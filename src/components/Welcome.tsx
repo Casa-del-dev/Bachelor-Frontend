@@ -1,5 +1,5 @@
 import "./Welcome.css";
-import Top from "./ImageWelcome";
+import Top from "./Imagewelcome";
 
 const Welcome = () => {
   return (
