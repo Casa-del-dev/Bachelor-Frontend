@@ -2,7 +2,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useSearchParams,
+  /*useSearchParams,*/
 } from "react-router-dom";
 
 import Layout from "./Layout";
