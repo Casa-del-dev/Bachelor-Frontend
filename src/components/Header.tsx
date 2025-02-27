@@ -12,13 +12,13 @@ export function Header() {
       <nav className="header-nav">
         <ul className="nav-links">
           <li>
-            <a href="/about">Problems</a>
+            <a href="/problem">Problems</a>
           </li>
           <li>
-            <a href="/services">Start</a>
+            <a href="/start">Start</a>
           </li>
           <li>
-            <a href="/contact">Building Blocks</a>
+            <a href="/bb">Building Blocks</a>
           </li>
         </ul>
       </nav>

@@ -1,12 +1,12 @@
 main {
-  position: fixed; /* Ensure it covers the whole screen */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh; /* Full screen */
+  height: 100vh;
   display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  background-color: #fff; /* Light background to confirm it's working */
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
   overflow-y: auto;
 }
