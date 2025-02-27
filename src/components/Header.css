@@ -1,0 +1,42 @@
+:root {
+  --border-color: rgb(0, 0, 0);
+}
+
+.header {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #fff;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Logo */
+.header-left .logo-image {
+  height: 50px;
+}
+
+/* Navigation Links */
+.header-nav .nav-links {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 50vw;
+  gap: calc(50vw / 3);
+}
+
+.header-nav .nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  font-size: 17pt;
+  transition: color 0.3s ease;
+}

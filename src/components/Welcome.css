@@ -1,0 +1,9 @@
+.welcome-container {
+  font-size: 2rem; /* Makes text more readable */
+  font-weight: bold;
+  box-sizing: border-box;
+  color: black;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
