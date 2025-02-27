@@ -10,6 +10,7 @@ const Welcome = () => {
       <div className="container">Welcome!</div>
       <div className="container">Welcome!</div>
       <div className="container">Welcome!</div>
+      <div className="container">Welcome!</div>
     </div>
   );
 };
