@@ -1,10 +1,15 @@
 import "./Welcome.css";
+import Top from "./Imagewelcome";
 
 const Welcome = () => {
   return (
     <div className="welcome-container">
-      <div className="c1">Welcome!</div>
-      <div className="c2">ciao</div>
+      <Top />
+      <div className="container">Welcome!</div>
+      <div className="container">Welcome!</div>
+      <div className="container">Welcome!</div>
+      <div className="container">Welcome!</div>
+      <div className="container">Welcome!</div>
     </div>
   );
 };

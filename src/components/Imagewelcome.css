@@ -1,0 +1,27 @@
+.container-image {
+  position: relative;
+  width: 100vw;
+  height: 400px;
+  overflow: hidden;
+  margin-top: 100px;
+  border-bottom: 1px solid black;
+}
+
+.image {
+  width: 100vw;
+  height: auto;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.text {
+  position: absolute;
+  top: 80%;
+  left: 3%;
+  z-index: 2;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+}
