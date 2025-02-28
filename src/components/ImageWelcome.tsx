@@ -4,7 +4,10 @@ import "./ImageWelcome.css";
 const ImageWelcome = () => {
   return (
     <div className="container-image">
-      <div className="text">DBox Plus: An AI-Assisted Code Learning Tutor</div>
+      <div className="text">
+        DBox Plus: An AI-Assisted Code <br />
+        Learning Tutor
+      </div>
       <img src={imga} className="image" alt="Background" />
     </div>
   );
