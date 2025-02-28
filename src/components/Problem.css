@@ -1,4 +1,43 @@
 .container {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 30vw 10px auto;
+  grid-template-areas: "left-side separator right-side";
   color: black;
+  align-items: center;
+}
+
+/* Left Side*/
+.left-side {
+  grid-area: left-side;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.left-side .container-fluid {
+  width: 100%;
+}
+
+/* Separator */
+.custom-line {
+  grid-area: separator;
+  width: 2px;
+  height: 80%;
+  background-color: black;
+  align-self: center;
+}
+
+/* Right Side */
+.right-side {
+  grid-area: right-side;
+  width: 100%;
+  justify-content: center;
+}
+
+.right-side .container-fluid {
+  width: 100%;
 }

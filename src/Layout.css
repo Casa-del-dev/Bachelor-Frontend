@@ -1,9 +1,9 @@
 main {
   position: fixed;
-  top: 0;
+  top: var(--header-height);
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - var(--header-height));
   background-color: #fff;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
