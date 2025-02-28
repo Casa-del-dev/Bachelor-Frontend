@@ -17,10 +17,10 @@
 
 .text {
   position: absolute;
-  top: 10vw;
+  top: calc(20vw * 0.8);
   left: 3%;
   z-index: 2;
   color: white;
-  font-size: 24px;
+  font-size: 1.25vw;
   font-weight: bold;
 }
