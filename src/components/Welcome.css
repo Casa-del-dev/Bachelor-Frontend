@@ -1,9 +1,56 @@
 .welcome-container {
-  font-size: 2rem;
-  font-weight: bold;
-  box-sizing: border-box;
-  color: black;
-  align-items: center;
   display: flex;
   flex-direction: column;
+  gap: 100px;
+}
+
+.container-fluid {
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.body-1,
+.body-2 {
+  width: 80vw;
+  font-size: 2rem;
+  font-weight: bold;
+  color: black;
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 5%;
+}
+
+.body-2 {
+  justify-content: flex-end;
+}
+
+.First-div,
+.Second-div,
+.Third-div,
+.Fourth-div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rem;
+}
+
+.Second-div,
+.Fourth-div {
+  justify-content: flex-end;
+}
+
+.body-1 img,
+.body-2 img {
+  width: 40%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/*Review part*/
+.container-review hr {
+  width: 90%;
+  border: 1px light black;
 }
