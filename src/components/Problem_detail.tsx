@@ -50,8 +50,12 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
               Solve
             </button>
           </div>
-          <pre className={details !== null ? "problem-text" : "problem-text-no-details"}>
-            {details !== null ? details || "No details available."}
+          <pre
+            className={
+              details !== null ? "problem-text" : "problem-text-no-details"
+            }
+          >
+            {details !== null ? details : "No details available."}
           </pre>
         </>
       ) : (
