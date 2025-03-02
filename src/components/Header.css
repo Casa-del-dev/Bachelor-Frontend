@@ -107,7 +107,7 @@
   /* Dropdown Navigation */
   .header-nav {
     position: absolute;
-    top: calc(1 * var(--header-height)); /* Position it at 2 * header height */
+    top: var(--header-height);
     right: 0;
     width: 100vw;
     background-color: #fff; /* Ensure the background is white */
@@ -120,12 +120,14 @@
 
   .header-nav.show {
     display: flex;
+    flex-direction: column;
   }
 
   /* Make sure each menu item has a background */
   .nav-links.show {
     display: flex;
     flex-direction: column;
+
     width: 100%;
     gap: 0;
   }
@@ -139,9 +141,10 @@
 
   .nav-links a {
     width: 100%;
-    font-size: 2vw;
+    font-size: 2.15vh;
     text-decoration: none;
     color: black;
+    flex-shrink: 0;
   }
 }
 

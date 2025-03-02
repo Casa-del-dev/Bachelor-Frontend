@@ -1,10 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HiMenu, HiX, HiUserCircle } from "react-icons/hi";
 import Logo from "../assets/Peachlab_logo.png";
 import "./Header.css";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Reset menuOpen when window width > 768px
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768 && menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    // Run it on mount in case the window is already wide.
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [menuOpen]);
 
   return (
     <header className="header">
@@ -28,6 +43,7 @@ export function Header() {
           </li>
         </ul>
       </nav>
+
       <div className="container-for-besties">
         {/* Hamburger Menu */}
         <div className="hamburgers-container">
