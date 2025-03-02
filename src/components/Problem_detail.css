@@ -1,18 +1,26 @@
 .problem-details-container {
-  display: flex;
+  display: grid;
+  grid-template-rows: 5vw 1px auto;
+  grid-template-areas: "top" "center" "bottom";
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
-  padding: 1em;
 }
 
 .problem-title {
-  margin: 0 0 1em 0;
-  font-size: 3vw;
+  all: unset;
+  grid-area: top;
+  font-size: 2vw;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  margin: 0;
 }
 
 .problem-text {
+  grid-area: bottom;
   white-space: pre-wrap;
   font-size: 1vw;
+  margin: 0;
 }

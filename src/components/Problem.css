@@ -2,7 +2,7 @@
   width: 100vw;
   height: 100%;
   display: grid;
-  grid-template-columns: 20vw 10px auto;
+  grid-template-columns: 20vw 1vw auto;
   grid-template-areas: "left-side separator right-side";
   color: black;
   align-items: center;
@@ -13,7 +13,7 @@
   display: flex;
   justify-content: center;
   width: 1px;
-  height: inherit;
+  height: 100%;
   background-color: black;
   align-self: center;
 }
