@@ -8,11 +8,12 @@
   top: 0;
   left: 0;
   width: 100vw;
+  height: 10vh;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding-left: 1vw;
   background-color: #fff;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-color);
@@ -20,23 +21,37 @@
 
 /* Logo */
 .header-left .logo-image {
-  height: 50px;
+  display: flex;
+  align-items: center;
+  height: 5vh;
 }
 
-/* Navigation Links */
-.header-nav .nav-links {
+/* Reset default ul and li styles */
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
-  width: 50vw;
+  justify-content: center;
+  height: var(--header-height);
   gap: calc(50vw / 3);
 }
 
-.header-nav .nav-links a {
+.nav-links li {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 10px 15px;
   text-decoration: none;
   color: #333;
   font-weight: bold;
-  font-size: 17pt;
+  font-size: max(calc(0.2 * var(--header-height)), 1.5vh);
   transition: color 0.3s ease;
 }

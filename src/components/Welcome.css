@@ -14,7 +14,6 @@
 .body-1,
 .body-2 {
   width: 80vw;
-  font-size: 2rem;
   font-weight: bold;
   color: black;
   display: flex;
@@ -33,7 +32,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10rem;
+  gap: 2vw;
 }
 
 .Second-div,
@@ -47,6 +46,13 @@
   height: auto;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.First-text,
+.Second-text,
+.Third-text,
+.Fourth-text {
+  font-size: 2vw;
 }
 
 /*Review part*/
