@@ -31,8 +31,14 @@
   grid-area: bottom;
   white-space: pre-wrap;
   font-size: 2vw;
-  text-align: center;
   margin: 0;
+  color: lightgrey;
+  font-weight: bold;
+  text-decoration: wavy;
+  text-shadow: 0 0 black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .check-button {

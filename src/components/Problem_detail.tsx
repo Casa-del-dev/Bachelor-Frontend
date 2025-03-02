@@ -46,9 +46,9 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
   return (
     <div className="problem-details-container">
       {isInitial ? (
-        <p className="problem-text-no-details">
+        <div className="problem-text-no-details">
           Please select a problem from the left.
-        </p>
+        </div>
       ) : (
         <>
           <div className="problem-title">
@@ -57,13 +57,7 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
               Solve
             </button>
           </div>
-          <pre
-            className={
-              details !== null ? "problem-text" : "problem-text-no-details"
-            }
-          >
-            {details !== null ? details : "No details available."}
-          </pre>
+          <pre className={"problem-text"}>{details}</pre>
         </>
       )}
     </div>
