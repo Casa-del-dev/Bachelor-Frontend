@@ -31,7 +31,7 @@ Output: 1994
 
 const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
   const navigate = useNavigate();
-  const details = problemDetailsMap[selectedProblem];
+  const details = problemDetailsMap[selectedProblem] || null;
 
   const handleCheckClick = () => {
     // Save the choice to local storage
