@@ -1,7 +1,11 @@
+import { useState } from "react";
+import { HiMenu, HiX, HiUserCircle } from "react-icons/hi";
 import Logo from "../assets/Peachlab_logo.png";
 import "./Header.css";
 
 export function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="header">
       <div className="header-left">
@@ -9,8 +13,10 @@ export function Header() {
           <img src={Logo} alt="Peachlab Logo" className="logo-image" />
         </a>
       </div>
-      <nav className="header-nav">
-        <ul className="nav-links">
+
+      {/* Navigation / Dropdown */}
+      <nav className={`header-nav ${menuOpen ? "show" : ""}`}>
+        <ul className={`nav-links ${menuOpen ? "show" : ""}`}>
           <li>
             <a href="/problem">Problems</a>
           </li>
@@ -22,7 +28,21 @@ export function Header() {
           </li>
         </ul>
       </nav>
-      <div className="header-end"></div>
+      <div className="container-for-besties">
+        {/* Hamburger Menu */}
+        <div className="hamburgers-container">
+          <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <HiX /> : <HiMenu />}
+          </div>
+        </div>
+
+        {/* User Profile Icon */}
+        <div className="user-profile">
+          <a href="/profile">
+            <HiUserCircle />
+          </a>
+        </div>
+      </div>
     </header>
   );
 }

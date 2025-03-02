@@ -9,15 +9,15 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 10vh;
+  height: var(--header-height);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding-left: 1vw;
   background-color: #fff;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-color);
+  padding: 0 2vw;
 }
 
 /* Logo */
@@ -27,7 +27,7 @@
   height: 5vh;
 }
 
-/* Reset default ul and li styles */
+/* Navigation (for larger screens) */
 .nav-links {
   list-style: none;
   padding: 0;
@@ -37,6 +37,7 @@
   justify-content: center;
   height: var(--header-height);
   gap: calc(50vw / 3);
+  color: black;
 }
 
 .nav-links li {
@@ -45,14 +46,114 @@
 }
 
 .nav-links a {
+  color: black;
+  font-size: 1.5vw;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: grey;
+}
+
+/* User Profile */
+.user-profile a {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 10px 15px;
+  color: black;
+  font-size: 4vh;
   text-decoration: none;
-  color: #333;
-  font-weight: bold;
-  font-size: max(calc(0.2 * var(--header-height)), 1.5vh);
   transition: color 0.3s ease;
+}
+
+.user-profile a:hover {
+  color: grey;
+}
+
+/* Hamburger Menu (default hidden) */
+.hamburger {
+  display: none;
+  cursor: pointer;
+}
+
+.container-for-besties {
+  display: flex;
+  align-items: center;
+}
+/* Mobile Styles */
+@media (max-width: 768px) {
+  /* Hamburger Menu */
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    color: black;
+    font-size: 4vh;
+    z-index: 1010; /* Ensure it's on top */
+  }
+
+  .hamburger:hover {
+    color: grey;
+  }
+
+  /* Hide regular nav-links on mobile */
+  .nav-links {
+    display: none;
+  }
+
+  /* Dropdown Navigation */
+  .header-nav {
+    position: absolute;
+    top: calc(1 * var(--header-height)); /* Position it at 2 * header height */
+    right: 0;
+    width: 100vw;
+    background-color: #fff; /* Ensure the background is white */
+    border-top: 1px solid var(--border-color);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    z-index: 100000;
+  }
+
+  .header-nav.show {
+    display: flex;
+  }
+
+  /* Make sure each menu item has a background */
+  .nav-links.show {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+  }
+
+  .nav-links li {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    background-color: #fff; /* Ensures each item has a white background */
+  }
+
+  .nav-links a {
+    width: 100%;
+    font-size: 2vw;
+    text-decoration: none;
+    color: black;
+  }
+}
+
+@media (max-width: 325px) {
+  .header-left .logo-image {
+    display: none;
+  }
+
+  .container-for-besties {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
