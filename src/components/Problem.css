@@ -1,4 +1,4 @@
-.container {
+.container-problem {
   width: 100vw;
   height: 100%;
   display: grid;
@@ -19,12 +19,11 @@
 }
 
 /* Right Side */
-.right-side {
+.right-side-problem {
   grid-area: right-side;
   width: 100%;
-  justify-content: center;
-}
-
-.right-side .container-fluid {
-  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
