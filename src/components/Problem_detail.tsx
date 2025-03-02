@@ -29,13 +29,15 @@ Output: 1994
 };
 
 const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
+  const details = problemDetailsMap[selectedProblem];
+
   return (
     <div className="problem-details-container">
       {selectedProblem ? (
         <>
           <h2 className="problem-title">{selectedProblem}</h2>
-          <pre className="problem-text">
-            {problemDetailsMap[selectedProblem] || "No details available."}
+          <pre className={details ? "problem-text" : "problem-text-no-details"}>
+            {details || "No details available."}
           </pre>
         </>
       ) : (

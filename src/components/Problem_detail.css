@@ -24,3 +24,11 @@
   font-size: 1vw;
   margin: 0;
 }
+
+.problem-text-no-details {
+  grid-area: bottom;
+  white-space: pre-wrap;
+  font-size: 2vw;
+  text-align: center;
+  margin: 0;
+}
