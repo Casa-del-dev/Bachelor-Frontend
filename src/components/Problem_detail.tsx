@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./Problem_detail.css";
 
@@ -48,7 +47,7 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
           <div className="problem-title">
             {selectedProblem}
             <button className="check-button" onClick={handleCheckClick}>
-              Check
+              Solve
             </button>
           </div>
           <pre className={details ? "problem-text" : "problem-text-no-details"}>
