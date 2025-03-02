@@ -1,5 +1,6 @@
 :root {
   --border-color: rgb(0, 0, 0);
+  --header-height: 10vh;
 }
 
 .header {
