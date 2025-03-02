@@ -31,18 +31,25 @@ Output: 1994
 
 const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
   const navigate = useNavigate();
-  const details = problemDetailsMap[selectedProblem] || null;
+
+  // Check if selectedProblem is empty (initial state)
+  const isInitial = !selectedProblem;
+
+  // Get problem details, or set to null if missing
+  const details = problemDetailsMap[selectedProblem]?.trim() || null;
 
   const handleCheckClick = () => {
-    // Save the choice to local storage
     localStorage.setItem("selectedProblem", selectedProblem);
-    // Navigate to the start route with the selected problem as a parameter
     navigate(`/start/${selectedProblem}`);
   };
 
   return (
     <div className="problem-details-container">
-      {selectedProblem ? (
+      {isInitial ? (
+        <p className="problem-text-no-details">
+          Please select a problem from the left.
+        </p>
+      ) : (
         <>
           <div className="problem-title">
             {selectedProblem}
@@ -58,8 +65,6 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
             {details !== null ? details : "No details available."}
           </pre>
         </>
-      ) : (
-        <p>Please select a problem from the left.</p>
       )}
     </div>
   );
