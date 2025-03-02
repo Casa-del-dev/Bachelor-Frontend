@@ -14,8 +14,10 @@
   font-weight: bold;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 100%;
   margin: 0;
+  padding-right: 1vw;
 }
 
 .problem-text {
@@ -31,4 +33,20 @@
   font-size: 2vw;
   text-align: center;
   margin: 0;
+}
+
+.check-button {
+  width: 6vw;
+  font-size: 1vw;
+  font-weight: bold;
+  background-color: lightgreen;
+  border: 1px solid darkgreen;
+  border-radius: 0.5vw;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.check-button:hover {
+  background-color: darkgreen;
+  color: white;
 }

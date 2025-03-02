@@ -1,3 +1,5 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Problem_detail.css";
 
 type ProblemDetailsProps = {
@@ -29,13 +31,26 @@ Output: 1994
 };
 
 const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
+  const navigate = useNavigate();
   const details = problemDetailsMap[selectedProblem];
+
+  const handleCheckClick = () => {
+    // Save the choice to local storage
+    localStorage.setItem("selectedProblem", selectedProblem);
+    // Navigate to the start route with the selected problem as a parameter
+    navigate(`/start/${selectedProblem}`);
+  };
 
   return (
     <div className="problem-details-container">
       {selectedProblem ? (
         <>
-          <h2 className="problem-title">{selectedProblem}</h2>
+          <div className="problem-title">
+            {selectedProblem}
+            <button className="check-button" onClick={handleCheckClick}>
+              Check
+            </button>
+          </div>
           <pre className={details ? "problem-text" : "problem-text-no-details"}>
             {details || "No details available."}
           </pre>
