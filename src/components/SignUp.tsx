@@ -12,7 +12,7 @@ export default function SignUp({
   setIsModalOpen,
   setIsLoginModalOpen,
 }: SignUpProps) {
-  // Changed "name" to "username" here
+  // Using "username" instead of "name"
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -70,7 +70,7 @@ export default function SignUp({
             <label>Username</label>
             <input
               type="text"
-              name="username" // Changed from "name" to "username"
+              name="username"
               value={formData.username}
               onChange={handleChange}
               className="form-input"
