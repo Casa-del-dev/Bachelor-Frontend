@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { HiEye, HiEyeOff } from "react-icons/hi";
-import { HiX } from "react-icons/hi";
+import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
+import { signUp } from "../Api.ts"; // Import sign-up API
+
 import "./SignUp.css";
 
 interface SignUpProps {
-  setIsModalOpen: (open: boolean) => void; // Accept function to close modal
+  setIsModalOpen: (open: boolean) => void;
   setIsLoginModalOpen: (open: boolean) => void;
 }
 
@@ -20,14 +21,14 @@ export default function SignUp({
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, _] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let newErrors: Record<string, string> = {};
 
@@ -42,7 +43,16 @@ export default function SignUp({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted:", formData);
+      try {
+        await signUp(formData.name, formData.email, formData.password);
+        setSuccess("Sign-up successful! Redirecting to login...");
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setIsLoginModalOpen(true); // ✅ Automatically open login modal after signup
+        }, 1500);
+      } catch (err) {
+        setErrors({ form: (err as Error).message });
+      }
     }
   };
 
