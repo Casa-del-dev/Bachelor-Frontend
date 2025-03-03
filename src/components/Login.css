@@ -1,3 +1,14 @@
+.overlay-content-login {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
 .login-button-container {
   padding-top: 10px;
   width: 100%;
@@ -20,6 +31,12 @@
 }
 
 @media (max-width: 700px) {
+  .overlay-content-login {
+    padding: 1.5rem; /* Reduce padding */
+    max-width: 50%; /* Reduce modal width */
+    height: 55vw;
+  }
+
   .login-button {
     width: 80px; /* Make button smaller */
     height: 26px;
@@ -27,7 +44,7 @@
   }
 
   .login-footer {
-    font-size: 2vw;
+    font-size: 3vw;
   }
 
   .login-title {
@@ -42,6 +59,10 @@
   }
 
   @media (max-width: 300px) {
+    .overlay-content-login {
+      height: 110vw;
+    }
+
     .login-button {
       width: 80px; /* Make button smaller */
       height: 26px;

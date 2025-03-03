@@ -152,7 +152,7 @@ export function Header() {
       {/* Login Modal */}
       {isLoginModalOpen && (
         <div className="overlay">
-          <div className="overlay-content">
+          <div className="overlay-content-login">
             <Login
               setIsLoginModalOpen={setIsLoginModalOpen}
               setIsModalOpen={setIsModalOpen}

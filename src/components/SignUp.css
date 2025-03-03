@@ -129,11 +129,7 @@
   .overlay-content {
     padding: 1.5rem; /* Reduce padding */
     max-width: 50%; /* Reduce modal width */
-    height: 110vw;
-  }
-
-  .close-btn {
-    font-size: 2vw; /* Make the close button smaller */
+    height: 80vw;
   }
 
   .form-group {
@@ -173,8 +169,12 @@
   }
 
   @media (max-width: 430px) {
-    .signup-button {
-      font-size: 3vw;
+    .overlay-content {
+      height: 100vw;
+    }
+
+    .close-btn {
+      font-size: 4vw;
     }
 
     .form-group label {
@@ -204,11 +204,9 @@
     }
   }
 
-  @media (max-width: 300px) {
+  @media (max-width: 370px) {
     .overlay-content {
-      padding: 1.5rem; /* Reduce padding */
-      max-width: 50%; /* Reduce modal width */
-      height: 140vw;
+      height: 150vw;
     }
 
     .close-btn {
@@ -250,5 +248,13 @@
       font-size: 10vw;
       margin: 0px;
     }
+  }
+}
+
+@media (max-width: 193px) {
+  .overlay-content {
+    padding: 1.5rem; /* Reduce padding */
+    max-width: 50%; /* Reduce modal width */
+    height: 180vw;
   }
 }
