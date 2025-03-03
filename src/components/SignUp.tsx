@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
 import { signUp } from "../Api.ts"; // Import sign-up API
-
 import "./SignUp.css";
 
 interface SignUpProps {
@@ -21,8 +20,9 @@ export default function SignUp({
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Added state for confirm password
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [success, setSuccess] = useState<string | null>(null);
+  const [_, setSuccess] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,7 +48,7 @@ export default function SignUp({
         setSuccess("Sign-up successful! Redirecting to login...");
         setTimeout(() => {
           setIsModalOpen(false);
-          setIsLoginModalOpen(true); // ✅ Automatically open login modal after signup
+          setIsLoginModalOpen(true);
         }, 1500);
       } catch (err) {
         setErrors({ form: (err as Error).message });
@@ -59,8 +59,6 @@ export default function SignUp({
   return (
     <div className="signup-container">
       <div className="signup-card">
-        {/* Close Button (Inside SignUp) */}
-
         <HiX className="close-btn" onClick={() => setIsModalOpen(false)} />
 
         <h2 className="signup-title">Sign Up</h2>
@@ -105,7 +103,6 @@ export default function SignUp({
                 className="form-input-password"
                 placeholder="••••••••"
               />
-
               {showPassword ? (
                 <HiEyeOff
                   className="password-toggle"
@@ -133,16 +130,15 @@ export default function SignUp({
                 className="form-input-password"
                 placeholder="••••••••"
               />
-
-              {showPassword ? (
+              {showConfirmPassword ? (
                 <HiEyeOff
                   className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 />
               ) : (
                 <HiEye
                   className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 />
               )}
             </div>
