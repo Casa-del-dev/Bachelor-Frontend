@@ -42,7 +42,7 @@ export default function Login({
     <div className="login-container">
       <div className="login-card">
         {/* Close Button */}
-        <HiX className="close-btn" onClick={() => setIsModalOpen(false)} />
+        <HiX className="close-btn" onClick={() => setIsLoginModalOpen(false)} />
 
         <h2 className="login-title">Login</h2>
         <form onSubmit={handleSubmit} className="login-form">

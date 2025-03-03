@@ -122,3 +122,133 @@
     transform: scale(1);
   }
 }
+
+/* 🔹 Scale everything down on screens smaller than 600px */
+
+@media (max-width: 700px) {
+  .overlay-content {
+    padding: 1.5rem; /* Reduce padding */
+    max-width: 50%; /* Reduce modal width */
+    height: 110vw;
+  }
+
+  .close-btn {
+    font-size: 2vw; /* Make the close button smaller */
+  }
+
+  .form-group {
+    gap: 3px; /* Reduce spacing */
+  }
+
+  .form-group label {
+    font-size: 3vw; /* Reduce label size */
+  }
+
+  .form-group input {
+    padding: 6px; /* Reduce input padding */
+    font-size: 3vw; /* Make text inside inputs smaller */
+  }
+
+  .form-input {
+    width: 100%; /* Ensure it adapts to smaller width */
+  }
+
+  .password-toggle {
+    font-size: 3vw; /* Make eye icon smaller */
+  }
+
+  .signup-button {
+    width: 80px; /* Make button smaller */
+    height: 26px;
+    font-size: 1.8vw;
+  }
+
+  .signup-footer {
+    font-size: 3vw;
+  }
+
+  .signup-title {
+    font-size: 5vw;
+    margin: 0px;
+  }
+
+  @media (max-width: 430px) {
+    .signup-button {
+      font-size: 3vw;
+    }
+
+    .form-group label {
+      font-size: 3vw; /* Reduce label size */
+    }
+
+    .form-group input {
+      padding: 6px; /* Reduce input padding */
+      font-size: 3vw; /* Make text inside inputs smaller */
+    }
+
+    .form-input {
+      width: 100%; /* Ensure it adapts to smaller width */
+    }
+
+    .password-toggle {
+      font-size: 3vw; /* Make eye icon smaller */
+    }
+
+    .signup-footer {
+      font-size: 3vw;
+    }
+
+    .signup-title {
+      font-size: 6vw;
+      margin: 0px;
+    }
+  }
+
+  @media (max-width: 300px) {
+    .overlay-content {
+      padding: 1.5rem; /* Reduce padding */
+      max-width: 50%; /* Reduce modal width */
+      height: 140vw;
+    }
+
+    .close-btn {
+      font-size: 5vw; /* Make the close button smaller */
+    }
+
+    .form-group {
+      gap: 3px; /* Reduce spacing */
+    }
+
+    .form-group label {
+      font-size: 5vw; /* Reduce label size */
+    }
+
+    .form-group input {
+      padding: 6px; /* Reduce input padding */
+      font-size: 5vw; /* Make text inside inputs smaller */
+    }
+
+    .form-input {
+      width: 100%; /* Ensure it adapts to smaller width */
+    }
+
+    .password-toggle {
+      font-size: 5vw; /* Make eye icon smaller */
+    }
+
+    .signup-button {
+      width: 80px; /* Make button smaller */
+      height: 26px;
+      font-size: 3vw;
+    }
+
+    .signup-footer {
+      font-size: 5vw;
+    }
+
+    .signup-title {
+      font-size: 10vw;
+      margin: 0px;
+    }
+  }
+}
