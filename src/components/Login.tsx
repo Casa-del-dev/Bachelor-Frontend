@@ -13,7 +13,7 @@ export default function Login({
   setIsModalOpen,
 }: LoginProps) {
   const [formData, setFormData] = useState({
-    username: "", // ✅ Changed from "name" to "username"
+    username: "", // Changed from "name" to "username"
     password: "",
   });
 
@@ -38,11 +38,11 @@ export default function Login({
     if (Object.keys(newErrors).length > 0) return;
 
     try {
-      const response = await login(formData.username, formData.password);
-      localStorage.setItem("authToken", response.token); // ✅ Store JWT token
+      await login(formData.username, formData.password);
       setMessage("Login successful! Redirecting...");
       setTimeout(() => {
-        setIsLoginModalOpen(false); // ✅ Close modal after login
+        setIsLoginModalOpen(false);
+        // Optionally, trigger a state update in your app so the UI reflects the login
       }, 1500);
     } catch (err) {
       setErrors({ form: "Invalid username or password" });
@@ -64,7 +64,7 @@ export default function Login({
             <label>Username</label>
             <input
               type="text"
-              name="username" // ✅ Fixed field name
+              name="username" // Fixed field name
               value={formData.username}
               onChange={handleChange}
               className="form-input"

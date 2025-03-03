@@ -12,7 +12,6 @@ export default function SignUp({
   setIsModalOpen,
   setIsLoginModalOpen,
 }: SignUpProps) {
-  // Using "username" instead of "name"
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -31,7 +30,6 @@ export default function SignUp({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
     let newErrors: Record<string, string> = {};
 
     if (!formData.username) newErrors.username = "Username is required";
@@ -43,20 +41,21 @@ export default function SignUp({
       newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
 
-    try {
-      await signUp(formData.username, formData.email, formData.password);
-      setSuccess("Sign-up successful! Redirecting to login...");
-      setTimeout(() => {
-        setIsModalOpen(false); // ✅ Close signup modal
-        setIsLoginModalOpen(true); // ✅ Open login modal automatically
-      }, 1500);
-    } catch (err) {
-      if ((err as Error).message.includes("409")) {
-        setErrors({ username: "Username already exists. Try another one." });
-      } else {
-        setErrors({ form: (err as Error).message });
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        await signUp(formData.username, formData.email, formData.password);
+        setSuccess("Sign-up successful! Redirecting to login...");
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setIsLoginModalOpen(true);
+        }, 1500);
+      } catch (err) {
+        if ((err as Error).message.includes("User already exists")) {
+          setErrors({ username: "Username already exists. Try another one." });
+        } else {
+          setErrors({ form: (err as Error).message });
+        }
       }
     }
   };
@@ -64,7 +63,6 @@ export default function SignUp({
   return (
     <div className="signup-container">
       <div className="signup-card">
-        {/* Close Button */}
         <HiX className="close-btn" onClick={() => setIsModalOpen(false)} />
 
         <h2 className="signup-title">Sign Up</h2>

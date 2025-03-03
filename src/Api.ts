@@ -30,5 +30,28 @@ export const login = async (username: string, password: string) => {
     throw new Error("Invalid credentials.");
   }
 
-  return response.json();
+  const data = await response.json();
+  // Save both token and username in localStorage
+  localStorage.setItem("authToken", data.token);
+  localStorage.setItem("username", username);
+  return data;
+};
+
+export const authCheck = async () => {
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    return { authenticated: false };
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return response.ok ? { authenticated: true } : { authenticated: false };
+};
+
+export const logout = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("username");
 };

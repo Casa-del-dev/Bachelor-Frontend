@@ -1,7 +1,12 @@
-import "./Profile.css";
+import "./Profile.css"; // Optionally add your own styling
 
-const Profile = () => {
-  return <div className="container">ciao</div>;
-};
+export default function Profile() {
+  const username = localStorage.getItem("username");
 
-export default Profile;
+  return (
+    <div className="profile-container">
+      <h1>Profile</h1>
+      {username ? <p>Welcome, {username}!</p> : <p>No user logged in.</p>}
+    </div>
+  );
+}
