@@ -7,6 +7,7 @@ import Problem_details from "./components/Problem_detail";
 import Start from "./components/Start";
 import Redirect from "./components/Redirect";
 import BB from "./components/Building-Block";
+import Profile from "./components/Profile";
 
 function App() {
   const [selectedProblem, _] = useState<string>("");
@@ -25,6 +26,7 @@ function App() {
           {/* This route handles /start without a parameter and redirects */}
           <Route path="/start" element={<Redirect />} />
           <Route path="/bb" element={<BB />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Layout>
     </Router>
