@@ -57,7 +57,7 @@
 }
 
 /* User Profile */
-.user-profile a {
+.profile-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,7 +68,8 @@
   transition: color 0.3s ease;
 }
 
-.user-profile a:hover {
+.profile-icon:hover {
+  cursor: pointer;
   color: grey;
 }
 
@@ -82,6 +83,42 @@
   display: flex;
   align-items: center;
 }
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
+  z-index: 1000;
+  margin-top: 5px;
+  margin-right: 5px;
+}
+
+.profile-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-dropdown ul li {
+  padding: 0;
+}
+
+.profile-dropdown ul li a {
+  display: block;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.profile-dropdown ul li a:hover {
+  background-color: #f5f5f5;
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
   /* Hamburger Menu */
