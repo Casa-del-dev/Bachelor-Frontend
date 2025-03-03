@@ -5,9 +5,13 @@ import "./SignUp.css";
 
 interface SignUpProps {
   setIsModalOpen: (open: boolean) => void; // Accept function to close modal
+  setIsLoginModalOpen: (open: boolean) => void;
 }
 
-export default function SignUp({ setIsModalOpen }: SignUpProps) {
+export default function SignUp({
+  setIsModalOpen,
+  setIsLoginModalOpen,
+}: SignUpProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -148,7 +152,14 @@ export default function SignUp({ setIsModalOpen }: SignUpProps) {
         {/* Login Redirect */}
         <p className="signup-footer">
           Already have an account?{" "}
-          <a href="/login" className="signup-link">
+          <a
+            href="#"
+            onClick={() => {
+              setIsModalOpen(false);
+              setIsLoginModalOpen(true);
+            }}
+            className="login-link"
+          >
             Log in
           </a>
         </p>

@@ -3,11 +3,13 @@ import { HiMenu, HiX, HiUserCircle } from "react-icons/hi";
 import Logo from "../assets/Peachlab_logo.png";
 import "./Header.css";
 import SignUp from "./SignUp";
+import Login from "./Login";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, _] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -37,13 +39,13 @@ export function Header() {
       }
     }
 
-    if (isModalOpen) {
+    if (isModalOpen || isLoginModalOpen) {
       setProfileDropdownOpen(false);
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isModalOpen]);
+  }, [isModalOpen, isLoginModalOpen]);
 
   // Close modal when clicking outside of modal content
   useEffect(() => {
@@ -118,7 +120,9 @@ export function Header() {
                     {isLoggedIn ? (
                       <a href="/logout">Logout</a>
                     ) : (
-                      <a href="/login">Login</a>
+                      <a href="#" onClick={() => setIsLoginModalOpen(true)}>
+                        Login
+                      </a>
                     )}
                   </li>
                   <li>
@@ -137,8 +141,22 @@ export function Header() {
       {isModalOpen && (
         <div className="overlay">
           <div className="overlay-content">
-            {/* Close Button (Handled inside SignUp component) */}
-            <SignUp setIsModalOpen={setIsModalOpen} />{" "}
+            <SignUp
+              setIsModalOpen={setIsModalOpen}
+              setIsLoginModalOpen={setIsLoginModalOpen}
+            />{" "}
+          </div>
+        </div>
+      )}
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <div className="overlay">
+          <div className="overlay-content">
+            <Login
+              setIsLoginModalOpen={setIsLoginModalOpen}
+              setIsModalOpen={setIsModalOpen}
+            />
           </div>
         </div>
       )}
