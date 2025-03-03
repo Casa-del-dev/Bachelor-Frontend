@@ -12,15 +12,16 @@ export default function SignUp({
   setIsModalOpen,
   setIsLoginModalOpen,
 }: SignUpProps) {
+  // Changed "name" to "username" here
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Added state for confirm password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [_, setSuccess] = useState<string | null>(null);
 
@@ -32,7 +33,7 @@ export default function SignUp({
     e.preventDefault();
     let newErrors: Record<string, string> = {};
 
-    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.username) newErrors.username = "Username is required";
     if (!formData.email) newErrors.email = "Email is required";
     if (!formData.password) newErrors.password = "Password is required";
     if (formData.password.length < 6)
@@ -44,7 +45,7 @@ export default function SignUp({
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        await signUp(formData.name, formData.email, formData.password);
+        await signUp(formData.username, formData.email, formData.password);
         setSuccess("Sign-up successful! Redirecting to login...");
         setTimeout(() => {
           setIsModalOpen(false);
@@ -59,22 +60,23 @@ export default function SignUp({
   return (
     <div className="signup-container">
       <div className="signup-card">
+        {/* Close Button */}
         <HiX className="close-btn" onClick={() => setIsModalOpen(false)} />
 
         <h2 className="signup-title">Sign Up</h2>
         <form onSubmit={handleSubmit} className="signup-form">
-          {/* Name Field */}
+          {/* Username Field */}
           <div className="form-group">
-            <label>Name</label>
+            <label>Username</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="username" // Changed from "name" to "username"
+              value={formData.username}
               onChange={handleChange}
               className="form-input"
-              placeholder="John Doe"
+              placeholder="JohnDoe"
             />
-            {errors.name && <p className="error-text">{errors.name}</p>}
+            {errors.username && <p className="error-text">{errors.username}</p>}
           </div>
 
           {/* Email Field */}
