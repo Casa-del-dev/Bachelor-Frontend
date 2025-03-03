@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://bachelor-api.erenhomburg.com/auth/v1"; // Replace with actual backend URL
+const API_BASE_URL = "https://bachelor-api.erenhomburg.com/auth/v1";
 
 export const signUp = async (
   username: string,
@@ -12,7 +12,8 @@ export const signUp = async (
   });
 
   if (!response.ok) {
-    throw new Error("User already exists or another error occurred.");
+    if (response.status === 409) throw new Error("User already exists");
+    throw new Error("Signup failed");
   }
 
   return response.json();
@@ -29,11 +30,5 @@ export const login = async (username: string, password: string) => {
     throw new Error("Invalid credentials.");
   }
 
-  const data = await response.json();
-  localStorage.setItem("authToken", data.token); // ✅ Store token in localStorage
-  return data;
-};
-
-export const getAuthToken = () => {
-  return localStorage.getItem("authToken");
+  return response.json();
 };

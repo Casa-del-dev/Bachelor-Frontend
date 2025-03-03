@@ -31,6 +31,7 @@ export default function SignUp({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     let newErrors: Record<string, string> = {};
 
     if (!formData.username) newErrors.username = "Username is required";
@@ -42,16 +43,19 @@ export default function SignUp({
       newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        await signUp(formData.username, formData.email, formData.password);
-        setSuccess("Sign-up successful! Redirecting to login...");
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setIsLoginModalOpen(true);
-        }, 1500);
-      } catch (err) {
+    try {
+      await signUp(formData.username, formData.email, formData.password);
+      setSuccess("Sign-up successful! Redirecting to login...");
+      setTimeout(() => {
+        setIsModalOpen(false); // ✅ Close signup modal
+        setIsLoginModalOpen(true); // ✅ Open login modal automatically
+      }, 1500);
+    } catch (err) {
+      if ((err as Error).message.includes("409")) {
+        setErrors({ username: "Username already exists. Try another one." });
+      } else {
         setErrors({ form: (err as Error).message });
       }
     }

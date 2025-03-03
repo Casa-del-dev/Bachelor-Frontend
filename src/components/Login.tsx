@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
+import { login } from "../Api.ts"; // Import login API
 import "./Login.css";
 
 interface LoginProps {
-  setIsLoginModalOpen: (open: boolean) => void; // Function to close modal
+  setIsLoginModalOpen: (open: boolean) => void;
   setIsModalOpen: (open: boolean) => void;
 }
 
@@ -12,52 +13,64 @@ export default function Login({
   setIsModalOpen,
 }: LoginProps) {
   const [formData, setFormData] = useState({
-    name: "",
+    username: "", // ✅ Changed from "name" to "username"
     password: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let newErrors: Record<string, string> = {};
+    setErrors({});
+    setMessage(null);
 
-    if (!formData.name) newErrors.name = "Name is required";
+    let newErrors: Record<string, string> = {};
+    if (!formData.username) newErrors.username = "Username is required";
     if (!formData.password) newErrors.password = "Password is required";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
-    if (Object.keys(newErrors).length === 0) {
-      console.log("Logging in with:", formData);
-      // Add API authentication logic here
+    try {
+      const response = await login(formData.username, formData.password);
+      localStorage.setItem("authToken", response.token); // ✅ Store JWT token
+      setMessage("Login successful! Redirecting...");
+      setTimeout(() => {
+        setIsLoginModalOpen(false); // ✅ Close modal after login
+      }, 1500);
+    } catch (err) {
+      setErrors({ form: "Invalid username or password" });
     }
   };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        {/* Close Button */}
         <HiX className="close-btn" onClick={() => setIsLoginModalOpen(false)} />
 
         <h2 className="login-title">Login</h2>
+        {message && <p className="success-text">{message}</p>}
+        {errors.form && <p className="error-text">{errors.form}</p>}
+
         <form onSubmit={handleSubmit} className="login-form">
-          {/* Name Field */}
+          {/* Username Field */}
           <div className="form-group">
-            <label>Name</label>
+            <label>Username</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="username" // ✅ Fixed field name
+              value={formData.username}
               onChange={handleChange}
               className="form-input"
-              placeholder="John Doe"
+              placeholder="JohnDoe"
             />
-            {errors.name && <p className="error-text">{errors.name}</p>}
+            {errors.username && <p className="error-text">{errors.username}</p>}
           </div>
 
           {/* Password Field */}
@@ -72,7 +85,6 @@ export default function Login({
                 className="form-input-password"
                 placeholder="••••••••"
               />
-
               {showPassword ? (
                 <HiEyeOff
                   className="password-toggle"
