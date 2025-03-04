@@ -27,7 +27,7 @@ const Start = () => {
       </div>
       <div className="right-main">
         <div className="custom-line-leftmiddle"></div>
-        ciao 3
+        ciao 21
       </div>
       {/*<h1>Start</h1>
       <p>Selected problem: {selectedProblem}</p>*/}
