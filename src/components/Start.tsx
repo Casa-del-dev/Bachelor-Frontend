@@ -1,6 +1,7 @@
 import "./Start.css";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import StartLeft from "./Start-left";
 
 const Start = () => {
   // Get the id from the URL if provided
@@ -9,10 +10,8 @@ const Start = () => {
 
   useEffect(() => {
     if (id) {
-      // If an id is provided in the URL, update the state
       setSelectedProblem(id);
     } else {
-      // Otherwise, check localStorage for a saved selection
       const stored = localStorage.getItem("selectedProblem");
       if (stored) {
         setSelectedProblem(stored);
@@ -21,10 +20,17 @@ const Start = () => {
   }, [id]);
 
   return (
-    <div className="container">
-      <h1>Start</h1>
-      <p>Selected problem: {selectedProblem}</p>
-      {/* Add your additional content for the Start component here */}
+    <div className="container-main">
+      <StartLeft />
+      <div className="middle-main">
+        <h1>ciao 2</h1>
+      </div>
+      <div className="right-main">
+        <div className="custom-line-leftmiddle"></div>
+        ciao 3
+      </div>
+      {/*<h1>Start</h1>
+      <p>Selected problem: {selectedProblem}</p>*/}
     </div>
   );
 };
