@@ -1,17 +1,24 @@
 import { useState } from "react";
 import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
-import { signUp } from "../Api.ts"; // Import sign-up API
 import "./SignUp.css";
+import { useApi } from "../ApiContext";
 
 interface SignUpProps {
   setIsModalOpen: (open: boolean) => void;
   setIsLoginModalOpen: (open: boolean) => void;
 }
 
+type SignUpPayload = {
+  username: string;
+  password: string;
+  email: string;
+};
+
 export default function SignUp({
   setIsModalOpen,
   setIsLoginModalOpen,
 }: SignUpProps) {
+  const { fetch } = useApi();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -30,6 +37,12 @@ export default function SignUp({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setIsLoginModalOpen(true);
+    }, 1500);
+
     let newErrors: Record<string, string> = {};
 
     if (!formData.username) newErrors.username = "Username is required";
@@ -44,12 +57,37 @@ export default function SignUp({
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        await signUp(formData.username, formData.email, formData.password);
-        setSuccess("Sign-up successful! Redirecting to login...");
-        setTimeout(() => {
-          setIsModalOpen(false);
-          setIsLoginModalOpen(true);
-        }, 1500);
+        const payload: SignUpPayload = {
+          email: formData.email,
+          password: formData.password,
+          username: formData.username,
+        };
+
+        const response = await fetch("auth/v1/signup", {
+          body: JSON.stringify(payload),
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("test");
+
+        switch (response.status) {
+          case 201: {
+            setSuccess("Sign-up successful! Redirecting to login...");
+            break;
+          }
+          case 309: {
+            //user already exists
+            const backendError = await response.text();
+            break;
+          }
+          default: {
+            //something different went wrong
+            const backendError = await response.text();
+          }
+        }
       } catch (err) {
         if ((err as Error).message.includes("User already exists")) {
           setErrors({ username: "Username already exists. Try another one." });

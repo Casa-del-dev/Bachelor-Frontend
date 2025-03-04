@@ -1,0 +1,86 @@
+.Right-Side-main {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.right-sidecontent-main {
+  display: grid;
+  grid-template-rows: 8vw auto 8vw;
+  grid-template-areas: "Header" "Body" "Footer";
+  width: 100%;
+  height: 100%;
+}
+
+.right-header-main {
+  grid-area: Header;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.right-main-main {
+  grid-area: Body;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.right-text-main {
+  grid-area: Footer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.input-container {
+  position: relative;
+  width: 80%;
+}
+
+.text-input {
+  width: 80%;
+
+  padding: 1vw;
+  padding-right: 2.5vw;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1vw;
+  color: black;
+  background-color: white;
+  outline: none;
+  resize: none; /* Prevent manual resizing */
+  overflow-y: hidden; /* Hide scrollbar initially */
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  line-height: 1.5; /* Adjust line height to align placeholder better */
+}
+
+/* Make the placeholder vertically centered */
+.text-input::placeholder {
+  color: #888;
+  font-size: 1vw;
+  line-height: normal;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
+.submit-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2vw;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.submit-icon:hover {
+  color: #0056b3;
+}

@@ -4,15 +4,17 @@ import Logo from "../assets/Peachlab_logo.png";
 import "./Header.css";
 import SignUp from "./SignUp";
 import Login from "./Login";
+import { useAuth } from "../AuthContext";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isLoggedIn, _] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const { isAuthenticated, logout } = useAuth();
 
   // Reset menuOpen when window width > 768px
   useEffect(() => {
@@ -117,8 +119,10 @@ export function Header() {
                     <a href="/profile">Profile</a>
                   </li>
                   <li>
-                    {isLoggedIn ? (
-                      <a href="/logout">Logout</a>
+                    {isAuthenticated ? (
+                      <a href="#" onClick={logout}>
+                        Logout
+                      </a>
                     ) : (
                       <a href="#" onClick={() => setIsLoginModalOpen(true)}>
                         Login

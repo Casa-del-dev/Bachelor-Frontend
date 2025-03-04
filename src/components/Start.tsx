@@ -2,6 +2,7 @@ import "./Start.css";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import StartLeft from "./Start-left";
+import StartRight from "./Start-right";
 
 const Start = () => {
   // Get the id from the URL if provided
@@ -26,8 +27,7 @@ const Start = () => {
         <h1>ciao 2</h1>
       </div>
       <div className="right-main">
-        <div className="custom-line-leftmiddle"></div>
-        ciao 21
+        <StartRight />
       </div>
       {/*<h1>Start</h1>
       <p>Selected problem: {selectedProblem}</p>*/}

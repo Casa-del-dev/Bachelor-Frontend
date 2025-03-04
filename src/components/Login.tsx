@@ -1,12 +1,22 @@
 import { useState } from "react";
 import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
-import { login } from "../Api.ts"; // Import login API
 import "./Login.css";
+import { useApi } from "../ApiContext";
+import { useAuth } from "../AuthContext";
 
 interface LoginProps {
   setIsLoginModalOpen: (open: boolean) => void;
   setIsModalOpen: (open: boolean) => void;
 }
+
+type SignInPayload = {
+  username: string;
+  password: string;
+};
+
+type AuthTokenResponse = {
+  token: string;
+};
 
 export default function Login({
   setIsLoginModalOpen,
@@ -16,6 +26,9 @@ export default function Login({
     username: "", // Changed from "name" to "username"
     password: "",
   });
+
+  const { fetch } = useApi();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -30,6 +43,11 @@ export default function Login({
     setErrors({});
     setMessage(null);
 
+    setTimeout(() => {
+      setIsLoginModalOpen(false);
+      // Optionally, trigger a state update in your app so the UI reflects the login
+    }, 1500);
+
     let newErrors: Record<string, string> = {};
     if (!formData.username) newErrors.username = "Username is required";
     if (!formData.password) newErrors.password = "Password is required";
@@ -37,13 +55,33 @@ export default function Login({
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
+    const payload: SignInPayload = {
+      password: formData.password,
+      username: formData.username,
+    };
+
     try {
-      await login(formData.username, formData.password);
-      setMessage("Login successful! Redirecting...");
-      setTimeout(() => {
-        setIsLoginModalOpen(false);
-        // Optionally, trigger a state update in your app so the UI reflects the login
-      }, 1500);
+      const response = await fetch("auth/v1/login", {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      switch (response.status) {
+        case 200: {
+          //successfully logged in
+          setMessage("Login successful! Redirecting...");
+          const authTokenResponse: AuthTokenResponse = await response.json();
+          login(authTokenResponse.token);
+          break;
+        }
+        default: {
+          //an error on sign up
+          break;
+        }
+      }
     } catch (err) {
       setErrors({ form: "Invalid username or password" });
     }
