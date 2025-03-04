@@ -111,6 +111,24 @@
   background-color: darkblue;
 }
 
+.success-text {
+  font-size: 1vw;
+  color: lime;
+  display: flex;
+  justify-content: center;
+}
+
+.fail-text {
+  font-size: 1vw;
+  display: flex;
+  justify-content: center;
+  color: red;
+}
+.error-text-signup {
+  margin: 0;
+  font-size: 1vw;
+  color: red;
+}
 /* Fade-in animation */
 @keyframes fadeIn {
   from {
@@ -129,7 +147,7 @@
   .overlay-content {
     padding: 1.5rem; /* Reduce padding */
     max-width: 50%; /* Reduce modal width */
-    height: 80vw;
+    height: 90vw;
   }
 
   .form-group {
@@ -168,86 +186,93 @@
     margin: 0px;
   }
 
-  @media (max-width: 430px) {
-    .overlay-content {
-      height: 100vw;
-    }
-
-    .close-btn {
-      font-size: 4vw;
-    }
-
-    .form-group label {
-      font-size: 3vw; /* Reduce label size */
-    }
-
-    .form-group input {
-      padding: 6px; /* Reduce input padding */
-      font-size: 3vw; /* Make text inside inputs smaller */
-    }
-
-    .form-input {
-      width: 100%; /* Ensure it adapts to smaller width */
-    }
-
-    .password-toggle {
-      font-size: 3vw; /* Make eye icon smaller */
-    }
-
-    .signup-footer {
-      font-size: 3vw;
-    }
-
-    .signup-title {
-      font-size: 6vw;
-      margin: 0px;
-    }
+  .error-text-signup {
+    font-size: 2vw;
+  }
+}
+@media (max-width: 430px) {
+  .overlay-content {
+    height: 100vw;
   }
 
-  @media (max-width: 370px) {
-    .overlay-content {
-      height: 150vw;
-    }
+  .close-btn {
+    font-size: 4vw;
+  }
 
-    .close-btn {
-      font-size: 5vw; /* Make the close button smaller */
-    }
+  .form-group label {
+    font-size: 3vw; /* Reduce label size */
+  }
 
-    .form-group {
-      gap: 3px; /* Reduce spacing */
-    }
+  .form-group input {
+    padding: 6px; /* Reduce input padding */
+    font-size: 3vw; /* Make text inside inputs smaller */
+  }
 
-    .form-group label {
-      font-size: 5vw; /* Reduce label size */
-    }
+  .form-input {
+    width: 100%; /* Ensure it adapts to smaller width */
+  }
 
-    .form-group input {
-      padding: 6px; /* Reduce input padding */
-      font-size: 5vw; /* Make text inside inputs smaller */
-    }
+  .password-toggle {
+    font-size: 3vw; /* Make eye icon smaller */
+  }
 
-    .form-input {
-      width: 100%; /* Ensure it adapts to smaller width */
-    }
+  .signup-footer {
+    font-size: 3vw;
+  }
 
-    .password-toggle {
-      font-size: 5vw; /* Make eye icon smaller */
-    }
+  .signup-title {
+    font-size: 6vw;
+    margin: 0px;
+  }
+}
 
-    .signup-button {
-      width: 80px; /* Make button smaller */
-      height: 26px;
-      font-size: 3vw;
-    }
+@media (max-width: 370px) {
+  .overlay-content {
+    height: 180vw;
+  }
 
-    .signup-footer {
-      font-size: 5vw;
-    }
+  .close-btn {
+    font-size: 5vw; /* Make the close button smaller */
+  }
 
-    .signup-title {
-      font-size: 10vw;
-      margin: 0px;
-    }
+  .form-group {
+    gap: 3px; /* Reduce spacing */
+  }
+
+  .form-group label {
+    font-size: 5vw; /* Reduce label size */
+  }
+
+  .form-group input {
+    padding: 6px; /* Reduce input padding */
+    font-size: 5vw; /* Make text inside inputs smaller */
+  }
+
+  .form-input {
+    width: 100%; /* Ensure it adapts to smaller width */
+  }
+
+  .password-toggle {
+    font-size: 5vw; /* Make eye icon smaller */
+  }
+
+  .signup-button {
+    width: 80px; /* Make button smaller */
+    height: 26px;
+    font-size: 3vw;
+  }
+
+  .signup-footer {
+    font-size: 5vw;
+  }
+
+  .signup-title {
+    font-size: 10vw;
+    margin: 0px;
+  }
+
+  .error-text-signup {
+    font-size: 3vw;
   }
 }
 
@@ -255,6 +280,10 @@
   .overlay-content {
     padding: 1.5rem; /* Reduce padding */
     max-width: 50%; /* Reduce modal width */
-    height: 180vw;
+    height: 250vw;
+  }
+
+  .error-text-signup {
+    font-size: 5vw;
   }
 }

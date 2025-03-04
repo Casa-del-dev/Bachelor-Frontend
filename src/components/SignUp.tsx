@@ -2,6 +2,7 @@ import { useState } from "react";
 import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
 import "./SignUp.css";
 import { useApi } from "../ApiContext";
+import { DiVim } from "react-icons/di";
 
 interface SignUpProps {
   setIsModalOpen: (open: boolean) => void;
@@ -29,7 +30,8 @@ export default function SignUp({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [_, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [fail, setFail] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,11 +39,8 @@ export default function SignUp({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setIsLoginModalOpen(true);
-    }, 1500);
+    setSuccess(null);
+    setFail(null);
 
     let newErrors: Record<string, string> = {};
 
@@ -76,14 +75,22 @@ export default function SignUp({
         switch (response.status) {
           case 201: {
             setSuccess("Sign-up successful! Redirecting to login...");
+            {
+              setTimeout(() => {
+                setIsModalOpen(false);
+                setIsLoginModalOpen(true);
+              }, 1000);
+            }
             break;
           }
-          case 309: {
+          case 409: {
+            setFail("User already exists");
             //user already exists
             //const backendError = await response.text();
             break;
           }
           default: {
+            setFail("Error");
             //something different went wrong
             //const backendError = await response.text();
           }
@@ -104,6 +111,7 @@ export default function SignUp({
         <HiX className="close-btn" onClick={() => setIsModalOpen(false)} />
 
         <h2 className="signup-title">Sign Up</h2>
+
         <form onSubmit={handleSubmit} className="signup-form">
           {/* Username Field */}
           <div className="form-group">
@@ -116,7 +124,9 @@ export default function SignUp({
               className="form-input"
               placeholder="JohnDoe"
             />
-            {errors.username && <p className="error-text">{errors.username}</p>}
+            {errors.username && (
+              <p className="error-text-signup">{errors.username}</p>
+            )}
           </div>
 
           {/* Email Field */}
@@ -130,7 +140,9 @@ export default function SignUp({
               className="form-input"
               placeholder="john@example.com"
             />
-            {errors.email && <p className="error-text">{errors.email}</p>}
+            {errors.email && (
+              <p className="error-text-signup">{errors.email}</p>
+            )}
           </div>
 
           {/* Password Field */}
@@ -157,7 +169,9 @@ export default function SignUp({
                 />
               )}
             </div>
-            {errors.password && <p className="error-text">{errors.password}</p>}
+            {errors.password && (
+              <p className="error-text-signup">{errors.password}</p>
+            )}
           </div>
 
           {/* Confirm Password Field */}
@@ -185,17 +199,24 @@ export default function SignUp({
               )}
             </div>
             {errors.confirmPassword && (
-              <p className="error-text">{errors.confirmPassword}</p>
+              <p className="error-text-signup">{errors.confirmPassword}</p>
             )}
           </div>
 
           {/* Submit Button */}
           <div className="signup-button-container">
-            <button type="submit" className="signup-button">
-              Sign Up
-            </button>
+            {!success ? (
+              <button type="submit" className="signup-button">
+                Sign Up
+              </button>
+            ) : (
+              <div />
+            )}
           </div>
         </form>
+
+        {success && <p className="success-text">{success}</p>}
+        {fail && <p className="fail-text">{fail}</p>}
 
         {/* Login Redirect */}
         <p className="signup-footer">

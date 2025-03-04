@@ -43,11 +43,6 @@ export default function Login({
     setErrors({});
     setMessage(null);
 
-    setTimeout(() => {
-      setIsLoginModalOpen(false);
-      // Optionally, trigger a state update in your app so the UI reflects the login
-    }, 1500);
-
     let newErrors: Record<string, string> = {};
     if (!formData.username) newErrors.username = "Username is required";
     if (!formData.password) newErrors.password = "Password is required";
@@ -75,9 +70,13 @@ export default function Login({
           setMessage("Login successful! Redirecting...");
           const authTokenResponse: AuthTokenResponse = await response.json();
           login(authTokenResponse.token);
+          setTimeout(() => {
+            setIsLoginModalOpen(false);
+          }, 1500);
           break;
         }
         default: {
+          //setMessage("Login failed");
           //an error on sign up
           break;
         }
@@ -93,13 +92,14 @@ export default function Login({
         <HiX className="close-btn" onClick={() => setIsLoginModalOpen(false)} />
 
         <h2 className="login-title">Login</h2>
-        {message && <p className="success-text">{message}</p>}
         {errors.form && <p className="error-text">{errors.form}</p>}
 
         <form onSubmit={handleSubmit} className="login-form">
           {/* Username Field */}
           <div className="form-group">
             <label>Username</label>
+            {errors.username && <p className="error-text">{errors.username}</p>}
+
             <input
               type="text"
               name="username" // Fixed field name
@@ -108,7 +108,6 @@ export default function Login({
               className="form-input"
               placeholder="JohnDoe"
             />
-            {errors.username && <p className="error-text">{errors.username}</p>}
           </div>
 
           {/* Password Field */}
@@ -140,11 +139,17 @@ export default function Login({
 
           {/* Submit Button */}
           <div className="login-button-container">
-            <button type="submit" className="login-button">
-              Login
-            </button>
+            {!message ? (
+              <button type="submit" className="login-button">
+                Login
+              </button>
+            ) : (
+              <div />
+            )}
           </div>
         </form>
+
+        {message && <p className="success-text">{message}</p>}
 
         {/* Sign-Up Redirect */}
         <p className="login-footer">

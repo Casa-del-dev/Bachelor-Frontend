@@ -30,11 +30,25 @@
   background-color: darkblue;
 }
 
+.success-text {
+  font-size: 1vw;
+  color: lime;
+  display: flex;
+  justify-content: center;
+}
+
+.error-text {
+  color: red;
+  font-size: 1vw;
+  margin: 0px;
+  height: 100%;
+}
+
 @media (max-width: 700px) {
   .overlay-content-login {
     padding: 1.5rem; /* Reduce padding */
     max-width: 50%; /* Reduce modal width */
-    height: 55vw;
+    height: 60vw;
   }
 
   .login-button {
@@ -47,35 +61,45 @@
     font-size: 3vw;
   }
 
+  .error-text {
+    font-size: 2vw;
+  }
+
   .login-title {
     font-size: 5vw;
     margin: 0px;
   }
+}
+@media (max-width: 430px) {
+  .login-button {
+    font-size: 3vw;
+  }
+  .overlay-content-login {
+    height: 90vw;
+  }
+}
 
-  @media (max-width: 430px) {
-    .login-button {
-      font-size: 3vw;
-    }
+@media (max-width: 300px) {
+  .overlay-content-login {
+    height: 170vw;
   }
 
-  @media (max-width: 300px) {
-    .overlay-content-login {
-      height: 110vw;
-    }
+  .login-button {
+    width: 80px; /* Make button smaller */
+    height: 26px;
+    font-size: 5vw;
+  }
 
-    .login-button {
-      width: 80px; /* Make button smaller */
-      height: 26px;
-      font-size: 5vw;
-    }
+  .login-footer {
+    font-size: 5vw;
+  }
 
-    .login-footer {
-      font-size: 5vw;
-    }
+  .login-title {
+    font-size: 10vw;
+    margin: 0px;
+  }
 
-    .login-title {
-      font-size: 10vw;
-      margin: 0px;
-    }
+  .error-text {
+    font-size: 5vw;
   }
 }
