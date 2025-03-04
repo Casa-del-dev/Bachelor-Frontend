@@ -7,7 +7,7 @@ import StartRight from "./Start-right";
 const Start = () => {
   // Get the id from the URL if provided
   const { id } = useParams<{ id: string }>();
-  const [selectedProblem, setSelectedProblem] = useState<string>("");
+  const [_, setSelectedProblem] = useState<string>("");
 
   useEffect(() => {
     if (id) {

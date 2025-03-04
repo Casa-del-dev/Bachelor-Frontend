@@ -80,12 +80,12 @@ export default function SignUp({
           }
           case 309: {
             //user already exists
-            const backendError = await response.text();
+            //const backendError = await response.text();
             break;
           }
           default: {
             //something different went wrong
-            const backendError = await response.text();
+            //const backendError = await response.text();
           }
         }
       } catch (err) {
