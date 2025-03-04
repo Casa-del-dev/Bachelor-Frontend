@@ -2,7 +2,7 @@ import { useState } from "react";
 import { HiEye, HiEyeOff, HiX } from "react-icons/hi";
 import "./SignUp.css";
 import { useApi } from "../ApiContext";
-import { DiVim } from "react-icons/di";
+//import { DiVim } from "react-icons/di";
 
 interface SignUpProps {
   setIsModalOpen: (open: boolean) => void;
