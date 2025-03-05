@@ -21,33 +21,33 @@
 .header-left-main {
   grid-area: header;
   height: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 0.3vw;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-areas: "Left Sep1 Middle Sep2 Right";
+  grid-template-columns: 1fr 1px 1fr 1px 1fr;
   width: 19.9vw;
 }
 
 .custom-separator-for-start-purpose {
+  grid-area: Sep1, Sep2;
   height: 100%;
   width: 1px;
   background-color: black;
 }
 
 .Project-system-files {
+  grid-area: Left;
   font-size: 0.8vw;
   height: 100%;
-  width: calc(100% / 3);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .Problem-description-main {
+  grid-area: Middle;
   font-size: 0.8vw;
   height: 100%;
-  width: calc(100% / 3);
+
   border-right: 1px solid black;
   display: flex;
   align-items: center;
@@ -55,9 +55,9 @@
 }
 
 .Building-blocks {
+  grid-area: Right;
   font-size: 0.8vw;
   height: 100%;
-  width: calc(100% / 3);
   display: flex;
   align-items: center;
   justify-content: center;
