@@ -24,31 +24,43 @@ const StartRight = () => {
     // Split input by newlines and filter out empty lines
     const lines = input.split("\n").filter((line) => line.trim() !== "");
     const tree: Step[] = [];
-    let currentParent: Step | null = null;
-    lines.forEach((line) => {
-      // Expected format: "level:1 = Description" or "level:2 = Sub-description"
-      const match = line.match(/level\s*:\s*(\d+)\s*=?\s*(.*)/i);
-      if (!match) return;
+    // Stack to keep track of the last step at each level
+    const stack: { step: Step; level: number }[] = [];
 
-      if (match) {
-        const level = parseInt(match[1], 10);
-        const description = match[2].trim();
-        if (level === 1) {
-          // Create a new parent step
-          const newStep = { description, children: [] };
-          tree.push(newStep);
-          currentParent = newStep;
-        } else if (level === 2) {
-          if (currentParent) {
-            // Push a child Step with an empty children array
-            currentParent.children.push({
-              description,
-              children: [],
-            });
-          }
+    for (const line of lines) {
+      // Expected format: "level:1 = Description"
+      const match = line.match(/level\s*:\s*(\d+)\s*=?\s*(.*)/i);
+      if (!match) continue;
+
+      const level = parseInt(match[1], 10);
+      const description = match[2].trim();
+      const newStep: Step = { description, children: [] };
+
+      if (level === 1) {
+        // For a level 1 step, push it directly into the tree.
+        tree.push(newStep);
+        // Clear the stack and add the new step.
+        stack.length = 0;
+        stack.push({ step: newStep, level });
+      } else {
+        // For levels > 1, find the proper parent.
+        // Pop out any steps that are at the same level or deeper than the current one.
+        while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+          stack.pop();
         }
+
+        if (stack.length === 0) {
+          // If no parent found, treat it as a new root.
+          tree.push(newStep);
+        } else {
+          // Attach newStep as a child to the current parent.
+          stack[stack.length - 1].step.children.push(newStep);
+        }
+        // Push the new step along with its level to the stack.
+        stack.push({ step: newStep, level });
       }
-    });
+    }
+
     return tree;
   };
 
@@ -87,16 +99,10 @@ const StartRight = () => {
   // Render the parsed step tree
   const renderTree = (steps: Step[]): JSX.Element[] => {
     return steps.map((step, index) => (
-      <div key={index} className="level1-box">
+      <div key={index} className="step-box">
         <div className="step-description">Step: {step.description}</div>
         {step.children && step.children.length > 0 && (
-          <div className="substeps">
-            {step.children.map((child, childIndex) => (
-              <div key={childIndex} className="step-sub-description">
-                &nbsp;&nbsp;- {child.description}
-              </div>
-            ))}
-          </div>
+          <div className="substeps"> {renderTree(step.children)}</div>
         )}
       </div>
     ));
@@ -108,9 +114,13 @@ const StartRight = () => {
       <div className="right-sidecontent-main">
         <div className="right-header-main">Step Tree</div>
         <div className="right-main-main">
-          {steps.length > 0
-            ? renderTree(steps)
-            : "Your step tree will appear here"}
+          {steps.length > 0 ? (
+            renderTree(steps)
+          ) : (
+            <div className="default-text-right-start">
+              Your step tree will appear here
+            </div>
+          )}
         </div>
 
         <div className="right-text-main">
