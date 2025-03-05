@@ -29,11 +29,16 @@
   width: 19.9vw;
 }
 
+.custom-separator-for-start-purpose {
+  height: 100%;
+  width: 1px;
+  background-color: black;
+}
+
 .Project-system-files {
   font-size: 0.8vw;
   height: 100%;
   width: calc(100% / 3);
-  border-right: 1px solid black;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -82,4 +87,23 @@
   height: 100%;
   background-color: black;
   align-self: center;
+}
+
+.invisible-button {
+  /* Show pointer on hover, removing the default 'text' cursor */
+  cursor: pointer;
+
+  /* Remove default button styles (if any) */
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  /* Keep existing text style from the parent classes */
+
+  /* Optional: Some hover feedback for the user */
+  transition: background-color 0.2s;
+}
+.invisible-button:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* Light grey highlight on hover */
 }
