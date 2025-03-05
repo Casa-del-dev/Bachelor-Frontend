@@ -6,8 +6,8 @@
 
 .right-sidecontent-main {
   display: grid;
-  grid-template-rows: 8vw auto 8vw;
-  grid-template-areas: "Header" "Body" "Footer";
+  grid-template-rows: 3vw auto 8vw 0px;
+  grid-template-areas: "Header" "Body" "Footer" "Else";
   width: 100%;
   height: 100%;
 }
@@ -19,6 +19,8 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+  border-bottom: 1px solid black;
+  font-size: 0.8vw;
 }
 
 .right-main-main {
@@ -30,23 +32,47 @@
   height: 100%;
 }
 
+.level1-box {
+  border: 1px solid #000; /* rectangle border */
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.step-description {
+  font-weight: bold;
+}
+
+.substeps {
+  margin-left: 20px;
+  margin-top: 5px;
+}
+
+.step-sub-description {
+  font-style: italic;
+  margin-bottom: 3px;
+}
+
 .right-text-main {
   grid-area: Footer;
   display: flex;
-  align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
+  bottom: 0;
 }
 
 .input-container {
   position: relative;
   width: 80%;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 10px;
 }
 
 .text-input {
-  width: 80%;
-
+  width: 100%;
+  min-height: 2vh;
+  max-height: 10vh;
   padding: 1vw;
   padding-right: 2.5vw;
   border: 1px solid #ccc;
@@ -55,26 +81,25 @@
   color: black;
   background-color: white;
   outline: none;
-  resize: none; /* Prevent manual resizing */
-  overflow-y: hidden; /* Hide scrollbar initially */
+  resize: none;
+  overflow-y: scroll;
   word-wrap: break-word;
   white-space: pre-wrap;
-  line-height: 1.5; /* Adjust line height to align placeholder better */
+  line-height: 1;
+  vertical-align: middle;
 }
 
-/* Make the placeholder vertically centered */
 .text-input::placeholder {
   color: #888;
   font-size: 1vw;
   line-height: normal;
-  vertical-align: middle;
   opacity: 0.8;
 }
 
 .submit-icon {
   position: absolute;
-  right: 10px;
-  top: 50%;
+  right: 1.5vw;
+  padding-bottom: 0.2vw;
   transform: translateY(-50%);
   font-size: 1.2vw;
   color: #007bff;
@@ -82,5 +107,5 @@
 }
 
 .submit-icon:hover {
-  color: #0056b3;
+  color: #00356e;
 }

@@ -7,7 +7,7 @@
 
 .left-content-main {
   display: grid;
-  grid-template-rows: 8vw auto;
+  grid-template-rows: 3vw auto;
   grid-template-areas: "header" "main";
   justify-content: center;
   width: 100%;
@@ -30,7 +30,7 @@
 }
 
 .Project-system-files {
-  font-size: 1vw;
+  font-size: 0.8vw;
   height: 100%;
   width: calc(100% / 3);
   border-right: 1px solid black;
@@ -40,7 +40,7 @@
 }
 
 .Problem-description-main {
-  font-size: 1vw;
+  font-size: 0.8vw;
   height: 100%;
   width: calc(100% / 3);
   border-right: 1px solid black;
@@ -50,7 +50,7 @@
 }
 
 .Building-blocks {
-  font-size: 1vw;
+  font-size: 0.8vw;
   height: 100%;
   width: calc(100% / 3);
   display: flex;
@@ -65,6 +65,14 @@
   height: 1px;
   background-color: black;
   align-self: center;
+}
+
+.all-type-of-content {
+  grid-area: main;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8vw;
 }
 
 .custom-line-leftmiddle {

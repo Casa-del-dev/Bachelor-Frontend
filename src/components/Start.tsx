@@ -22,7 +22,9 @@ const Start = () => {
 
   return (
     <div className="container-main">
-      <StartLeft />
+      <div className="left-main">
+        <StartLeft />
+      </div>
       <div className="middle-main">
         <h1>ciao 2</h1>
       </div>
