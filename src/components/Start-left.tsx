@@ -48,7 +48,7 @@ const StartLeft = () => {
         return;
       }
       if (!problemDropdownRef.current.contains(event.target)) {
-        setMenuOpen(false);
+        setMenuOpen(true);
       }
     }
 
