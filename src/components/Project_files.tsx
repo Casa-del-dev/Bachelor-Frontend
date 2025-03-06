@@ -1,5 +1,5 @@
-import _, { useState } from "react";
-import { FaTrash, FaFileAlt, FaFolderPlus /*, FaPlus*/ } from "react-icons/fa";
+import _, { useState, useEffect } from "react";
+import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
 import "./Project_files.css";
 
 // Initial file structure example
@@ -24,13 +24,27 @@ interface FileItem {
 }
 
 const Project_files = () => {
-  const [files, setFiles] = useState<FileItem[]>(initialFiles);
+  // Get the selected problem name from localStorage (stored as a plain string).
+  const selectedProblemName =
+    localStorage.getItem("selectedProblem") || "Default Problem";
+  // Create a unique key for the system file tree for this problem.
+  const systemStorageKey = `selectedSystemProblem_${selectedProblemName}`;
 
-  // Update the file tree state
+  // Initialize the file tree state from localStorage using the systemStorageKey.
+  // If not present, fall back to initialFiles.
+  const [files, setFiles] = useState<FileItem[]>(() => {
+    const storedTree = localStorage.getItem(systemStorageKey);
+    return storedTree ? JSON.parse(storedTree) : initialFiles;
+  });
+
+  // When the file tree changes, update the state and save it to localStorage
+  // using the system-specific key.
   const updateFileTree = (newTree: FileItem[]) => {
     setFiles(newTree);
+    localStorage.setItem(systemStorageKey, JSON.stringify(newTree));
   };
 
+  // Example function to handle file click.
   const handleFileClick = (item: FileItem) => {
     if (item.type === "file") {
       localStorage.setItem("selectedFile", item.name);
@@ -38,7 +52,7 @@ const Project_files = () => {
     }
   };
 
-  // Recursively add a new item (file/folder) to a folder by id
+  // Recursively add a new item (file/folder) to a folder by id.
   const addItemToFolder = (
     tree: FileItem[],
     parentId: number,
@@ -61,7 +75,7 @@ const Project_files = () => {
     });
   };
 
-  // Create a new file at root or inside a folder
+  // Create a new file at root or inside a folder.
   const addNewFile = (parentId: number | null = null) => {
     const fileName = prompt("Enter new file name (e.g., NewFile.js):");
     if (!fileName) return;
@@ -76,7 +90,7 @@ const Project_files = () => {
     }
   };
 
-  // Create a new folder at root or inside a folder
+  // Create a new folder at root or inside a folder.
   const addNewFolder = (parentId: number | null = null) => {
     const folderName = prompt("Enter new folder name:");
     if (!folderName) return;
@@ -95,7 +109,7 @@ const Project_files = () => {
     }
   };
 
-  // Recursively delete an item (file or folder) by id from the tree
+  // Recursively delete an item (file or folder) by id from the tree.
   const deleteFromTree = (tree: FileItem[], itemId: number): FileItem[] => {
     return tree
       .filter((item) => item.id !== itemId)
@@ -107,14 +121,14 @@ const Project_files = () => {
       });
   };
 
-  // Delete an item after confirmation
+  // Delete an item after confirmation.
   const deleteItem = (itemId: number) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     const updated = deleteFromTree(files, itemId);
     updateFileTree(updated);
   };
 
-  // Recursively rename an item in the tree
+  // Recursively rename an item in the tree.
   const renameInTree = (
     tree: FileItem[],
     itemId: number,
@@ -134,7 +148,7 @@ const Project_files = () => {
     });
   };
 
-  // Rename an item on double click (using a prompt)
+  // Rename an item on double click (using a prompt).
   const renameItem = (itemId: number) => {
     const newName = prompt("Enter the new name:");
     if (!newName) return;
@@ -142,7 +156,7 @@ const Project_files = () => {
     updateFileTree(updated);
   };
 
-  // Recursive function to render file/folder tree
+  // Recursively render the file/folder tree.
   const renderTree = (tree: FileItem[]) => {
     return (
       <ul>
@@ -156,31 +170,33 @@ const Project_files = () => {
               >
                 {item.name}
               </span>
-              <span
-                className="icon"
-                title="Delete"
-                onClick={() => deleteItem(item.id)}
-              >
-                <FaTrash />
-              </span>
-              {item.type === "folder" && (
-                <>
-                  <span
-                    className="icon"
-                    title="New File"
-                    onClick={() => addNewFile(item.id)}
-                  >
-                    <FaFileAlt />
-                  </span>
-                  <span
-                    className="icon"
-                    title="New Folder"
-                    onClick={() => addNewFolder(item.id)}
-                  >
-                    <FaFolderPlus />
-                  </span>
-                </>
-              )}
+              <div className="controls">
+                <span
+                  className="icon"
+                  title="Delete"
+                  onClick={() => deleteItem(item.id)}
+                >
+                  <FaTrash />
+                </span>
+                {item.type === "folder" && (
+                  <>
+                    <span
+                      className="icon"
+                      title="New File"
+                      onClick={() => addNewFile(item.id)}
+                    >
+                      <FaFileAlt />
+                    </span>
+                    <span
+                      className="icon"
+                      title="New Folder"
+                      onClick={() => addNewFolder(item.id)}
+                    >
+                      <FaFolderPlus />
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
             {item.type === "folder" &&
               item.children &&
@@ -191,24 +207,34 @@ const Project_files = () => {
     );
   };
 
+  // Ensure that if the selected problem changes externally, we update our file tree.
+  useEffect(() => {
+    const storedTree = localStorage.getItem(systemStorageKey);
+    if (storedTree) {
+      setFiles(JSON.parse(storedTree));
+    }
+  }, [systemStorageKey]);
+
   return (
     <div className="project-files">
-      <h2>Project Files</h2>
-      <div className="controls">
-        <span
-          className="icon"
-          title="New File (root)"
-          onClick={() => addNewFile(null)}
-        >
-          <FaFileAlt />
-        </span>
-        <span
-          className="icon"
-          title="New Folder (root)"
-          onClick={() => addNewFolder(null)}
-        >
-          <FaFolderPlus />
-        </span>
+      <div className="head-projectsys-left-start">
+        <div className="Title-text">Project Files</div>
+        <div className="controls">
+          <span
+            className="icon"
+            title="New File (root)"
+            onClick={() => addNewFile(null)}
+          >
+            <FaFileAlt />
+          </span>
+          <span
+            className="icon"
+            title="New Folder (root)"
+            onClick={() => addNewFolder(null)}
+          >
+            <FaFolderPlus />
+          </span>
+        </div>
       </div>
       <div className="file-tree">{renderTree(files)}</div>
     </div>
