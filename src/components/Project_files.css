@@ -109,12 +109,12 @@
 
 .file-tree ul {
   padding-left: 2vw; /*padding of 2 because the list dots are not in ul*/
+  overflow: auto;
 }
 
 .file-item {
   display: flex;
   flex-direction: row;
-  width: 100%;
   align-items: center;
   text-align: end;
   gap: 1vw;
