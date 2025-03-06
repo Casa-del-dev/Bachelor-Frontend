@@ -58,10 +58,10 @@
 .step-description {
   font-weight: bold;
   font-size: 1vw;
-  word-wrap: break-word; /* Ensures long words break */
-  overflow-wrap: break-word; /* Alternative for wider support */
-  white-space: normal; /* Allows text to wrap normally */
-  width: 15vw;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  width: calc(20vw - 5vw);
 }
 
 .substeps {

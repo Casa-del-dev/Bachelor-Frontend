@@ -1,11 +1,17 @@
 import { useState } from "react";
+import "./Problem_detail";
 import "./Start-left.css";
+import Project_files from "./Project_files";
+import { problemDetailsMap } from "./Problem_detail";
+import { HiMenu, HiX } from "react-icons/hi";
 
 const StartLeft = () => {
   // "Problem" is the default selected section
   const [selectedSection, setSelectedSection] = useState<
     "Project" | "Problem" | "Blocks"
   >("Problem");
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const openProjectFiles = () => {
     setSelectedSection("Project");
@@ -19,17 +25,95 @@ const StartLeft = () => {
     setSelectedSection("Blocks");
   };
 
+  const storedProblem = localStorage.getItem("selectedProblem");
+  const details = storedProblem
+    ? problemDetailsMap[storedProblem]?.trim()
+    : null;
+
+  const problemKeys = Object.keys(problemDetailsMap);
+
+  const handleHamburgerClick = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleProblemSelect = (problemKey: string) => {
+    localStorage.setItem("selectedProblem", problemKey);
+    setMenuOpen(false);
+  };
+
   // Render the chosen content
   const renderContent = () => {
     switch (selectedSection) {
       case "Project":
-        return <div>Project System Files Content</div>;
+        return <Project_files />;
       case "Problem":
-        return <div>Problem Content</div>;
+        return (
+          <div className="container-problem-left">
+            <div className="problem-title-left">
+              {" "}
+              <div className="title-left-problem-start">{storedProblem} </div>
+              <div
+                className="Hamburger-left-start"
+                onClick={handleHamburgerClick}
+              >
+                {menuOpen ? <HiX /> : <HiMenu />}
+                {/* Dropdown menu */}
+                {menuOpen && (
+                  <div className="dropdown-menu">
+                    {problemKeys.map((key) => (
+                      <div
+                        key={key}
+                        className="dropdown-item"
+                        onClick={() => handleProblemSelect(key)}
+                      >
+                        {key}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="problem-text-left">
+              {details || "No problem selected yet"}
+            </div>
+          </div>
+        );
       case "Blocks":
         return <div>Building Blocks Content</div>;
       default:
-        return <div>Problem Content</div>;
+        return (
+          <div className="container-problem-left">
+            <div className="problem-title-left">
+              {" "}
+              <div className="title-left-problem-start">{storedProblem} </div>
+              <div
+                className="Hamburger-left-start"
+                onClick={handleHamburgerClick}
+              >
+                {menuOpen ? <HiX /> : <HiMenu />}
+                {/* Dropdown menu */}
+                {menuOpen && (
+                  <div className="dropdown-menu">
+                    {problemKeys.map((key) => (
+                      <div
+                        key={key}
+                        className="dropdown-item"
+                        onClick={() => handleProblemSelect(key)}
+                      >
+                        {key}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="problem-text-left">
+              {details || "No problem selected yet"}
+            </div>
+          </div>
+        );
     }
   };
 

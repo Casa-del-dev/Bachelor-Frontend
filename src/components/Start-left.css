@@ -90,20 +90,83 @@
 }
 
 .invisible-button {
-  /* Show pointer on hover, removing the default 'text' cursor */
   cursor: pointer;
-
-  /* Remove default button styles (if any) */
   background: none;
   border: none;
   outline: none;
   padding: 0;
   margin: 0;
-  /* Keep existing text style from the parent classes */
-
-  /* Optional: Some hover feedback for the user */
   transition: background-color 0.2s;
 }
 .invisible-button:hover {
   background-color: rgba(0, 0, 0, 0.1); /* Light grey highlight on hover */
+}
+
+.container-problem-left {
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  height: calc(100vh - var(--header-height) - 3vw);
+}
+
+.problem-text-left {
+  grid-area: bottom;
+  white-space: pre-wrap;
+  font-size: 1vw;
+  padding: 1vh;
+}
+
+.problem-title-left {
+  font-weight: bold;
+  font-size: 2vw;
+  display: grid;
+  grid-template-columns: 1fr 2vw;
+  grid-template-areas: "Main hamburger";
+  justify-content: center;
+  align-items: center;
+}
+
+.title-left-problem-start {
+  grid-area: Main;
+  padding-left: 1vh;
+}
+
+.Hamburger-left-start {
+  font-size: 1vw;
+  grid-area: hamburger;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.Hamburger-left-start:hover {
+  color: rgb(99, 14, 14);
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  top: 100%;
+  right: 30%;
+  font-weight: normal;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f1f1;
 }

@@ -5,7 +5,7 @@ type ProblemDetailsProps = {
   selectedProblem: string;
 };
 
-const problemDetailsMap: { [key: string]: string } = {
+export const problemDetailsMap: { [key: string]: string } = {
   "Problem 1": `
 Roman to Integer
 
