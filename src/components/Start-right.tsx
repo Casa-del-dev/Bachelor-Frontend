@@ -100,7 +100,7 @@ const StartRight = () => {
   const renderTree = (steps: Step[]): JSX.Element[] => {
     return steps.map((step, index) => (
       <div key={index} className="step-box">
-        <div className="step-description">Step: {step.description}</div>
+        <div className="step-description">{step.description}</div>
         {step.children && step.children.length > 0 && (
           <div className="substeps"> {renderTree(step.children)}</div>
         )}
@@ -114,13 +114,22 @@ const StartRight = () => {
       <div className="right-sidecontent-main">
         <div className="right-header-main">Step Tree</div>
         <div className="right-main-main">
-          {steps.length > 0 ? (
-            renderTree(steps)
-          ) : (
-            <div className="default-text-right-start">
-              Your step tree will appear here
-            </div>
-          )}
+          <div className="container-step-tree">
+            {steps.length > 0 ? (
+              <button className="Check-button">
+                <div className="Check">Check</div>
+              </button>
+            ) : (
+              ""
+            )}
+            {steps.length > 0 ? (
+              renderTree(steps)
+            ) : (
+              <div className="default-text-right-start">
+                Your step tree will appear here
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="right-text-main">
