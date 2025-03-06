@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { FaTrash, FaFileAlt, FaFolderPlus, FaPlus } from "react-icons/fa";
+import _, { useState } from "react";
+import { FaTrash, FaFileAlt, FaFolderPlus /*, FaPlus*/ } from "react-icons/fa";
 import "./Project_files.css";
 
 // Initial file structure example
