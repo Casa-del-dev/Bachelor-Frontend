@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./Problem_detail";
 import "./Start-left.css";
 import Project_files from "./Project_files";
@@ -12,6 +12,7 @@ const StartLeft = () => {
   >("Problem");
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const problemDropdownRef = useRef<HTMLDivElement>(null);
 
   const openProjectFiles = () => {
     setSelectedSection("Project");
@@ -41,6 +42,24 @@ const StartLeft = () => {
     setMenuOpen(false);
   };
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!problemDropdownRef.current || !(event.target instanceof Node)) {
+        return;
+      }
+      if (!problemDropdownRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    if (menuOpen) {
+      setMenuOpen(true);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
   // Render the chosen content
   const renderContent = () => {
     switch (selectedSection) {
@@ -54,6 +73,7 @@ const StartLeft = () => {
               <div className="title-left-problem-start">{storedProblem} </div>
               <div
                 className="Hamburger-left-start"
+                ref={problemDropdownRef}
                 onClick={handleHamburgerClick}
               >
                 {menuOpen ? <HiX /> : <HiMenu />}
