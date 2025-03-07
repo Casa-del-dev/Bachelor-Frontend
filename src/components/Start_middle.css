@@ -25,13 +25,21 @@
   color: black;
   width: 100%;
   display: grid;
-  grid-template-columns: 5vw 1fr;
-  grid-template-areas: "Left Right";
+  grid-template-columns: 5vw 1px 1fr;
+  grid-template-areas: "Left Separator Right";
   justify-content: start;
 }
 
 .icons-terminal {
   grid-area: Left;
+}
+
+.simple-line {
+  grid-area: Separator;
+  background-color: black;
+  color: black;
+  height: 100%;
+  width: 100%;
 }
 
 .bottom-terminal-start {
@@ -50,6 +58,7 @@
 .bottom-section input {
   border: none;
   margin: 0;
+  outline: none;
   background-color: transparent;
   color: black;
   width: 100%;

@@ -47,6 +47,7 @@ export default function ResizableSplitView() {
 
       <div className="bottom-section" style={{ height: `${100 - topHeight}%` }}>
         <div className="icon-terminal">CIAOOO</div>
+        <div className="simple-line"></div>
         <div className="bottom-terminal-start" onClick={handleClickOnTerminal}>
           <div className="terminal">{output}</div>
           <input
