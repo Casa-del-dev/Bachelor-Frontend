@@ -8,6 +8,9 @@
   height: 100%;
   overflow: hidden;
 }
+.middle-main {
+  width: 100%;
+}
 
 .right-main {
   width: 20vw;

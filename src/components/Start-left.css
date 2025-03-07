@@ -24,7 +24,6 @@
   display: grid;
   grid-template-areas: "Left Sep1 Middle Sep2 Right";
   grid-template-columns: 1fr 1px 1fr 1px 1fr;
-  width: 19.9vw;
 }
 
 .custom-separator-for-start-purpose {

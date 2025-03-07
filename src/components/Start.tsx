@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
+import StartMiddle from "./Start_middle";
 
 const Start = () => {
   // Get the id from the URL if provided
@@ -22,17 +23,13 @@ const Start = () => {
 
   return (
     <div className="container-main">
-      <div className="left-main">
-        <StartLeft />
-      </div>
+      <StartLeft />
       <div className="middle-main">
-        <h1>ciao 2</h1>
+        <StartMiddle />
       </div>
       <div className="right-main">
         <StartRight />
       </div>
-      {/*<h1>Start</h1>
-      <p>Selected problem: {selectedProblem}</p>*/}
     </div>
   );
 };

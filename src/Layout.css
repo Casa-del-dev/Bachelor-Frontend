@@ -5,5 +5,5 @@ main {
   width: 100vw;
   height: calc(100vh - var(--header-height));
   background-color: #fff;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
