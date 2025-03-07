@@ -9,9 +9,14 @@ export default function ResizableSplitView() {
   const isResizing = useRef(false);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleMouseDown = () => {
     isResizing.current = true;
+  };
+
+  const handleClickOnTerminal = () => {
+    if (inputRef.current) inputRef.current.focus();
   };
 
   const handleMouseMove = (event: MouseEvent) => {
@@ -41,21 +46,34 @@ export default function ResizableSplitView() {
       <div className="resizer" onMouseDown={handleMouseDown} />
 
       <div className="bottom-section" style={{ height: `${100 - topHeight}%` }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              let newOutput = "";
-              newOutput = output + "\n" + "$ " + input;
-              setOutput(newOutput);
-              setInput("");
-            }
-          }}
-        />
-        <div className="terminal"></div>
-        {output}
+        <div className="icon-terminal">CIAOOO</div>
+        <div className="bottom-terminal-start" onClick={handleClickOnTerminal}>
+          <div className="terminal">{output}</div>
+          <input
+            type="text"
+            value={input}
+            ref={inputRef}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                let newOutput = "";
+                newOutput = output + "\n" + "$ " + input + "\n";
+                switch (input) {
+                  case "ls":
+                    newOutput += "List of projects";
+                    break;
+                  case "pwd":
+                    newOutput += "";
+                    break;
+                  default:
+                    newOutput += "Unknown command";
+                }
+                setOutput(newOutput);
+                setInput("");
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   );
