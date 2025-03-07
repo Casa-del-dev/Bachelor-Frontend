@@ -72,9 +72,11 @@
   background-color: transparent;
   color: black;
   width: 100%;
+  font-size: 1vw;
 }
 
 .terminal {
+  font-size: 1vw;
   white-space: pre-line;
   padding-bottom: 1rem;
   overflow-y: auto;
