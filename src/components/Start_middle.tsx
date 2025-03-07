@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa"; // FontAwesome icons
 import "./Start_middle.css";
 
 export default function ResizableSplitView() {
@@ -46,7 +47,11 @@ export default function ResizableSplitView() {
       <div className="resizer" onMouseDown={handleMouseDown} />
 
       <div className="bottom-section" style={{ height: `${100 - topHeight}%` }}>
-        <div className="icon-terminal">CIAOOO</div>
+        <div className="icon-terminal">
+          <FaPlay size={20} />
+          <FaCog size={20} />
+          <FaHourglassHalf size={20} />
+        </div>
         <div className="simple-line"></div>
         <div className="bottom-terminal-start" onClick={handleClickOnTerminal}>
           <div className="terminal">{output}</div>

@@ -21,7 +21,7 @@
 }
 
 .bottom-section {
-  background-color: whitesmoke;
+  background-color: white;
   color: black;
   width: 100%;
   display: grid;
@@ -30,8 +30,18 @@
   justify-content: start;
 }
 
-.icons-terminal {
+.icon-terminal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding-bottom: 4vh;
+  justify-content: center;
+  gap: 7vh;
+  align-items: center;
   grid-area: Left;
+  overflow: hidden;
 }
 
 .simple-line {
