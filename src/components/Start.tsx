@@ -98,6 +98,7 @@ const Start: React.FC = () => {
   const handleMouseUp = () => {
     if (draggingLeftDivider.current || draggingRightDivider.current) {
       draggingLeftDivider.current = false;
+
       draggingRightDivider.current = false;
     }
   };
