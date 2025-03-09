@@ -110,7 +110,6 @@ const StartRight = () => {
 
   return (
     <div className="Right-Side-main">
-      <div className="custom-line-leftmiddle"></div>
       <div className="right-sidecontent-main">
         <div className="right-header-main">Step Tree</div>
         <div className="right-main-main">

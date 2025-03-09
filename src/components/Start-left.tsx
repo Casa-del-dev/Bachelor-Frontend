@@ -170,7 +170,6 @@ const StartLeft = () => {
         {/* Dynamic section - will show whichever is selected */}
         <div className="all-type-of-content">{renderContent()}</div>
       </div>
-      <div className="custom-line-leftmiddle"></div>
     </div>
   );
 };
