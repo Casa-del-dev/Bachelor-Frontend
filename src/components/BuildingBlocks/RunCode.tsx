@@ -19,7 +19,6 @@ export const handleRunCode = async (
     const response = await axios.post("http://127.0.0.1:8000/run-python/", {
       code: code,
     });
-    console.log(response);
     setCodeOutput(response.data.output);
     setOutput(codeOutput);
   } catch (error) {

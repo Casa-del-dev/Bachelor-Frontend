@@ -30,7 +30,7 @@ export default function ResizableSplitView() {
     if (!isResizing.current) return;
     event.preventDefault();
 
-    const newHeight = ((event.clientY - 43) / window.innerHeight) * 100; //  42 because of the header
+    const newHeight = ((event.clientY - 42) / window.innerHeight) * 100; //  42 because of the header
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", topHeight.toString());
@@ -55,6 +55,7 @@ export default function ResizableSplitView() {
         <div className="icon-terminal">
           <FaPlay
             size={20}
+            className="play-icon"
             onClick={() =>
               handleRunCode(
                 code,
