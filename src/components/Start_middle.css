@@ -38,7 +38,7 @@
   box-sizing: border-box;
   padding-bottom: 4vh;
   justify-content: center;
-  gap: 7vh;
+  gap: 20%;
   align-items: center;
   grid-area: Left;
   overflow: hidden;

@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa"; // FontAwesome icons
 import Programming from "./Program-interface";
+import { handleRunCode } from "./BuildingBlocks/RunCode";
+import { useCodeContext } from "../CodeContext";
+import { useAuth } from "../AuthContext";
 import "./Start_middle.css";
 
 export default function ResizableSplitView() {
@@ -8,10 +11,12 @@ export default function ResizableSplitView() {
     return parseFloat(localStorage.getItem("terminal-height") || `${50}`);
   }); // Initial height in percentage
 
+  const { code, codeOutput, setCodeOutput } = useCodeContext();
   const isResizing = useRef(false);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { isAuthenticated } = useAuth();
 
   const handleMouseDown = () => {
     isResizing.current = true;
@@ -44,12 +49,23 @@ export default function ResizableSplitView() {
       <div className="top-section" style={{ height: `${topHeight}%` }}>
         <Programming />
       </div>
-
       <div className="resizer" onMouseDown={handleMouseDown} />
 
       <div className="bottom-section" style={{ height: `${100 - topHeight}%` }}>
         <div className="icon-terminal">
-          <FaPlay size={20} />
+          <FaPlay
+            size={20}
+            onClick={() =>
+              handleRunCode(
+                code,
+                codeOutput,
+                setCodeOutput,
+                isAuthenticated,
+                setOutput
+              )
+            }
+          />
+
           <FaCog size={20} />
           <FaHourglassHalf size={20} />
         </div>
@@ -63,17 +79,17 @@ export default function ResizableSplitView() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                let newOutput = "";
-                newOutput = output + "\n" + "$ " + input + "\n";
+                let newOutput = output;
+                newOutput += "$ " + input + "\n";
                 switch (input) {
                   case "ls":
-                    newOutput += "List of projects";
+                    newOutput += "List of projects" + "\n";
                     break;
                   case "pwd":
-                    newOutput += "";
+                    newOutput += "" + "\n";
                     break;
                   default:
-                    newOutput += "Unknown command";
+                    newOutput += "Unknown command" + "\n";
                 }
                 setOutput(newOutput);
                 setInput("");

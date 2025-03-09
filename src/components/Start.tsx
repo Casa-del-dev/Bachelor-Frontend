@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
+import { CodeProvider } from "../CodeContext";
 
 const Start = () => {
   // Get the id from the URL if provided
@@ -25,7 +26,9 @@ const Start = () => {
     <div className="container-main">
       <StartLeft />
       <div className="middle-main">
-        <StartMiddle />
+        <CodeProvider>
+          <StartMiddle />
+        </CodeProvider>
       </div>
       <div className="right-main">
         <StartRight />
