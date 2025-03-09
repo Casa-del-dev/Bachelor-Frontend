@@ -1,3 +1,5 @@
+#For the terminal there also his xterm.js library that I could use. No need to do one on my own
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
