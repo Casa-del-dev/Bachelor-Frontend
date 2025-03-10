@@ -2,15 +2,17 @@ import { useState, useEffect, useRef, JSX } from "react";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
 
-const StartRight = () => {
-  interface Step {
-    description: string;
-    children: Step[];
-  }
+interface Step {
+  description: string;
+  children: Step[];
+  // You can optionally add extra fields here (e.g., status, hints)
+}
 
+const StartRight = () => {
   const [text, setText] = useState(""); // state for input text
   const [steps, setSteps] = useState<Step[]>([]); // state for parsed step tree
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   // Adjust the textarea height dynamically on input
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.target;
@@ -19,55 +21,36 @@ const StartRight = () => {
     setText(target.value);
   };
 
-  // Parse the input into a tree structure
-  const parseSteps = (input: string): Step[] => {
-    // Split input by newlines and filter out empty lines
-    const lines = input.split("\n").filter((line) => line.trim() !== "");
-    const tree: Step[] = [];
-    // Stack to keep track of the last step at each level
-    const stack: { step: Step; level: number }[] = [];
+  // Recursively transform the JSON structure into our Step interface.
+  // Assumes each step object has a "content" field and optionally a "substeps" object.
+  const transformStep = (step: any): Step => {
+    return {
+      description: step.content || "",
+      children: step.substeps ? transformStepsObject(step.substeps) : [],
+    };
+  };
 
-    for (const line of lines) {
-      // Expected format: "level:1 = Description"
-      const match = line.match(/level\s*:\s*(\d+)\s*=?\s*(.*)/i);
-      if (!match) continue;
+  const transformStepsObject = (obj: any): Step[] => {
+    //console.log(Object.keys(obj).map((key) => transformStep(obj[key])));
+    return Object.keys(obj).map((key) => transformStep(obj[key]));
+  };
 
-      const level = parseInt(match[1], 10);
-      const description = match[2].trim();
-      const newStep: Step = { description, children: [] };
-
-      if (level === 1) {
-        // For a level 1 step, push it directly into the tree.
-        tree.push(newStep);
-        // Clear the stack and add the new step.
-        stack.length = 0;
-        stack.push({ step: newStep, level });
-      } else {
-        // For levels > 1, find the proper parent.
-        // Pop out any steps that are at the same level or deeper than the current one.
-        while (stack.length > 0 && stack[stack.length - 1].level >= level) {
-          stack.pop();
-        }
-
-        if (stack.length === 0) {
-          // If no parent found, treat it as a new root.
-          tree.push(newStep);
-        } else {
-          // Attach newStep as a child to the current parent.
-          stack[stack.length - 1].step.children.push(newStep);
-        }
-        // Push the new step along with its level to the stack.
-        stack.push({ step: newStep, level });
-      }
+  // Parse the JSON input into a tree structure
+  const parseJSONSteps = (input: string): Step[] => {
+    try {
+      const parsed = JSON.parse(input);
+      // Assuming the parsed JSON is an object with keys like "step1", "step2", etc.
+      return transformStepsObject(parsed);
+    } catch (error) {
+      console.error("Invalid JSON input:", error);
+      return [];
     }
-
-    return tree;
   };
 
   // When submit is triggered, parse and set the steps
   const handleSubmit = () => {
     if (text.trim() === "") return;
-    const parsedTree = parseSteps(text);
+    const parsedTree = parseJSONSteps(text);
     setSteps(parsedTree);
     console.log("Parsed Steps:", parsedTree);
     // Reset input field
@@ -80,10 +63,9 @@ const StartRight = () => {
   // Reset the textarea height when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Safely check references and types
       if (
         textareaRef.current &&
-        event.target instanceof Node && // ensures we can use 'contains'
+        event.target instanceof Node &&
         !textareaRef.current.contains(event.target)
       ) {
         textareaRef.current.style.height = "auto";
@@ -96,13 +78,13 @@ const StartRight = () => {
     };
   }, []);
 
-  // Render the parsed step tree
+  // Render the parsed step tree recursively
   const renderTree = (steps: Step[]): JSX.Element[] => {
     return steps.map((step, index) => (
       <div key={index} className="step-box">
         <div className="step-description">{step.description}</div>
         {step.children && step.children.length > 0 && (
-          <div className="substeps"> {renderTree(step.children)}</div>
+          <div className="substeps">{renderTree(step.children)}</div>
         )}
       </div>
     ));
@@ -115,9 +97,11 @@ const StartRight = () => {
         <div className="right-main-main">
           <div className="container-step-tree">
             {steps.length > 0 ? (
-              <button className="Check-button">
-                <div className="Check">Check</div>
-              </button>
+              <div className="button-container">
+                <button className="Check-button">
+                  <div className="Check">Check</div>
+                </button>
+              </div>
             ) : (
               ""
             )}
@@ -138,10 +122,13 @@ const StartRight = () => {
               value={text}
               onChange={handleInput}
               className="text-input"
-              placeholder="Enter your text (e.g., level:1 = Main Step, level:2 = Sub Step)..."
+              placeholder='Enter your JSON (e.g., {"step1": {"content": "Initialize...", "substeps": {}}})'
+              style={{ height: "auto", maxHeight: "200px", overflowY: "auto" }}
               rows={1}
             />
-            <HiArrowRight className="submit-icon" onClick={handleSubmit} />
+            <div className="arrow-container">
+              <HiArrowRight className="submit-icon" onClick={handleSubmit} />
+            </div>
           </div>
         </div>
       </div>
