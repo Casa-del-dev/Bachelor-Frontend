@@ -115,6 +115,7 @@
 .arrow-container {
   display: flex;
   align-items: center;
+  height: auto;
 }
 
 .submit-icon {
