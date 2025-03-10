@@ -93,11 +93,10 @@
 .input-container {
   display: flex;
   margin-top: 1rem;
-  min-height: 6vh;
   height: auto;
-  max-height: 15vh;
   overflow: hidden;
   border-top: 1px solid black;
+  align-items: center;
 }
 
 .text-input {

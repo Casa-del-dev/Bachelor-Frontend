@@ -123,7 +123,12 @@ const StartRight = () => {
               onChange={handleInput}
               className="text-input"
               placeholder='Enter your JSON (e.g., {"step1": {"content": "Initialize...", "substeps": {}}})'
-              style={{ height: "auto", maxHeight: "200px", overflowY: "auto" }}
+              style={{
+                minHeight: "50px",
+                height: "auto",
+                maxHeight: "200px",
+                overflowY: "auto",
+              }}
               rows={1}
             />
             <div className="arrow-container">
