@@ -1,0 +1,21 @@
+.lightbulb-container {
+  position: relative;
+  display: inline-block;
+  width: 2.4vw;
+  height: 2.4vw;
+}
+
+.lightbulb-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.lightbulb-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.5vw;
+  font-weight: bold;
+  color: black;
+}

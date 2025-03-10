@@ -56,6 +56,7 @@
   padding: 1rem;
   border-radius: 3px; /* optional, for a slightly softer look */
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 /* Substeps container: indent the children so they appear inside the parent's border */

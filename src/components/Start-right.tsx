@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, JSX } from "react";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
+import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 
 interface Step {
   description: string;
@@ -93,7 +94,9 @@ const StartRight = () => {
   return (
     <div className="Right-Side-main">
       <div className="right-sidecontent-main">
-        <div className="right-header-main">Step Tree</div>
+        <div className="right-header-main">
+          Step Tree <The_muskeltiers />
+        </div>
         <div className="right-main-main">
           <div className="container-step-tree">
             {steps.length > 0 ? (
