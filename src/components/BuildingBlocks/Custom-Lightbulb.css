@@ -1,8 +1,8 @@
 .lightbulb-container {
   position: relative;
   display: inline-block;
-  width: 2.4vw;
-  height: 2.4vw;
+  width: 1.9vw;
+  height: 1.9vw;
 }
 
 .lightbulb-icon {
@@ -12,7 +12,7 @@
 
 .lightbulb-number {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 0.5vw;

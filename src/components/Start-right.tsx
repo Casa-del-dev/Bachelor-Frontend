@@ -4,43 +4,80 @@ import { HiArrowRight } from "react-icons/hi";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 
 interface Step {
-  description: string;
+  // We only store the content and children.
+  // We won't rely on the JSON key for numbering.
+  content: string;
   children: Step[];
-  // You can optionally add extra fields here (e.g., status, hints)
 }
 
 const StartRight = () => {
   const [text, setText] = useState(""); // state for input text
-  const [steps, setSteps] = useState<Step[]>([]); // state for parsed step tree
+  const [steps, setSteps] = useState<Step[] | null>(null); // state for parsed step tree
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Adjust the textarea height dynamically on input
+  // Get the problem name from localStorage and build the storage key
+  const selectedProblemName =
+    localStorage.getItem("selectedProblem") || "Default Problem";
+  const StorageKey = "step" + `selectedSystemProblem_${selectedProblemName}`;
+
+  // On component mount, load any saved steps from localStorage
+  useEffect(() => {
+    const savedSteps = localStorage.getItem(StorageKey);
+    if (savedSteps) {
+      try {
+        const parsedSteps = JSON.parse(savedSteps);
+        setSteps(parsedSteps);
+      } catch (error) {
+        console.error("Error parsing saved steps from localStorage:", error);
+      }
+    } else {
+      setSteps([]);
+    }
+  }, [StorageKey]);
+
+  // Save the steps tree to localStorage whenever it changes
+  useEffect(() => {
+    if (steps !== null) {
+      localStorage.setItem(StorageKey, JSON.stringify(steps));
+    }
+  }, [steps, StorageKey]);
+
+  // Dynamically adjust the textarea height on input
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.target;
-    target.style.height = "auto"; // reset
+    target.style.height = "auto"; // reset height
     target.style.height = `${target.scrollHeight}px`; // expand to fit content
     setText(target.value);
   };
 
   // Recursively transform the JSON structure into our Step interface.
-  // Assumes each step object has a "content" field and optionally a "substeps" object.
-  const transformStep = (step: any): Step => {
+  // We'll simply pull out the `content` from each step and recursively
+  // transform any `subSteps` into children.
+  const transformStep = (stepData: any): Step => {
     return {
-      description: step.content || "",
-      children: step.substeps ? transformStepsObject(step.substeps) : [],
+      content: stepData.content || "",
+      children: stepData.subSteps
+        ? transformStepsObject(stepData.subSteps)
+        : [],
     };
   };
 
   const transformStepsObject = (obj: any): Step[] => {
-    //console.log(Object.keys(obj).map((key) => transformStep(obj[key])));
+    // obj is an object whose keys might be "1", "2", "subStep 1", etc.
+    // We just transform each key’s data into a Step.
     return Object.keys(obj).map((key) => transformStep(obj[key]));
   };
 
-  // Parse the JSON input into a tree structure
+  // Parse the JSON input into a tree structure.
+  // The JSON is expected to have a top-level "steps" property.
   const parseJSONSteps = (input: string): Step[] => {
     try {
       const parsed = JSON.parse(input);
-      // Assuming the parsed JSON is an object with keys like "step1", "step2", etc.
+      if (parsed.steps) {
+        // If we have a top-level "steps" object, transform that
+        return transformStepsObject(parsed.steps);
+      }
+      // Fallback if "steps" is missing
       return transformStepsObject(parsed);
     } catch (error) {
       console.error("Invalid JSON input:", error);
@@ -54,7 +91,7 @@ const StartRight = () => {
     const parsedTree = parseJSONSteps(text);
     setSteps(parsedTree);
     console.log("Parsed Steps:", parsedTree);
-    // Reset input field
+    // Reset the input field
     setText("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -79,27 +116,53 @@ const StartRight = () => {
     };
   }, []);
 
-  // Render the parsed step tree recursively
-  const renderTree = (steps: Step[]): JSX.Element[] => {
-    return steps.map((step, index) => (
-      <div key={index} className="step-box">
-        <div className="step-description">{step.description}</div>
-        {step.children && step.children.length > 0 && (
-          <div className="substeps">{renderTree(step.children)}</div>
-        )}
-      </div>
-    ));
+  /**
+   * Recursively render the steps.
+   *
+   * @param steps The array of steps to render
+   * @param parentNumber A string representing the parent step's number, e.g. "1" or "1.2"
+   *
+   * The approach:
+   * - For each step, compute its own stepNumber:
+   *    if parentNumber is not empty => parentNumber + "." + (index + 1)
+   *    else => (index + 1).toString()
+   * - Display "Step {stepNumber}:" and the content
+   * - Recursively render the children with the new stepNumber as the parentNumber
+   */
+  const renderTree = (
+    steps: Step[],
+    parentNumber: string = ""
+  ): JSX.Element[] => {
+    return steps.map((step, index) => {
+      // e.g. If parentNumber = "1", child step number = "1.(index+1)" => "1.1", "1.2", etc.
+      // if parentNumber = "" (top-level), child step number = index+1 => "1", "2", etc.
+      const stepNumber = parentNumber
+        ? `${parentNumber}.${index + 1}`
+        : (index + 1).toString();
+
+      return (
+        <div key={index} className="step-box">
+          <div className="step-title">
+            Step {stepNumber}: <The_muskeltiers number={3} />
+          </div>
+          <div className="step-content">{step.content}</div>
+          {step.children && step.children.length > 0 && (
+            <div className="substeps">
+              {renderTree(step.children, stepNumber)}
+            </div>
+          )}
+        </div>
+      );
+    });
   };
 
   return (
     <div className="Right-Side-main">
       <div className="right-sidecontent-main">
-        <div className="right-header-main">
-          Step Tree <The_muskeltiers />
-        </div>
+        <div className="right-header-main">Step Tree</div>
         <div className="right-main-main">
           <div className="container-step-tree">
-            {steps.length > 0 ? (
+            {steps && steps.length > 0 ? (
               <div className="button-container">
                 <button className="Check-button">
                   <div className="Check">Check</div>
@@ -108,7 +171,7 @@ const StartRight = () => {
             ) : (
               ""
             )}
-            {steps.length > 0 ? (
+            {steps && steps.length > 0 ? (
               renderTree(steps)
             ) : (
               <div className="default-text-right-start">
@@ -125,7 +188,25 @@ const StartRight = () => {
               value={text}
               onChange={handleInput}
               className="text-input"
-              placeholder='Enter your JSON (e.g., {"step1": {"content": "Initialize...", "substeps": {}}})'
+              placeholder={`Enter your JSON (e.g.,
+{
+  "steps": {
+    "1": {
+      "content": "Top step 1 content",
+      "subSteps": {
+        "subStep 1": {
+          "content": "Child step => displayed as 1.1",
+          "subSteps": {}
+        }
+      }
+    },
+    "2": {
+      "content": "Top step 2 content",
+      "subSteps": {}
+    }
+  }
+}
+`}
               style={{
                 minHeight: "50px",
                 height: "auto",

@@ -40,6 +40,8 @@ const StartLeft = () => {
   const handleProblemSelect = (problemKey: string) => {
     localStorage.setItem("selectedProblem", problemKey);
     setMenuOpen(false);
+
+    window.location.reload();
   };
 
   useEffect(() => {

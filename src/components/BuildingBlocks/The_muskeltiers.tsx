@@ -2,12 +2,12 @@ import { ShieldCheck, FileText } from "lucide-react";
 import CustomLightbulb from "./Custom-Lightbulb";
 import "./The_muskeltiers.css";
 
-const The_muskeltiers = () => {
+const The_muskeltiers = ({ number }: { number: number }) => {
   return (
     <div className="container-for-triplets">
-      <ShieldCheck size="2vw" strokeWidth="1" />
-      <FileText size="2vw" strokeWidth="1" />
-      <CustomLightbulb number={2} />
+      <ShieldCheck size="1.5vw" strokeWidth="1" />
+      <CustomLightbulb number={number} />
+      <FileText size="1.5vw" strokeWidth="1" />
     </div>
   );
 };

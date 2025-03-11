@@ -65,9 +65,14 @@
 }
 
 /* Description text of each step */
-.step-description {
+.step-title {
   font-weight: bold;
   margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1vw;
+  word-break: break-all;
 }
 
 .button-container {

@@ -6,7 +6,7 @@ const CustomLightbulb = ({ number }: { number: number }) => {
       {/* Custom Lightbulb Icon */}
       <svg
         className="lightbulb-icon"
-        viewBox="0 0 24 18"
+        viewBox="0 0 24 20"
         fill="yellow"
         stroke="black"
         strokeWidth="1"

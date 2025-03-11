@@ -28,7 +28,8 @@ const Project_files = () => {
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "Default Problem";
   // Create a unique key for the system file tree for this problem.
-  const systemStorageKey = `selectedSystemProblem_${selectedProblemName}`;
+  const systemStorageKey =
+    "sys" + `selectedSystemProblem_${selectedProblemName}`;
 
   // Initialize the file tree state from localStorage using the systemStorageKey.
   // If not present, fall back to initialFiles.
