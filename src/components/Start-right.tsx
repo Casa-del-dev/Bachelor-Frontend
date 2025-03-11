@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, JSX } from "react";
+import axios from "axios";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
+import { problemDetailsMap } from "./Problem_detail";
+import { useAuth } from "../AuthContext";
 
 interface Step {
   // We only store the content and children.
@@ -12,8 +15,10 @@ interface Step {
 
 const StartRight = () => {
   const [text, setText] = useState(""); // state for input text
-  const [steps, setSteps] = useState<Step[] | null>(null); // state for parsed step tree
+  const [steps, setSteps] = useState<Step[]>([]); // state for parsed step tree
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // Get the problem name from localStorage and build the storage key
   const selectedProblemName =
@@ -117,6 +122,70 @@ const StartRight = () => {
   }, []);
 
   /**
+   * API KEY
+   *
+   */
+  const handleGenerateWithChatGPT = async () => {
+    if (!isAuthenticated) {
+      console.log("Login Needed");
+      return;
+    }
+
+    if (text.trim() === "") return;
+
+    const selectedProblem =
+      localStorage.getItem("selectedProblem") || "Default Problem";
+
+    const selectedProblemDetails = problemDetailsMap[selectedProblem];
+
+    // ✅ Create the request payload
+    const requestBody = {
+      Prompt: text,
+      Problem: selectedProblemDetails,
+      Tree: steps ?? {}, // Ensure it's always an object
+    };
+
+    console.log("Sending API Request:", requestBody); // 🔍 Log payload
+
+    setLoading(true);
+
+    try {
+      const res = await axios.post(
+        "https://bachelor-backend.erenhomburg.workers.dev/openai/v1/",
+        {
+          Prompt: text,
+          Problem: selectedProblemDetails,
+          Tree: steps ?? {},
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log(res);
+      // Extract ChatGPT response from OpenAI's "choices" field
+      const gptResponse = res.data;
+
+      const rawMessage = gptResponse.choices[0].message.content;
+
+      // Parse response as JSON if structured correctly
+      const parsedTree = parseJSONSteps(rawMessage);
+      console.log(parsedTree);
+      setSteps(parsedTree);
+
+      setText("");
+    } catch (error) {
+      console.error("Error generating steps with ChatGPT:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --------------------------------------------------------------------------------
+
+  /**
    * Recursively render the steps.
    *
    * @param steps The array of steps to render
@@ -189,24 +258,24 @@ const StartRight = () => {
               onChange={handleInput}
               className="text-input"
               placeholder={`Enter your JSON (e.g.,
-{
-  "steps": {
-    "1": {
-      "content": "Top step 1 content",
-      "subSteps": {
-        "subStep 1": {
-          "content": "Child step => displayed as 1.1",
-          "subSteps": {}
-        }
-      }
-    },
-    "2": {
-      "content": "Top step 2 content",
-      "subSteps": {}
-    }
-  }
-}
-`}
+                        {
+                          "steps": {
+                            "1": {
+                              "content": "Top step 1 content",
+                              "subSteps": {
+                                "subStep 1": {
+                                  "content": "Child step => displayed as 1.1",
+                                  "subSteps": {}
+                                }
+                              }
+                            },
+                            "2": {
+                              "content": "Top step 2 content",
+                              "subSteps": {}
+                            }
+                          }
+                        }
+                        `}
               style={{
                 minHeight: "50px",
                 height: "auto",
@@ -218,6 +287,20 @@ const StartRight = () => {
             <div className="arrow-container">
               <HiArrowRight className="submit-icon" onClick={handleSubmit} />
             </div>
+          </div>
+
+          {/* ADDED: a second button to generate from ChatGPT */}
+          <div style={{ marginTop: "10px", textAlign: "right" }}>
+            <button
+              onClick={handleGenerateWithChatGPT}
+              disabled={loading}
+              style={{
+                padding: "6px 12px",
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
+            >
+              {loading ? "Generating..." : "Generate Steps via ChatGPT"}
+            </button>
           </div>
         </div>
       </div>
