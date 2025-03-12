@@ -7,9 +7,8 @@ import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
 
 interface Step {
-  // We only store the content and children.
-  // We won't rely on the JSON key for numbering.
   content: string;
+  prompt: string; // Prompt field from the JSON
   children: Step[];
 }
 
@@ -56,11 +55,11 @@ const StartRight = () => {
   };
 
   // Recursively transform the JSON structure into our Step interface.
-  // We'll simply pull out the `content` from each step and recursively
-  // transform any `subSteps` into children.
+  // Extracts the 'prompt' alongside 'content' and 'children'
   const transformStep = (stepData: any): Step => {
     return {
       content: stepData.content || "",
+      prompt: stepData.prompt || "",
       children: stepData.subSteps
         ? transformStepsObject(stepData.subSteps)
         : [],
@@ -68,8 +67,6 @@ const StartRight = () => {
   };
 
   const transformStepsObject = (obj: any): Step[] => {
-    // obj is an object whose keys might be "1", "2", "subStep 1", etc.
-    // We just transform each key’s data into a Step.
     return Object.keys(obj).map((key) => transformStep(obj[key]));
   };
 
@@ -79,10 +76,8 @@ const StartRight = () => {
     try {
       const parsed = JSON.parse(input);
       if (parsed.steps) {
-        // If we have a top-level "steps" object, transform that
         return transformStepsObject(parsed.steps);
       }
-      // Fallback if "steps" is missing
       return transformStepsObject(parsed);
     } catch (error) {
       console.error("Invalid JSON input:", error);
@@ -122,8 +117,7 @@ const StartRight = () => {
   }, []);
 
   /**
-   * API KEY
-   *
+   * API Call to generate steps with ChatGPT.
    */
   const handleGenerateWithChatGPT = async () => {
     if (!isAuthenticated) {
@@ -138,14 +132,13 @@ const StartRight = () => {
 
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
-    // ✅ Create the request payload
     const requestBody = {
       Prompt: text,
       Problem: selectedProblemDetails,
-      Tree: steps ?? {}, // Ensure it's always an object
+      Tree: steps ?? {},
     };
 
-    console.log("Sending API Request:", requestBody); // 🔍 Log payload
+    console.log("Sending API Request:", requestBody);
 
     setLoading(true);
 
@@ -174,10 +167,10 @@ const StartRight = () => {
         ? parsedResponse.steps
         : parsedResponse;
 
-      // Transform the steps object into an array using your existing function
+      // Transform the steps object into an array
       const stepsArray = transformStepsObject(stepsData);
 
-      // Save the transformed steps array to localStorage and update state
+      // Save to localStorage and update state
       localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
       setSteps(stepsArray);
       setText("");
@@ -188,28 +181,15 @@ const StartRight = () => {
     }
   };
 
-  // --------------------------------------------------------------------------------
-
   /**
    * Recursively render the steps.
-   *
-   * @param steps The array of steps to render
-   * @param parentNumber A string representing the parent step's number, e.g. "1" or "1.2"
-   *
-   * The approach:
-   * - For each step, compute its own stepNumber:
-   *    if parentNumber is not empty => parentNumber + "." + (index + 1)
-   *    else => (index + 1).toString()
-   * - Display "Step {stepNumber}:" and the content
-   * - Recursively render the children with the new stepNumber as the parentNumber
+   * Pass each step's prompt to The_muskeltiers component.
    */
   const renderTree = (
     steps: Step[],
     parentNumber: string = ""
   ): JSX.Element[] => {
     return steps.map((step, index) => {
-      // e.g. If parentNumber = "1", child step number = "1.(index+1)" => "1.1", "1.2", etc.
-      // if parentNumber = "" (top-level), child step number = index+1 => "1", "2", etc.
       const stepNumber = parentNumber
         ? `${parentNumber}.${index + 1}`
         : (index + 1).toString();
@@ -217,7 +197,8 @@ const StartRight = () => {
       return (
         <div key={index} className="step-box">
           <div className="step-title">
-            Step {stepNumber}: <The_muskeltiers fill={"none"} />
+            Step {stepNumber}:{" "}
+            <The_muskeltiers fill={"none"} prompt={step.prompt} />
           </div>
           <div className="step-content">{step.content}</div>
           {step.children && step.children.length > 0 && (
@@ -263,24 +244,29 @@ const StartRight = () => {
               onChange={handleInput}
               className="text-input"
               placeholder={`Enter your JSON (e.g.,
-                        {
-                          "steps": {
-                            "1": {
-                              "content": "Top step 1 content",
-                              "subSteps": {
-                                "subStep 1": {
-                                  "content": "Child step => displayed as 1.1",
-                                  "subSteps": {}
-                                }
-                              }
-                            },
-                            "2": {
-                              "content": "Top step 2 content",
-                              "subSteps": {}
-                            }
-                          }
-                        }
-                        `}
+{
+  "context": "Input Text",
+  "full_code": "",
+  "tree": "",
+  "steps": {
+    "1": {
+      "content": "Extracted step description from the Content.",
+      "prompt": "Highlighted portion of the text that explains this step.",
+      "subSteps": {
+        "1": {
+          "content": "Extracted substep description.",
+          "prompt": "Highlighted portion of the text that explains this substep."
+        }
+      }
+    },
+    "2": {
+      "content": "Another identified step.",
+      "prompt": "Highlighted portion of the text.",
+      "subSteps": {}
+    }
+  }
+}
+              `}
               style={{
                 minHeight: "50px",
                 height: "auto",
