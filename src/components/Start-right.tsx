@@ -42,7 +42,7 @@ const StartRight = () => {
 
   // Save the steps tree to localStorage whenever it changes
   useEffect(() => {
-    if (steps !== null) {
+    if (steps.length > 0) {
       localStorage.setItem(StorageKey, JSON.stringify(steps));
     }
   }, [steps, StorageKey]);
@@ -164,17 +164,22 @@ const StartRight = () => {
         }
       );
 
-      console.log(res);
-      // Extract ChatGPT response from OpenAI's "choices" field
       const gptResponse = res.data;
-
+      console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
+      const parsedResponse = JSON.parse(rawMessage);
 
-      // Parse response as JSON if structured correctly
-      const parsedTree = parseJSONSteps(rawMessage);
-      console.log(parsedTree);
-      setSteps(parsedTree);
+      // Extract the steps if available, otherwise assume the entire object is steps.
+      const stepsData = parsedResponse.steps
+        ? parsedResponse.steps
+        : parsedResponse;
 
+      // Transform the steps object into an array using your existing function
+      const stepsArray = transformStepsObject(stepsData);
+
+      // Save the transformed steps array to localStorage and update state
+      localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
+      setSteps(stepsArray);
       setText("");
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
