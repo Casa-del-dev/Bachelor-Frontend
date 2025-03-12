@@ -121,6 +121,7 @@
   display: flex;
   align-items: center;
   height: auto;
+  flex-direction: column;
 }
 
 .submit-icon {
@@ -147,4 +148,9 @@
 .default-text-right-start {
   color: #666;
   margin-top: 1rem;
+}
+
+.button-cahtgpt {
+  font-size: 0.5vw;
+  display: flex;
 }

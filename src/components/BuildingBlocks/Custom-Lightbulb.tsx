@@ -1,13 +1,19 @@
 import "./Custom-Lightbulb.css";
 
-const CustomLightbulb = ({ number }: { number: number }) => {
+const CustomLightbulb = ({
+  number,
+  fill = "yellow",
+}: {
+  number?: number;
+  fill?: string;
+}) => {
   return (
     <div className="lightbulb-container">
       {/* Custom Lightbulb Icon */}
       <svg
         className="lightbulb-icon"
         viewBox="0 0 24 20"
-        fill="yellow"
+        fill={fill}
         stroke="black"
         strokeWidth="1"
         strokeLinecap="round"

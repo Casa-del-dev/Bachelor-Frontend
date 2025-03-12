@@ -217,7 +217,7 @@ const StartRight = () => {
       return (
         <div key={index} className="step-box">
           <div className="step-title">
-            Step {stepNumber}: <The_muskeltiers number={3} />
+            Step {stepNumber}: <The_muskeltiers fill={"none"} />
           </div>
           <div className="step-content">{step.content}</div>
           {step.children && step.children.length > 0 && (
@@ -291,21 +291,18 @@ const StartRight = () => {
             />
             <div className="arrow-container">
               <HiArrowRight className="submit-icon" onClick={handleSubmit} />
+              <button
+                className="button-cahtgpt"
+                onClick={handleGenerateWithChatGPT}
+                disabled={loading}
+                style={{
+                  padding: "6px 12px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                }}
+              >
+                {loading ? "Generating..." : "Generate"}
+              </button>
             </div>
-          </div>
-
-          {/* ADDED: a second button to generate from ChatGPT */}
-          <div style={{ marginTop: "10px", textAlign: "right" }}>
-            <button
-              onClick={handleGenerateWithChatGPT}
-              disabled={loading}
-              style={{
-                padding: "6px 12px",
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-            >
-              {loading ? "Generating..." : "Generate Steps via ChatGPT"}
-            </button>
           </div>
         </div>
       </div>

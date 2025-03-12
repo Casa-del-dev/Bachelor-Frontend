@@ -4,3 +4,13 @@
   align-items: center;
   justify-content: center;
 }
+
+.Filetext-tree:hover {
+  fill: lightgray;
+  cursor: pointer;
+}
+
+.Check-tree:hover {
+  fill: lightgray;
+  cursor: pointer;
+}
