@@ -98,10 +98,8 @@
 
 .input-container {
   display: flex;
-  margin-top: 1rem;
   height: auto;
   overflow: hidden;
-  border-top: 1px solid black;
   align-items: center;
 }
 
@@ -136,12 +134,15 @@
   color: lightblue;
 }
 
-/* Example header styling */
 .right-header-main {
-  font-size: 1.2rem;
-  font-weight: 600;
-  padding: 1rem;
-  border-bottom: 1px solid #ccc;
+  height: 3vw;
+  font-size: 0.8vw;
+  display: flex;
+  align-items: center;
+  padding-left: 1vw;
+  padding-right: 1vw;
+  justify-content: space-between;
+  border-bottom: 1px solid black;
 }
 
 /* Default text if no steps are present */
@@ -153,4 +154,18 @@
 .button-cahtgpt {
   font-size: 0.5vw;
   display: flex;
+}
+
+.icon-container-start-right {
+  display: flex;
+  flex-direction: row;
+  visibility: visible;
+}
+
+.step-box:hover .icon-container-start-right {
+  visibility: visible;
+}
+
+.trash:hover {
+  fill: lightgrey;
 }

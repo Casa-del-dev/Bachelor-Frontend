@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, JSX } from "react";
-import axios from "axios";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
+import { Trash } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
+import { apiCall } from "./Check";
 
-interface Step {
+export interface Step {
   content: string;
   prompt: string; // Prompt field from the JSON
   children: Step[];
@@ -143,21 +144,8 @@ const StartRight = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        "https://bachelor-backend.erenhomburg.workers.dev/openai/v1/",
-        {
-          Prompt: text,
-          Problem: selectedProblemDetails,
-          Tree: steps ?? {},
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const gptResponse = await apiCall(text, selectedProblemDetails, steps);
 
-      const gptResponse = res.data;
       console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
@@ -181,29 +169,98 @@ const StartRight = () => {
     }
   };
 
+  const HandleDeleteTree = () => {
+    setSteps([]);
+  };
+
+  // Helper: update the content of a step at the given path (using 0-indexed positions)
+  const updateStepContentAtPath = (
+    steps: Step[],
+    path: number[],
+    newContent: string
+  ): Step[] => {
+    const updatedSteps = steps.map((step) => ({ ...step }));
+    let current: Step[] = updatedSteps;
+    for (let i = 0; i < path.length; i++) {
+      const idx = path[i];
+      if (i === path.length - 1) {
+        current[idx] = { ...current[idx], content: newContent };
+      } else {
+        current[idx] = {
+          ...current[idx],
+          children: current[idx].children.map((child) => ({ ...child })),
+        };
+        current = current[idx].children;
+      }
+    }
+    return updatedSteps;
+  };
+
+  // Helper: remove a step at the given path (0-indexed)
+  const removeStepAtPath = (steps: Step[], path: number[]): Step[] => {
+    // Clone steps array
+    const updatedSteps = steps.map((step) => ({
+      ...step,
+      children: [...step.children],
+    }));
+    if (path.length === 1) {
+      // Remove the step at the top level
+      updatedSteps.splice(path[0], 1);
+    } else {
+      const index = path[0];
+      updatedSteps[index].children = removeStepAtPath(
+        updatedSteps[index].children,
+        path.slice(1)
+      );
+    }
+    return updatedSteps;
+  };
+
+  // Handler to remove a step given its path
+  const handleRemoveStep = (path: number[]) => {
+    setSteps((prevSteps) => removeStepAtPath(prevSteps, path));
+  };
+
   /**
    * Recursively render the steps.
-   * Pass each step's prompt to The_muskeltiers component.
+   * We pass down the current "path" (an array of 0-indexed positions) so we can update or remove the correct step.
+   * For display, we add 1 to each index (e.g., index 0 becomes "1").
    */
   const renderTree = (
     steps: Step[],
-    parentNumber: string = ""
+    parentPath: number[] = []
   ): JSX.Element[] => {
     return steps.map((step, index) => {
-      const stepNumber = parentNumber
-        ? `${parentNumber}.${index + 1}`
-        : (index + 1).toString();
-
+      const currentPath = [...parentPath, index];
+      const displayPath = currentPath.map((i) => i + 1).join(".");
       return (
-        <div key={index} className="step-box">
+        <div key={currentPath.join("-")} className="step-box">
           <div className="step-title">
-            Step {stepNumber}:{" "}
-            <The_muskeltiers fill={"none"} prompt={step.prompt} />
+            Step {displayPath}:{" "}
+            <div className="icon-container-start-right">
+              <The_muskeltiers
+                fill={"none"}
+                content={step.content}
+                stepNumber={displayPath}
+                onUpdateContent={(newContent: string) => {
+                  setSteps((prevSteps) =>
+                    updateStepContentAtPath(prevSteps, currentPath, newContent)
+                  );
+                }}
+              />
+              <Trash
+                onClick={() => handleRemoveStep(currentPath)}
+                cursor="pointer"
+                strokeWidth={1}
+                width={"1.5vw"}
+                className="trash"
+              />
+            </div>
           </div>
           <div className="step-content">{step.content}</div>
           {step.children && step.children.length > 0 && (
             <div className="substeps">
-              {renderTree(step.children, stepNumber)}
+              {renderTree(step.children, currentPath)}
             </div>
           )}
         </div>
@@ -214,12 +271,26 @@ const StartRight = () => {
   return (
     <div className="Right-Side-main">
       <div className="right-sidecontent-main">
-        <div className="right-header-main">Step Tree</div>
+        <div className="right-header-main">
+          Step Tree{" "}
+          {steps && steps.length > 0 ? (
+            <Trash
+              color="black"
+              size={"1vw"}
+              strokeWidth={1}
+              cursor="pointer"
+              onClick={HandleDeleteTree}
+              className="trash"
+            />
+          ) : (
+            ""
+          )}
+        </div>
         <div className="right-main-main">
           <div className="container-step-tree">
             {steps && steps.length > 0 ? (
               <div className="button-container">
-                <button className="Check-button">
+                <button className="Check-button" /*onClick={apiCall}*/>
                   <div className="Check">Check</div>
                 </button>
               </div>
@@ -229,66 +300,40 @@ const StartRight = () => {
             {steps && steps.length > 0 ? (
               renderTree(steps)
             ) : (
-              <div className="default-text-right-start">
-                Your step tree will appear here
+              <div className="input-container">
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={handleInput}
+                  className="text-input"
+                  placeholder={`Enter Your Thoughts`}
+                  style={{
+                    height: "75vh",
+                    minHeight: "75vh",
+                    maxHeight: "75vh",
+                    overflowY: "auto",
+                  }}
+                  rows={1}
+                />
+                <div className="arrow-container">
+                  <HiArrowRight
+                    className="submit-icon"
+                    onClick={handleSubmit}
+                  />
+                  <button
+                    className="button-cahtgpt"
+                    onClick={handleGenerateWithChatGPT}
+                    disabled={loading}
+                    style={{
+                      padding: "6px 12px",
+                      cursor: loading ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {loading ? "Generating..." : "Generate"}
+                  </button>
+                </div>
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="right-text-main">
-          <div className="input-container">
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={handleInput}
-              className="text-input"
-              placeholder={`Enter your JSON (e.g.,
-{
-  "context": "Input Text",
-  "full_code": "",
-  "tree": "",
-  "steps": {
-    "1": {
-      "content": "Extracted step description from the Content.",
-      "prompt": "Highlighted portion of the text that explains this step.",
-      "subSteps": {
-        "1": {
-          "content": "Extracted substep description.",
-          "prompt": "Highlighted portion of the text that explains this substep."
-        }
-      }
-    },
-    "2": {
-      "content": "Another identified step.",
-      "prompt": "Highlighted portion of the text.",
-      "subSteps": {}
-    }
-  }
-}
-              `}
-              style={{
-                minHeight: "50px",
-                height: "auto",
-                maxHeight: "200px",
-                overflowY: "auto",
-              }}
-              rows={1}
-            />
-            <div className="arrow-container">
-              <HiArrowRight className="submit-icon" onClick={handleSubmit} />
-              <button
-                className="button-cahtgpt"
-                onClick={handleGenerateWithChatGPT}
-                disabled={loading}
-                style={{
-                  padding: "6px 12px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
-              >
-                {loading ? "Generating..." : "Generate"}
-              </button>
-            </div>
           </div>
         </div>
       </div>

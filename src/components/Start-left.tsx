@@ -73,31 +73,40 @@ const StartLeft = () => {
             <div className="problem-title-left">
               {" "}
               <div className="title-left-problem-start">{storedProblem} </div>
-              <div
-                className="Hamburger-left-start"
-                ref={problemDropdownRef}
-                onClick={handleHamburgerClick}
-              >
-                {menuOpen ? <HiX /> : <HiMenu />}
-                {/* Dropdown menu */}
-                {menuOpen && (
-                  <div className="dropdown-menu">
-                    {problemKeys.map((key) => (
-                      <div
-                        key={key}
-                        className="dropdown-item"
-                        onClick={() => handleProblemSelect(key)}
-                      >
-                        {key}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {storedProblem ? (
+                <div
+                  className="Hamburger-left-start"
+                  ref={problemDropdownRef}
+                  onClick={handleHamburgerClick}
+                >
+                  {menuOpen ? <HiX /> : <HiMenu />}
+                  {/* Dropdown menu */}
+                  {menuOpen && (
+                    <div className="dropdown-menu">
+                      {problemKeys.map((key) => (
+                        <div
+                          key={key}
+                          className="dropdown-item"
+                          onClick={() => handleProblemSelect(key)}
+                        >
+                          {key}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                ""
+              )}
             </div>
 
             <div className="problem-text-left">
-              {details || "No problem selected yet"}
+              {details || (
+                <div className="defaulttextytext">
+                  {" "}
+                  "No problem selected yet"{" "}
+                </div>
+              )}
             </div>
           </div>
         );

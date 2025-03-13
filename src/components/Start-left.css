@@ -103,6 +103,7 @@
   flex-direction: column;
   overflow-y: auto;
   height: calc(100vh - var(--header-height) - 3vw);
+  width: 100%;
 }
 
 .problem-text-left {
@@ -110,6 +111,7 @@
   white-space: pre-wrap;
   font-size: 1vw;
   padding: 1vh;
+  height: 100%;
 }
 
 .problem-title-left {
@@ -168,4 +170,11 @@
 
 .dropdown-item:hover {
   background-color: #f1f1f1;
+}
+
+.defaulttextytext {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }

@@ -15,8 +15,8 @@
   cursor: pointer;
 }
 
-/* Full-screen semi-transparent overlay */
 .overlay {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -28,32 +28,64 @@
   z-index: 1000;
 }
 
-/* Modal content container */
 .overlay-content {
   background: #fff;
-  padding: 20px;
   border-radius: 4px;
   position: relative;
-  word-break: break-all;
-  max-width: 30%;
-  max-height: 60%;
-  overflow-y: auto;
+  max-width: 20%;
+  height: auto;
 }
 
-/* Close button styling */
 .close-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
   background: transparent;
   border: none;
-  font-size: 1.2rem;
   cursor: pointer;
   color: black;
+  top: 0;
+  right: 0;
+  padding-right: 0.5vw;
+  padding-top: 0.5vw;
 }
 
-/* Optional styling for the prompt text */
-.prompt-text {
-  margin-top: 20px;
-  font-size: 1rem;
+.close-button:hover {
+  color: grey;
+}
+
+.editable-textarea {
+  width: 100%;
+  margin-top: 0.5vw;
+  font-size: 1vw;
+  box-sizing: border-box;
+  background-color: transparent;
+  border-radius: 10;
+  border: 1px solid lightgrey;
+  color: black;
+  resize: none;
+  overflow-y: auto;
+  border-radius: 4px;
+  height: 15vw;
+}
+
+.save-button-div {
+  font-size: 1vw;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.save-button {
+  background-color: lightblue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2vw;
+  width: 5vw;
+  border: 1px solid grey;
+}
+
+.step-number-title {
+  font-weight: bold;
+  font-size: 1.5vw;
 }

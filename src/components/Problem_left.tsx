@@ -19,19 +19,19 @@ const problems = [
 
 const Problem_left = ({ onSelect }: ProblemLeftProps) => {
   const [selected, setSelected] = useState<string>("");
+  const [theChosen, setTheChosen] = useState<string>("");
 
   // On mount, load the last selected problem from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("selectedProblem");
     if (stored) {
-      setSelected(stored);
+      setTheChosen(stored);
       onSelect(stored);
     }
-  }, [onSelect]);
+  }, []);
 
   const handleClick = (problem: string) => {
     setSelected(problem);
-    localStorage.setItem("selectedProblem", problem);
     onSelect(problem);
   };
 
@@ -43,7 +43,10 @@ const Problem_left = ({ onSelect }: ProblemLeftProps) => {
         {problems.map((p, index) => (
           <div
             key={index}
-            className={`general-button ${selected === p ? "active" : ""}`}
+            className={`general-button 
+              ${theChosen === p ? "activeA" : ""} 
+              ${selected === p && theChosen !== p ? "activeB" : ""}
+            `}
             onClick={() => handleClick(p)}
           >
             {p}
