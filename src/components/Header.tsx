@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { HiMenu, HiX, HiUserCircle } from "react-icons/hi";
-import Logo from "../assets/Peachlab_logo.png";
+import Logo from "../assets/Peachlab.svg";
 import "./Header.css";
 import SignUp from "./SignUp";
 import Login from "./Login";
