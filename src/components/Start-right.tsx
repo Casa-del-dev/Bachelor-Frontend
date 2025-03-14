@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, JSX } from "react";
+import { useState, useEffect, useRef, JSX, Fragment } from "react";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
 import { Trash } from "lucide-react";
@@ -20,19 +20,33 @@ export interface Step {
   hasparent: boolean;
 }
 
+function createBlankStep(): Step {
+  return {
+    code: "",
+    content: "New Step",
+    correctStep: "",
+    prompt: "",
+    status: "",
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+  };
+}
+
 const StartRight = () => {
-  const [text, setText] = useState(""); // state for input text
-  const [steps, setSteps] = useState<Step[]>([]); // state for parsed step tree
+  const [text, setText] = useState("");
+  const [steps, setSteps] = useState<Step[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  // Get the problem name from localStorage and build the storage key
+  // Build a storage key based on the selected problem name.
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "Default Problem";
   const StorageKey = "step" + `selectedSystemProblem_${selectedProblemName}`;
 
-  // On component mount, load any saved steps from localStorage
+  // Load saved steps from localStorage on mount.
   useEffect(() => {
     const savedSteps = localStorage.getItem(StorageKey);
     if (savedSteps) {
@@ -47,23 +61,22 @@ const StartRight = () => {
     }
   }, [StorageKey]);
 
-  // Save the steps tree to localStorage whenever it changes
+  // Save steps to localStorage when they change.
   useEffect(() => {
     if (steps.length > 0) {
       localStorage.setItem(StorageKey, JSON.stringify(steps));
     }
   }, [steps, StorageKey]);
 
-  // Dynamically adjust the textarea height on input
+  // Adjust textarea height on input.
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.target;
-    target.style.height = "auto"; // reset height
-    target.style.height = `${target.scrollHeight}px`; // expand to fit content
+    target.style.height = "auto";
+    target.style.height = `${target.scrollHeight}px`;
     setText(target.value);
   };
 
-  // Recursively transform the JSON structure into our Step interface.
-  // Extracts the 'prompt' alongside 'content' and 'children'
+  // Transform JSON data into the Step interface recursively.
   const transformStep = (stepData: any, hasParent: boolean = false): Step => {
     return {
       code: stepData.code || "",
@@ -87,8 +100,7 @@ const StartRight = () => {
     return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
   };
 
-  // Parse the JSON input into a tree structure.
-  // The JSON is expected to have a top-level "steps" property.
+  // Parse JSON input into a tree structure.
   const parseJSONSteps = (input: string): Step[] => {
     try {
       const parsed = JSON.parse(input);
@@ -102,20 +114,19 @@ const StartRight = () => {
     }
   };
 
-  // When submit is triggered, parse and set the steps
+  // Trigger parsing and setting the steps tree.
   const handleSubmit = () => {
     if (text.trim() === "") return;
     const parsedTree = parseJSONSteps(text);
     setSteps(parsedTree);
     console.log("Parsed Steps:", parsedTree);
-    // Reset the input field
     setText("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
   };
 
-  // Reset the textarea height when clicking outside
+  // Reset textarea height when clicking outside.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -146,7 +157,6 @@ const StartRight = () => {
 
     const selectedProblem =
       localStorage.getItem("selectedProblem") || "Default Problem";
-
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
     const requestBody = {
@@ -161,20 +171,16 @@ const StartRight = () => {
 
     try {
       const gptResponse = await apiCall(text, selectedProblemDetails, steps);
-
       console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
 
-      // Extract the steps if available, otherwise assume the entire object is steps.
+      // Extract the steps if available.
       const stepsData = parsedResponse.steps
         ? parsedResponse.steps
         : parsedResponse;
 
-      // Transform the steps object into an array
       const stepsArray = transformStepsObject(stepsData);
-
-      // Save to localStorage and update state
       localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
       setSteps(stepsArray);
       setText("");
@@ -185,12 +191,13 @@ const StartRight = () => {
     }
   };
 
+  // Delete the entire tree.
   const HandleDeleteTree = () => {
     setSteps([]);
-    localStorage.setItem(StorageKey, "");
+    localStorage.setItem(StorageKey, "[]");
   };
 
-  // Helper: update the content of a step at the given path (using 0-indexed positions)
+  // Update the content of a step at the given path.
   const updateStepContentAtPath = (
     steps: Step[],
     path: number[],
@@ -213,15 +220,13 @@ const StartRight = () => {
     return updatedSteps;
   };
 
-  // Helper: remove a step at the given path (0-indexed)
+  // Remove a step at the given path.
   const removeStepAtPath = (steps: Step[], path: number[]): Step[] => {
-    // Clone steps array
     const updatedSteps = steps.map((step) => ({
       ...step,
       children: [...step.children],
     }));
     if (path.length === 1) {
-      // Remove the step at the top level
       updatedSteps.splice(path[0], 1);
     } else {
       const index = path[0];
@@ -233,27 +238,78 @@ const StartRight = () => {
     return updatedSteps;
   };
 
-  // Handler to remove a step given its path
   const handleRemoveStep = (path: number[]) => {
     setSteps((prevSteps) => removeStepAtPath(prevSteps, path));
   };
 
-  /**
-   * Recursively render the steps.
-   * We pass down the current "path" (an array of 0-indexed positions) so we can update or remove the correct step.
-   * For display, we add 1 to each index (e.g., index 0 becomes "1").
-   */
+  // --- NEW: Insertion Functions ---
+
+  // Insert a new top-level step at a specified index.
+  const insertTopLevelStepAt = (index: number) => {
+    setSteps((prevSteps) => {
+      const newStep = {
+        ...createBlankStep(),
+        hasparent: false,
+        content: "New Step",
+      };
+      const newSteps = [...prevSteps];
+      newSteps.splice(index, 0, newStep);
+      return newSteps;
+    });
+  };
+
+  // Insert a new substep into the parent's children array at the given index.
+  const insertSubStepAtPath = (
+    parentPath: number[],
+    insertionIndex: number
+  ) => {
+    setSteps((prevSteps) => {
+      // Deep clone the steps.
+      const newSteps = JSON.parse(JSON.stringify(prevSteps));
+      let parent = newSteps;
+      // Traverse to the parent's children array.
+      for (let i = 0; i < parentPath.length; i++) {
+        parent = parent[parentPath[i]].children;
+      }
+      parent.splice(insertionIndex, 0, {
+        ...createBlankStep(),
+        content: "New Substep",
+        hasparent: true,
+      });
+      return newSteps;
+    });
+  };
+
+  // --- Render Function ---
+  // This function renders plus buttons between steps so you can insert new steps exactly where you want.
   const renderTree = (
     steps: Step[],
     parentPath: number[] = []
   ): JSX.Element[] => {
-    return steps.map((step, index) => {
+    const elements: JSX.Element[] = [];
+    // Render a plus button at the beginning.
+    if (parentPath.length === 0) {
+      elements.push(
+        <PlusbetweenSteps
+          key={`plus-top-0`}
+          onClick={() => insertTopLevelStepAt(0)}
+        />
+      );
+    } else {
+      elements.push(
+        <PlusbetweenSteps
+          key={`${parentPath.join("-")}-plus-0`}
+          onClick={() => insertSubStepAtPath(parentPath, 0)}
+        />
+      );
+    }
+
+    steps.forEach((step, index) => {
       const currentPath = [...parentPath, index];
       const displayPath = currentPath.map((i) => i + 1).join(".");
-      return (
-        <>
-          {/* Step Box */}
-          <div key={currentPath.join("-")} className="step-box">
+      elements.push(
+        <Fragment key={`step-${currentPath.join("-")}`}>
+          <div className="step-box">
             <div className="step-title">
               Step {displayPath}:{" "}
               <div className="icon-container-start-right">
@@ -282,21 +338,29 @@ const StartRight = () => {
               </div>
             </div>
             <div className="step-content">{step.content}</div>
-            {!step.hasparent && step.children.length <= 0 && (
-              <PlusbetweenSteps />
-            )}
             {step.children && step.children.length > 0 && (
               <div className="substeps">
-                <PlusbetweenSteps />
                 {renderTree(step.children, currentPath)}
               </div>
             )}
           </div>
-
-          <PlusbetweenSteps />
-        </>
+          {/* Plus button after each step */}
+          {parentPath.length === 0 ? (
+            <PlusbetweenSteps
+              key={`plus-top-${index + 1}`}
+              onClick={() => insertTopLevelStepAt(index + 1)}
+            />
+          ) : (
+            <PlusbetweenSteps
+              key={`${parentPath.join("-")}-plus-${index + 1}`}
+              onClick={() => insertSubStepAtPath(parentPath, index + 1)}
+            />
+          )}
+        </Fragment>
       );
     });
+
+    return elements;
   };
 
   return (
@@ -322,17 +386,12 @@ const StartRight = () => {
             {steps && steps.length > 0 ? (
               <>
                 <div className="button-container">
-                  <button className="Check-button" /*onClick={apiCall}*/>
+                  <button className="Check-button">
                     <div className="Check">Check</div>
                   </button>
                 </div>
-                <PlusbetweenSteps />
+                {renderTree(steps)}
               </>
-            ) : (
-              ""
-            )}
-            {steps && steps.length > 0 ? (
-              renderTree(steps)
             ) : (
               <div className="input-container">
                 <textarea
