@@ -1,8 +1,9 @@
 .lightbulb-container {
   position: relative;
-  display: inline-block;
+  display: flex;
   width: 1.9vw;
   height: 3vh;
+  align-items: center;
 }
 
 .lightbulb-icon {

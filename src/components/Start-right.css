@@ -160,6 +160,12 @@
   visibility: visible;
 }
 
+.trash {
+  display: flex;
+  height: 100px;
+  align-items: center;
+}
+
 .trash:hover {
   fill: lightgrey;
 }

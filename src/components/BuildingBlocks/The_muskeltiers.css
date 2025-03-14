@@ -116,3 +116,9 @@
   margin-top: 1vw;
   border-radius: 4px;
 }
+
+.Lshapedarrow {
+  height: 100px;
+  display: flex;
+  align-items: center;
+}

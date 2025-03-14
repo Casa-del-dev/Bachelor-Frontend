@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ShieldCheck, Pen, X, FileText } from "lucide-react";
 import CustomLightbulb from "./Custom-Lightbulb";
 import "./The_muskeltiers.css";
+import LShapedArrow from "./LShapedArrow";
 
 interface TheMuskeltiersProps {
   number?: number;
@@ -10,6 +11,7 @@ interface TheMuskeltiersProps {
   stepNumber: string;
   prompt?: string;
   onUpdateContent: (newContent: string) => void;
+  onAddChild?: () => void;
 }
 
 const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
@@ -19,6 +21,7 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   content,
   stepNumber,
   onUpdateContent,
+  onAddChild,
 }) => {
   const [isOverlayOpen, setOverlayOpen] = useState(false);
   const [what, setWhat] = useState<"" | "prompt" | "edit">("");
@@ -134,6 +137,9 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
         onClick={handleOverlayOpenEditing}
       />
 
+      <div className="Lshapedarrow">
+        <LShapedArrow onClick={onAddChild} />
+      </div>
       {/* If overlay is open, show it */}
       {isOverlayOpen && (
         <div className="overlay" onClick={handleOverlayClose}>

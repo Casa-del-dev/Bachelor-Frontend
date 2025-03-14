@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@codemirror/lang-python": "^6.1.7",
+    "@heroicons/react": "^2.2.0",
     "@lezer/python": "^1.1.16",
     "@tailwindcss/vite": "^4.0.9",
     "@uiw/react-codemirror": "^4.23.10",

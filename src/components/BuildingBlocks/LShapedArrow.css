@@ -1,0 +1,35 @@
+.l-shaped-arrow {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.vertical-arrow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  transform: rotate(180deg); /* Make it point down */
+}
+
+.horizontal-arrow {
+  position: absolute;
+  left: 16px; /* Adjust for alignment */
+  top: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.LshapedArrow:hover {
+  stroke: grey; /* Change line color */
+  cursor: pointer;
+}
+
+.LshapedArrow:hover path {
+  stroke: grey; /* Change line color */
+}
+
+.LshapedArrow:hover polygon {
+  fill: grey; /* Change arrowhead color */
+}

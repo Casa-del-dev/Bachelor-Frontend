@@ -327,6 +327,9 @@ const StartRight = () => {
                       )
                     );
                   }}
+                  onAddChild={() =>
+                    insertSubStepAtPath(currentPath, step.children.length)
+                  }
                 />
                 <Trash
                   onClick={() => handleRemoveStep(currentPath)}
