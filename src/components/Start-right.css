@@ -1,7 +1,6 @@
-/* Ensure the right-side area can scroll vertically without horizontal scrolling. */
 .Right-Side-main {
-  height: 100%; /* Or whatever fixed height you prefer */
-  overflow: hidden; /* Hide any horizontal overflow */
+  height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -13,24 +12,22 @@
   overflow: hidden;
 }
 
-/* The main scrollable area */
 .right-main-main {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* Container for your step tree */
 .container-step-tree {
-  /* Provides a vertical scroll area if content is long */
   max-height: 100%;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Only the first .step-box at the top level gets a thick border */
 .container-step-tree > .step-box:first-of-type {
   border: 2px solid #000;
-  border-radius: 4px; /* optional, for rounded corners */
+  border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
   position: relative;
@@ -38,10 +35,8 @@
   overflow-y: auto;
 }
 
-/* If you have multiple top-level steps (siblings), you can style them here */
 .container-step-tree > .step-box:not(:first-of-type) {
-  /* Decide if you want top-level boxes after the first to have no border or a different style */
-  border: 2px solid #000; /* Example style if you want them visible as well */
+  border: 2px solid #000;
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -49,22 +44,22 @@
   height: 25vh;
 }
 
-/* Any .step-box inside the first box (i.e., children) has a thinner border */
 .container-step-tree .step-box {
   border-left: 1px solid #ccc;
   margin: 1rem 0;
   padding: 1rem;
-  border-radius: 3px; /* optional, for a slightly softer look */
+  border-radius: 3px;
   box-sizing: border-box;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1vw;
 }
 
-/* Substeps container: indent the children so they appear inside the parent's border */
 .substeps {
-  margin-left: 1rem; /* Indent substeps */
+  margin-left: 1rem;
 }
 
-/* Description text of each step */
 .step-title {
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -80,7 +75,7 @@
   display: flex;
   justify-content: center;
 }
-/* Just as an example, here are some button/input styles. Update to your preference. */
+
 .Check-button {
   cursor: pointer;
   background: rgb(146, 248, 146);

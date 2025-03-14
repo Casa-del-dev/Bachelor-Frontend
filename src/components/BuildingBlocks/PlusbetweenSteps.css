@@ -1,0 +1,38 @@
+.container-plus-right-start {
+  width: 100%;
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas: "line1 plus line2";
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.container-plus-right-start:hover {
+  opacity: 1;
+}
+
+.straightline-left {
+  grid-area: line1;
+  height: 1px;
+  width: 100%;
+  background-color: black;
+}
+
+.plusbetweensteps {
+  grid-area: plus;
+  border: 1px solid black;
+  border-radius: 4px;
+}
+
+.container-plus-right-start:hover .plusbetweensteps:hover {
+  background-color: lightgrey;
+  cursor: pointer;
+}
+
+.straightline-right {
+  grid-area: line2;
+  height: 1px;
+  width: 100%;
+  background-color: black;
+}

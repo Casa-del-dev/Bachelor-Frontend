@@ -89,3 +89,30 @@
   font-weight: bold;
   font-size: 1.5vw;
 }
+
+.single-prompt {
+  font-weight: normal;
+  outline: 1px solid grey;
+  border-radius: 5px;
+  font-size: 1vw;
+  padding: 0.5vw;
+}
+
+.previous-prompts-container {
+  margin-top: 0.5vw;
+}
+
+.editable-textarea-for-prompt {
+  height: 5vw;
+  font-size: 1vw;
+  box-sizing: border-box;
+  background-color: transparent;
+  border-radius: 10;
+  border: 1px solid lightgrey;
+  color: black;
+  resize: none;
+  overflow-y: auto;
+  width: 100%;
+  margin-top: 1vw;
+  border-radius: 4px;
+}

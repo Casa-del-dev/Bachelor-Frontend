@@ -6,11 +6,18 @@ import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
 import { apiCall } from "./Check";
+import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
 
 export interface Step {
+  code: string;
   content: string;
-  prompt: string; // Prompt field from the JSON
+  correctStep: string;
+  prompt: string;
+  status: string;
+  general_hint: string;
+  detailed_hint: string;
   children: Step[];
+  hasparent: boolean;
 }
 
 const StartRight = () => {
@@ -57,18 +64,27 @@ const StartRight = () => {
 
   // Recursively transform the JSON structure into our Step interface.
   // Extracts the 'prompt' alongside 'content' and 'children'
-  const transformStep = (stepData: any): Step => {
+  const transformStep = (stepData: any, hasParent: boolean = false): Step => {
     return {
+      code: stepData.code || "",
       content: stepData.content || "",
+      correctStep: stepData.correctStep || "",
       prompt: stepData.prompt || "",
+      status: stepData.status || "",
+      general_hint: stepData.generalHint || "",
+      detailed_hint: stepData.generalHint || "",
+      hasparent: hasParent,
       children: stepData.subSteps
-        ? transformStepsObject(stepData.subSteps)
+        ? transformStepsObject(stepData.subSteps, true)
         : [],
     };
   };
 
-  const transformStepsObject = (obj: any): Step[] => {
-    return Object.keys(obj).map((key) => transformStep(obj[key]));
+  const transformStepsObject = (
+    obj: any,
+    hasParent: boolean = false
+  ): Step[] => {
+    return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
   };
 
   // Parse the JSON input into a tree structure.
@@ -77,9 +93,9 @@ const StartRight = () => {
     try {
       const parsed = JSON.parse(input);
       if (parsed.steps) {
-        return transformStepsObject(parsed.steps);
+        return transformStepsObject(parsed.steps, false);
       }
-      return transformStepsObject(parsed);
+      return transformStepsObject(parsed, false);
     } catch (error) {
       console.error("Invalid JSON input:", error);
       return [];
@@ -171,6 +187,7 @@ const StartRight = () => {
 
   const HandleDeleteTree = () => {
     setSteps([]);
+    localStorage.setItem(StorageKey, "");
   };
 
   // Helper: update the content of a step at the given path (using 0-indexed positions)
@@ -234,36 +251,50 @@ const StartRight = () => {
       const currentPath = [...parentPath, index];
       const displayPath = currentPath.map((i) => i + 1).join(".");
       return (
-        <div key={currentPath.join("-")} className="step-box">
-          <div className="step-title">
-            Step {displayPath}:{" "}
-            <div className="icon-container-start-right">
-              <The_muskeltiers
-                fill={"none"}
-                content={step.content}
-                stepNumber={displayPath}
-                onUpdateContent={(newContent: string) => {
-                  setSteps((prevSteps) =>
-                    updateStepContentAtPath(prevSteps, currentPath, newContent)
-                  );
-                }}
-              />
-              <Trash
-                onClick={() => handleRemoveStep(currentPath)}
-                cursor="pointer"
-                strokeWidth={1}
-                width={"1.5vw"}
-                className="trash"
-              />
+        <>
+          {/* Step Box */}
+          <div key={currentPath.join("-")} className="step-box">
+            <div className="step-title">
+              Step {displayPath}:{" "}
+              <div className="icon-container-start-right">
+                <The_muskeltiers
+                  fill={"none"}
+                  content={step.content}
+                  prompt={step.prompt}
+                  stepNumber={displayPath}
+                  onUpdateContent={(newContent: string) => {
+                    setSteps((prevSteps) =>
+                      updateStepContentAtPath(
+                        prevSteps,
+                        currentPath,
+                        newContent
+                      )
+                    );
+                  }}
+                />
+                <Trash
+                  onClick={() => handleRemoveStep(currentPath)}
+                  cursor="pointer"
+                  strokeWidth={1}
+                  width={"1.5vw"}
+                  className="trash"
+                />
+              </div>
             </div>
+            <div className="step-content">{step.content}</div>
+            {!step.hasparent && step.children.length <= 0 && (
+              <PlusbetweenSteps />
+            )}
+            {step.children && step.children.length > 0 && (
+              <div className="substeps">
+                <PlusbetweenSteps />
+                {renderTree(step.children, currentPath)}
+              </div>
+            )}
           </div>
-          <div className="step-content">{step.content}</div>
-          {step.children && step.children.length > 0 && (
-            <div className="substeps">
-              {renderTree(step.children, currentPath)}
-            </div>
-          )}
-        </div>
+
+          <PlusbetweenSteps />
+        </>
       );
     });
   };
@@ -289,11 +320,14 @@ const StartRight = () => {
         <div className="right-main-main">
           <div className="container-step-tree">
             {steps && steps.length > 0 ? (
-              <div className="button-container">
-                <button className="Check-button" /*onClick={apiCall}*/>
-                  <div className="Check">Check</div>
-                </button>
-              </div>
+              <>
+                <div className="button-container">
+                  <button className="Check-button" /*onClick={apiCall}*/>
+                    <div className="Check">Check</div>
+                  </button>
+                </div>
+                <PlusbetweenSteps />
+              </>
             ) : (
               ""
             )}
