@@ -9,7 +9,7 @@ import { apiCall } from "./Check";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
 
 export interface Step {
-  id: string; // unique ID for each step
+  id: string; // unique ID for each step DA AGGIUNGRE AL PROMPTONE BRO
   code: string;
   content: string;
   correctStep: string;
