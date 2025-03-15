@@ -9,6 +9,7 @@ import { apiCall } from "./Check";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
 
 export interface Step {
+  id: string; // unique ID for each step
   code: string;
   content: string;
   correctStep: string;
@@ -22,6 +23,7 @@ export interface Step {
 
 function createBlankStep(): Step {
   return {
+    id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`, // new
     code: "",
     content: "New Step",
     correctStep: "",
@@ -79,6 +81,9 @@ const StartRight = () => {
   // Transform JSON data into the Step interface recursively.
   const transformStep = (stepData: any, hasParent: boolean = false): Step => {
     return {
+      id:
+        stepData.id ||
+        `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       code: stepData.code || "",
       content: stepData.content || "",
       correctStep: stepData.correctStep || "",
@@ -220,8 +225,63 @@ const StartRight = () => {
     return updatedSteps;
   };
 
-  // Remove a step at the given path.
-  const removeStepAtPath = (steps: Step[], path: number[]): Step[] => {
+  // ==============================================
+  // === REMOVAL with Fade-Out
+  // ==============================================
+
+  const handleRemoveStep = (path: number[]) => {
+    const stepId = getStepIdAtPath(steps, path);
+    if (!stepId) return;
+
+    const el = document.getElementById(stepId);
+    if (!el) return;
+
+    // 1) Add fade-out class
+    el.classList.add("fade-out");
+
+    // 2) On animation end, actually remove from state & scroll
+    el.addEventListener(
+      "animationend",
+      () => {
+        setSteps((prevSteps) => {
+          // Remove the step from the array
+          const newSteps = removeStepAtPath(prevSteps, path);
+
+          // Find step to scroll to (next or previous)
+          const targetId = getNextOrPrevStepId(newSteps, path);
+
+          // Scroll to that step (if any)
+          setTimeout(() => {
+            if (targetId) {
+              const nextEl = document.getElementById(targetId);
+              if (nextEl) {
+                nextEl.scrollIntoView({ behavior: "smooth", block: "center" });
+              }
+            }
+          }, 0);
+
+          return newSteps;
+        });
+      },
+      { once: true } // ensure this runs only once
+    );
+  };
+
+  function getStepIdAtPath(steps: Step[], path: number[]): string | null {
+    let current = steps;
+    for (let i = 0; i < path.length; i++) {
+      const idx = path[i];
+      if (idx < 0 || idx >= current.length) return null;
+      if (i === path.length - 1) {
+        return current[idx].id; // Found the step whose ID we want
+      }
+      current = current[idx].children;
+    }
+    return null;
+  }
+
+  // Actual remove logic (no fade-out)
+  function removeStepAtPath(steps: Step[], path: number[]): Step[] {
     const updatedSteps = steps.map((step) => ({
       ...step,
       children: [...step.children],
@@ -236,57 +296,132 @@ const StartRight = () => {
       );
     }
     return updatedSteps;
-  };
+  }
 
-  const handleRemoveStep = (path: number[]) => {
-    setSteps((prevSteps) => removeStepAtPath(prevSteps, path));
-  };
+  function getNextOrPrevStepId(steps: Step[], path: number[]): string | null {
+    // 'path' pointed to the item we removed; let’s see what's left in that parent.
+    if (path.length === 0) return null;
 
-  // --- NEW: Insertion Functions ---
+    // Identify the parent's children array
+    const parentArray = getParentArray(steps, path.slice(0, -1));
+    if (!parentArray) return null;
 
-  // Insert a new top-level step at a specified index.
+    // The index we removed
+    const removedIndex = path[path.length - 1];
+
+    // 1) Check if there's a "next" step in the same parent
+    if (removedIndex < parentArray.length) {
+      return parentArray[removedIndex].id; // The item that shifted into the old spot
+    }
+
+    // 2) Otherwise, check if there's a "previous" step
+    if (removedIndex - 1 >= 0 && parentArray[removedIndex - 1]) {
+      return parentArray[removedIndex - 1].id;
+    }
+
+    return null; // Nothing to scroll to
+  }
+
+  /** Helper to return the array of children for the parent at `path` */
+  function getParentArray(steps: Step[], path: number[]): Step[] | null {
+    let current = steps;
+    for (let i = 0; i < path.length; i++) {
+      const idx = path[i];
+      if (idx < 0 || idx >= current.length) return null;
+      current = current[idx].children;
+    }
+    return current;
+  }
+
+  // ==============================================
+  // === INSERT (Top-Level, SubStep) with Fade-In + Scroll
+  // ==============================================
+
   const insertTopLevelStepAt = (index: number) => {
+    const newStep = createBlankStep(); // Has a unique newStep.id
     setSteps((prevSteps) => {
-      const newStep = {
-        ...createBlankStep(),
-        hasparent: false,
-        content: "New Step",
-      };
       const newSteps = [...prevSteps];
       newSteps.splice(index, 0, newStep);
       return newSteps;
     });
+
+    // Animate & scroll once the DOM updates
+    setTimeout(() => {
+      animateAndScrollTo(newStep.id);
+    }, 0);
   };
 
-  // Insert a new substep into the parent's children array at the given index.
   const insertSubStepAtPath = (
     parentPath: number[],
     insertionIndex: number
   ) => {
+    const newSubStep = createBlankStep();
+    newSubStep.content = "New Substep";
+    newSubStep.hasparent = true;
+
     setSteps((prevSteps) => {
-      // Deep clone the steps.
       const newSteps = JSON.parse(JSON.stringify(prevSteps));
       let parent = newSteps;
-      // Traverse to the parent's children array.
       for (let i = 0; i < parentPath.length; i++) {
         parent = parent[parentPath[i]].children;
       }
-      parent.splice(insertionIndex, 0, {
-        ...createBlankStep(),
-        content: "New Substep",
-        hasparent: true,
-      });
+      parent.splice(insertionIndex, 0, newSubStep);
       return newSteps;
     });
+
+    setTimeout(() => {
+      animateAndScrollTo(newSubStep.id);
+    }, 0);
   };
 
-  // --- Render Function ---
-  // This function renders plus buttons between steps so you can insert new steps exactly where you want.
+  function animateAndScrollTo(elementId: string) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    // 1) Add fade-in class
+    el.classList.add("fade-in");
+
+    // 2) Scroll into view
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // 3) Once the animation ends, remove the class so we can re-trigger it next time
+    const handleAnimationEnd = () => {
+      el.classList.remove("fade-in");
+      el.removeEventListener("animationend", handleAnimationEnd);
+    };
+    el.addEventListener("animationend", handleAnimationEnd);
+  }
+
+  // ================================================================
+  // === EDITING LOGIC (Inline Editing)
+  // ================================================================
+  const [editingPath, setEditingPath] = useState<number[] | null>(null);
+  const [tempContent, setTempContent] = useState("");
+
+  const handleStartEditing = (path: number[], initialValue: string) => {
+    setEditingPath(path);
+    setTempContent(initialValue);
+  };
+
+  const handleBlur = () => {
+    if (editingPath !== null) {
+      setSteps((prev) =>
+        updateStepContentAtPath(prev, editingPath!, tempContent)
+      );
+      setEditingPath(null);
+      setTempContent("");
+    }
+  };
+
+  // ================================================================
+  // RENDER THE TREE
+  // ================================================================
   const renderTree = (
     steps: Step[],
     parentPath: number[] = []
   ): JSX.Element[] => {
     const elements: JSX.Element[] = [];
+
     // Render a plus button at the beginning.
     if (parentPath.length === 0) {
       elements.push(
@@ -307,28 +442,26 @@ const StartRight = () => {
     steps.forEach((step, index) => {
       const currentPath = [...parentPath, index];
       const displayPath = currentPath.map((i) => i + 1).join(".");
+
+      const isCurrentlyEditing =
+        editingPath &&
+        editingPath.length === currentPath.length &&
+        editingPath.every((val, i) => val === currentPath[i]);
+
       elements.push(
         <Fragment key={`step-${currentPath.join("-")}`}>
-          <div className="step-box">
+          {/* Attach the step's unique ID for fade in/out */}
+          <div className="step-box" id={step.id}>
             <div className="step-title">
               Step {displayPath}:{" "}
               <div className="icon-container-start-right">
                 <The_muskeltiers
                   fill={"none"}
-                  content={step.content}
                   prompt={step.prompt}
                   stepNumber={displayPath}
-                  onUpdateContent={(newContent: string) => {
-                    setSteps((prevSteps) =>
-                      updateStepContentAtPath(
-                        prevSteps,
-                        currentPath,
-                        newContent
-                      )
-                    );
-                  }}
-                  onAddChild={() =>
-                    insertSubStepAtPath(currentPath, step.children.length)
+                  onAddChild={() => insertSubStepAtPath(currentPath, 0)}
+                  onEditStep={() =>
+                    handleStartEditing(currentPath, step.content)
                   }
                 />
                 <Trash
@@ -340,13 +473,28 @@ const StartRight = () => {
                 />
               </div>
             </div>
-            <div className="step-content">{step.content}</div>
+
+            {/* Show a textarea if editing, else show plain content */}
+            {isCurrentlyEditing ? (
+              <textarea
+                autoFocus
+                className="inline-edit-textarea"
+                rows={3}
+                value={tempContent}
+                onChange={(e) => setTempContent(e.target.value)}
+                onBlur={handleBlur}
+              />
+            ) : (
+              <div className="step-content">{step.content}</div>
+            )}
+
             {step.children && step.children.length > 0 && (
               <div className="substeps">
                 {renderTree(step.children, currentPath)}
               </div>
             )}
           </div>
+
           {/* Plus button after each step */}
           {parentPath.length === 0 ? (
             <PlusbetweenSteps
