@@ -5,34 +5,43 @@ import { Trash } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
-import { apiCall } from "./Check";
+import { apiCall } from "./AI_Prompt";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
+import { apiCallCheck } from "./AI_Check";
 
 export interface Step {
-  id: string; // unique ID for each step DA AGGIUNGRE AL PROMPTONE BRO
+  id: string; // unique ID for each step
   code: string;
   content: string;
   correctStep: string;
   prompt: string;
-  status: string;
+  status: {
+    correctness: "correct" | "incorrect" | "missing" | "";
+    can_be_further_divided: "can" | "cannot" | "";
+  };
   general_hint: string;
   detailed_hint: string;
   children: Step[];
   hasparent: boolean;
+  isDeleting: boolean;
 }
 
 function createBlankStep(): Step {
   return {
-    id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`, // new
+    id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     code: "",
     content: "New Step",
     correctStep: "",
     prompt: "",
-    status: "",
+    status: {
+      correctness: "",
+      can_be_further_divided: "",
+    },
     general_hint: "",
     detailed_hint: "",
     hasparent: false,
     children: [],
+    isDeleting: false,
   };
 }
 
@@ -95,6 +104,7 @@ const StartRight = () => {
       children: stepData.subSteps
         ? transformStepsObject(stepData.subSteps, true)
         : [],
+      isDeleting: false,
     };
   };
 
@@ -152,30 +162,58 @@ const StartRight = () => {
   /**
    * API Call to generate steps with ChatGPT.
    */
-  const handleGenerateWithChatGPT = async () => {
+  const handleGenerateWithChatGPT = async (Context: string) => {
     if (!isAuthenticated) {
       console.log("Login Needed");
       return;
     }
 
-    if (text.trim() === "") return;
+    if (Context === "From Prompt" && text.trim() === "") return;
 
     const selectedProblem =
       localStorage.getItem("selectedProblem") || "Default Problem";
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
-    const requestBody = {
-      Prompt: text,
-      Problem: selectedProblemDetails,
-      Tree: steps ?? {},
-    };
-
-    console.log("Sending API Request:", requestBody);
-
     setLoading(true);
 
     try {
-      const gptResponse = await apiCall(text, selectedProblemDetails, steps);
+      const gptResponse = await apiCall(text, selectedProblemDetails);
+      console.log(gptResponse);
+      const rawMessage = gptResponse.choices[0].message.content;
+      const parsedResponse = JSON.parse(rawMessage);
+
+      // Extract the steps if available.
+      const stepsData = parsedResponse.steps
+        ? parsedResponse.steps
+        : parsedResponse;
+
+      const stepsArray = transformStepsObject(stepsData);
+      localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
+      setSteps(stepsArray);
+      setText("");
+    } catch (error) {
+      console.error("Error generating steps with ChatGPT:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateWithChatGPTCheck = async (Context: string) => {
+    if (!isAuthenticated) {
+      console.log("Login Needed");
+      return;
+    }
+
+    if (Context === "From Prompt" && text.trim() === "") return;
+
+    const selectedProblem =
+      localStorage.getItem("selectedProblem") || "Default Problem";
+    const selectedProblemDetails = problemDetailsMap[selectedProblem];
+
+    setLoading(true);
+    console.log(steps);
+    try {
+      const gptResponse = await apiCallCheck(selectedProblemDetails, steps);
       console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
@@ -226,126 +264,47 @@ const StartRight = () => {
   };
 
   // ==============================================
-  // === REMOVAL with Fade-Out
+  // === REMOVAL with Fade-Out (by id)
   // ==============================================
-
-  const handleRemoveStep = (path: number[]) => {
-    const stepId = getStepIdAtPath(steps, path);
-    if (!stepId) return;
-
-    const el = document.getElementById(stepId);
-    if (!el) return;
-
-    // 1) Add fade-out class
-    el.classList.add("fade-out");
-
-    // 2) On animation end, actually remove from state & scroll
-    el.addEventListener(
-      "animationend",
-      () => {
-        setSteps((prevSteps) => {
-          // Remove the step from the array
-          const newSteps = removeStepAtPath(prevSteps, path);
-
-          // Find step to scroll to (next or previous)
-          const targetId = getNextOrPrevStepId(newSteps, path);
-
-          // Scroll to that step (if any)
-          setTimeout(() => {
-            if (targetId) {
-              const nextEl = document.getElementById(targetId);
-              if (nextEl) {
-                nextEl.scrollIntoView({ behavior: "smooth", block: "center" });
-              }
-            }
-          }, 0);
-
-          return newSteps;
-        });
-      },
-      { once: true } // ensure this runs only once
+  const handleRemoveStep = (id: string) => {
+    setSteps((prevSteps) =>
+      prevSteps.map((step) =>
+        step.id === id ? { ...step, isDeleting: true } : step
+      )
     );
+
+    setTimeout(() => {
+      setSteps((prevSteps) => removeStepById(prevSteps, id));
+    }, 300); // Matches animation duration
   };
 
-  function getStepIdAtPath(steps: Step[], path: number[]): string | null {
-    let current = steps;
-    for (let i = 0; i < path.length; i++) {
-      const idx = path[i];
-      if (idx < 0 || idx >= current.length) return null;
-      if (i === path.length - 1) {
-        return current[idx].id; // Found the step whose ID we want
+  // Helper: Remove a step (and its children) by id.
+  function removeStepById(steps: Step[], id: string): Step[] {
+    return steps.reduce<Step[]>((acc, step) => {
+      if (step.id === id) {
+        // Skip this step (i.e. remove it)
+        return acc;
       }
-      current = current[idx].children;
-    }
-    return null;
-  }
-
-  // Actual remove logic (no fade-out)
-  function removeStepAtPath(steps: Step[], path: number[]): Step[] {
-    const updatedSteps = steps.map((step) => ({
-      ...step,
-      children: [...step.children],
-    }));
-    if (path.length === 1) {
-      updatedSteps.splice(path[0], 1);
-    } else {
-      const index = path[0];
-      updatedSteps[index].children = removeStepAtPath(
-        updatedSteps[index].children,
-        path.slice(1)
-      );
-    }
-    return updatedSteps;
-  }
-
-  function getNextOrPrevStepId(steps: Step[], path: number[]): string | null {
-    // 'path' pointed to the item we removed; let’s see what's left in that parent.
-    if (path.length === 0) return null;
-
-    // Identify the parent's children array
-    const parentArray = getParentArray(steps, path.slice(0, -1));
-    if (!parentArray) return null;
-
-    // The index we removed
-    const removedIndex = path[path.length - 1];
-
-    // 1) Check if there's a "next" step in the same parent
-    if (removedIndex < parentArray.length) {
-      return parentArray[removedIndex].id; // The item that shifted into the old spot
-    }
-
-    // 2) Otherwise, check if there's a "previous" step
-    if (removedIndex - 1 >= 0 && parentArray[removedIndex - 1]) {
-      return parentArray[removedIndex - 1].id;
-    }
-
-    return null; // Nothing to scroll to
-  }
-
-  /** Helper to return the array of children for the parent at `path` */
-  function getParentArray(steps: Step[], path: number[]): Step[] | null {
-    let current = steps;
-    for (let i = 0; i < path.length; i++) {
-      const idx = path[i];
-      if (idx < 0 || idx >= current.length) return null;
-      current = current[idx].children;
-    }
-    return current;
+      const newStep = { ...step };
+      if (newStep.children && newStep.children.length > 0) {
+        newStep.children = removeStepById(newStep.children, id);
+      }
+      acc.push(newStep);
+      return acc;
+    }, []);
   }
 
   // ==============================================
   // === INSERT (Top-Level, SubStep) with Fade-In + Scroll
   // ==============================================
-
   const insertTopLevelStepAt = (index: number) => {
-    const newStep = createBlankStep(); // Has a unique newStep.id
+    const newStep = createBlankStep();
     setSteps((prevSteps) => {
       const newSteps = [...prevSteps];
       newSteps.splice(index, 0, newStep);
       return newSteps;
     });
 
-    // Animate & scroll once the DOM updates
     setTimeout(() => {
       animateAndScrollTo(newStep.id);
     }, 0);
@@ -378,13 +337,10 @@ const StartRight = () => {
     const el = document.getElementById(elementId);
     if (!el) return;
 
-    // 1) Add fade-in class
     el.classList.add("fade-in");
 
-    // 2) Scroll into view
     el.scrollIntoView({ behavior: "smooth", block: "center" });
 
-    // 3) Once the animation ends, remove the class so we can re-trigger it next time
     const handleAnimationEnd = () => {
       el.classList.remove("fade-in");
       el.removeEventListener("animationend", handleAnimationEnd);
@@ -450,8 +406,10 @@ const StartRight = () => {
 
       elements.push(
         <Fragment key={`step-${currentPath.join("-")}`}>
-          {/* Attach the step's unique ID for fade in/out */}
-          <div className="step-box" id={step.id}>
+          <div
+            className={`step-box ${step.isDeleting ? "fade-out" : ""}`}
+            id={step.id}
+          >
             <div className="step-title">
               Step {displayPath}:{" "}
               <div className="icon-container-start-right">
@@ -465,7 +423,7 @@ const StartRight = () => {
                   }
                 />
                 <Trash
-                  onClick={() => handleRemoveStep(currentPath)}
+                  onClick={() => handleRemoveStep(step.id)}
                   cursor="pointer"
                   strokeWidth={1}
                   width={"1.5vw"}
@@ -474,7 +432,6 @@ const StartRight = () => {
               </div>
             </div>
 
-            {/* Show a textarea if editing, else show plain content */}
             {isCurrentlyEditing ? (
               <textarea
                 autoFocus
@@ -495,7 +452,6 @@ const StartRight = () => {
             )}
           </div>
 
-          {/* Plus button after each step */}
           {parentPath.length === 0 ? (
             <PlusbetweenSteps
               key={`plus-top-${index + 1}`}
@@ -537,8 +493,18 @@ const StartRight = () => {
             {steps && steps.length > 0 ? (
               <>
                 <div className="button-container">
-                  <button className="Check-button">
-                    <div className="Check">Check</div>
+                  <button
+                    className="Check-button"
+                    onClick={() => handleGenerateWithChatGPTCheck("Check")}
+                    disabled={loading}
+                    style={{
+                      padding: "6px 12px",
+                      cursor: loading ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    <div className="Check">
+                      {loading ? "Checking..." : "Check"}
+                    </div>
                   </button>
                 </div>
                 {renderTree(steps)}
@@ -566,7 +532,7 @@ const StartRight = () => {
                   />
                   <button
                     className="button-cahtgpt"
-                    onClick={handleGenerateWithChatGPT}
+                    onClick={() => handleGenerateWithChatGPT("From Prompt")}
                     disabled={loading}
                     style={{
                       padding: "6px 12px",

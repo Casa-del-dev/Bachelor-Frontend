@@ -3,16 +3,11 @@ import axios from "axios";
 const API_ENDPOINT =
   "https://bachelor-backend.erenhomburg.workers.dev/openai/v1/";
 
-export const apiCall = async (
-  prompt: string,
-  problemDetails: any,
-  steps: any
-) => {
+export const apiCall = async (prompt: string, problemDetails: any) => {
   try {
     const requestBody = {
       Prompt: prompt,
       Problem: problemDetails,
-      Tree: steps ?? {},
     };
 
     console.log("Sending API Request:", requestBody); // Debugging log
