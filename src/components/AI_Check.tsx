@@ -18,6 +18,8 @@ export const apiCallCheck = async (problemDetails: any, steps: any) => {
       },
     });
 
+    console.log(response);
+
     return response.data;
   } catch (error) {
     console.error("Error in API call:", error);

@@ -198,6 +198,44 @@ const StartRight = () => {
     }
   };
 
+  /**
+   * Recursively converts an array of Step objects into a string.
+   * Each step is numbered according to its level in the hierarchy.
+   *
+   * @param steps - An array of Step objects.
+   * @param prefix - A string prefix to keep track of the numbering (used recursively).
+   * @returns A string representation of the steps tree.
+   */
+  const stepsToString = (steps: Step[], prefix: string = ""): string => {
+    return steps
+      .map((step, index) => {
+        // Build a numbering prefix (e.g., "1", "1.2", "1.2.3", etc.)
+        const currentPrefix = prefix
+          ? `${prefix}.${index + 1}`
+          : `${index + 1}`;
+        // Start with the step header and its content
+        let stepStr = `Step ${currentPrefix}: ${step.content}\n`;
+
+        // Optionally include code if it exists
+        if (step.code) {
+          stepStr += `  Code: ${step.code}\n`;
+        }
+
+        // Optionally include hints if they exist
+        if (step.general_hint || step.detailed_hint) {
+          stepStr += `  Hints: ${step.general_hint} ${step.detailed_hint}\n`;
+        }
+
+        // Recursively process children (sub-steps)
+        if (step.children && step.children.length > 0) {
+          stepStr += stepsToString(step.children, currentPrefix);
+        }
+
+        return stepStr;
+      })
+      .join("");
+  };
+
   const handleGenerateWithChatGPTCheck = async (Context: string) => {
     if (!isAuthenticated) {
       console.log("Login Needed");
@@ -211,9 +249,13 @@ const StartRight = () => {
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
     setLoading(true);
-    console.log(steps);
+    console.log("Steps", stepsToString(steps));
+
     try {
-      const gptResponse = await apiCallCheck(selectedProblemDetails, steps);
+      const gptResponse = await apiCallCheck(
+        selectedProblemDetails,
+        stepsToString(steps)
+      );
       console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
@@ -268,14 +310,32 @@ const StartRight = () => {
   // ==============================================
   const handleRemoveStep = (id: string) => {
     setSteps((prevSteps) =>
-      prevSteps.map((step) =>
-        step.id === id ? { ...step, isDeleting: true } : step
-      )
+      prevSteps.map((step) => markStepAndChildrenAsDeleting(step, id))
     );
 
     setTimeout(() => {
       setSteps((prevSteps) => removeStepById(prevSteps, id));
     }, 300); // Matches animation duration
+  };
+
+  const markStepAndChildrenAsDeleting = (step: Step, id: string): Step => {
+    if (step.id === id) {
+      return {
+        ...step,
+        isDeleting: true,
+        children: step.children.map((child) => ({
+          ...child,
+          isDeleting: true,
+        })),
+      };
+    }
+
+    return {
+      ...step,
+      children: step.children.map((child) =>
+        markStepAndChildrenAsDeleting(child, id)
+      ),
+    };
   };
 
   // Helper: Remove a step (and its children) by id.
