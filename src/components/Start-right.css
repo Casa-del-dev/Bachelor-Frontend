@@ -41,6 +41,7 @@
   margin-bottom: 1rem;
   box-sizing: border-box;
   height: 25vh;
+  overflow-y: auto;
 }
 
 .container-step-tree .step-box {
@@ -201,4 +202,21 @@
 
 .fade-out {
   animation: fadeOutScale 0.3s ease forwards;
+}
+
+.inline-edit-textarea-editing {
+  resize: none;
+  background-color: transparent;
+  color: black;
+  word-break: break-all;
+  border: none;
+  height: auto;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.step-content {
+  word-break: break-all;
 }

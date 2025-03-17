@@ -5,12 +5,13 @@ import "./The_muskeltiers.css";
 import LShapedArrow from "./LShapedArrow";
 
 interface TheMuskeltiersProps {
-  number?: number;
-  fill?: string;
+  number: number | null;
+  fill: string;
   stepNumber: string;
   prompt?: string;
   onAddChild?: () => void;
   onEditStep?: () => void;
+  onGiveHint: () => void;
 }
 
 const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
@@ -20,6 +21,7 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   stepNumber,
   onAddChild,
   onEditStep,
+  onGiveHint,
 }) => {
   /**
    * We'll keep the prompt overlay only. The edit overlay is removed
@@ -51,7 +53,7 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   return (
     <div className="container-for-triplets">
       <ShieldCheck className="Check-tree" size="1.5vw" strokeWidth="1" />
-      <CustomLightbulb number={number} fill={fill} />
+      <CustomLightbulb number={number} fill={fill} onGiveHint={onGiveHint} />
 
       {/* Prompt overlay icon */}
       <FileText

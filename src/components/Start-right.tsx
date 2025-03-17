@@ -430,6 +430,77 @@ const StartRight = () => {
   };
 
   // ================================================================
+  // HINT FUNCTIONS
+  // ================================================================
+
+  const handleGiveHint = (path: number[], hintNumber: number | null) => {
+    if (hintNumber === null) return;
+    setSteps((prevSteps) => {
+      // Make a copy or deep clone so we can safely mutate
+      const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
+
+      // Navigate to the step at the given path
+      let parent = newSteps;
+      for (let i = 0; i < path.length - 1; i++) {
+        parent = parent[path[i]].children;
+      }
+      const stepIndex = path[path.length - 1];
+      const step = parent[stepIndex];
+
+      if (hintNumber === 3) {
+        step.content += `\nHint ${3 - hintNumber + 1}: ${step.general_hint}`;
+        step.general_hint = "";
+      } else if (hintNumber === 2) {
+        step.content += `\nHint ${3 - hintNumber + 1}: ${step.detailed_hint}`;
+        step.detailed_hint = "";
+      } else if (hintNumber === 1) {
+        step.content += `Correct Step: ${step.correctStep}`;
+        step.correctStep = "";
+      }
+
+      return newSteps;
+    });
+
+    // Since we call setSteps, React re-renders,
+    // which calls renderTree again and re-runs getNumberForStep.
+  };
+
+  function getNumberForStep(step: Step): number | null {
+    if (step.general_hint) {
+      return 3;
+    } else if (step.detailed_hint) {
+      return 2;
+    } else if (step.correctStep) {
+      return 1;
+    } else {
+      return null;
+    }
+  }
+
+  // ================================================================
+  // Background color
+  // ================================================================
+
+  const getBackgroundColor = (step: Step): string => {
+    if (step.status.correctness === "") return "transparent";
+    else if (
+      step.status.correctness === "correct" &&
+      step.status.can_be_further_divided === "cannot"
+    ) {
+      return "green";
+    } else if (
+      step.status.correctness === "incorrect" &&
+      step.status.can_be_further_divided === "cannot"
+    ) {
+      return "red";
+    } else if (step.status.can_be_further_divided === "can") {
+      return "lightblue";
+    } else {
+      return "transparent";
+    }
+  };
+
+  // ================================================================
   // RENDER THE TREE
   // ================================================================
   const renderTree = (
@@ -458,6 +529,7 @@ const StartRight = () => {
     steps.forEach((step, index) => {
       const currentPath = [...parentPath, index];
       const displayPath = currentPath.map((i) => i + 1).join(".");
+      const hintNumber = getNumberForStep(step);
 
       const isCurrentlyEditing =
         editingPath &&
@@ -469,18 +541,21 @@ const StartRight = () => {
           <div
             className={`step-box ${step.isDeleting ? "fade-out" : ""}`}
             id={step.id}
+            style={{ backgroundColor: getBackgroundColor(step) }}
           >
             <div className="step-title">
               Step {displayPath}:{" "}
               <div className="icon-container-start-right">
                 <The_muskeltiers
-                  fill={"none"}
+                  number={hintNumber}
+                  fill={hintNumber ? "yellow" : "none"}
                   prompt={step.prompt}
                   stepNumber={displayPath}
                   onAddChild={() => insertSubStepAtPath(currentPath, 0)}
                   onEditStep={() =>
                     handleStartEditing(currentPath, step.content)
                   }
+                  onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
                 />
                 <Trash
                   onClick={() => handleRemoveStep(step.id)}
@@ -495,8 +570,8 @@ const StartRight = () => {
             {isCurrentlyEditing ? (
               <textarea
                 autoFocus
-                className="inline-edit-textarea"
-                rows={3}
+                className="inline-edit-textarea-editing"
+                rows={10}
                 value={tempContent}
                 onChange={(e) => setTempContent(e.target.value)}
                 onBlur={handleBlur}
