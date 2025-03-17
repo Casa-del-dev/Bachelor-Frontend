@@ -24,6 +24,13 @@ export interface Step {
   children: Step[];
   hasparent: boolean;
   isDeleting: boolean;
+
+  showGeneralHint1: boolean;
+  showDetailedHint1: boolean;
+  showCorrectStep1: boolean;
+  showGeneralHint2: boolean;
+  showDetailedHint2: boolean;
+  showCorrectStep2: boolean;
 }
 
 function createBlankStep(): Step {
@@ -42,6 +49,12 @@ function createBlankStep(): Step {
     hasparent: false,
     children: [],
     isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    showCorrectStep2: false,
   };
 }
 
@@ -105,6 +118,12 @@ const StartRight = () => {
         ? transformStepsObject(stepData.subSteps, true)
         : [],
       isDeleting: false,
+      showGeneralHint1: false,
+      showDetailedHint1: false,
+      showCorrectStep1: false,
+      showGeneralHint2: false,
+      showDetailedHint2: false,
+      showCorrectStep2: false,
     };
   };
 
@@ -435,47 +454,108 @@ const StartRight = () => {
 
   const handleGiveHint = (path: number[], hintNumber: number | null) => {
     if (hintNumber === null) return;
+
     setSteps((prevSteps) => {
-      // Make a copy or deep clone so we can safely mutate
       const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
 
-      // Navigate to the step at the given path
-      let parent = newSteps;
+      let current = newSteps;
       for (let i = 0; i < path.length - 1; i++) {
-        parent = parent[path[i]].children;
+        current = current[path[i]].children;
       }
       const stepIndex = path[path.length - 1];
-      const step = parent[stepIndex];
+      const step = current[stepIndex];
+
+      let hintType = "";
 
       if (hintNumber === 3) {
-        step.content += `\nHint ${3 - hintNumber + 1}: ${step.general_hint}`;
-        step.general_hint = "";
+        step.showGeneralHint1 = true; // Reveal hint
+        hintType = "general";
       } else if (hintNumber === 2) {
-        step.content += `\nHint ${3 - hintNumber + 1}: ${step.detailed_hint}`;
-        step.detailed_hint = "";
+        step.showDetailedHint1 = true;
+        hintType = "detailed";
       } else if (hintNumber === 1) {
-        step.content += `Correct Step: ${step.correctStep}`;
-        step.correctStep = "";
+        step.showCorrectStep1 = true;
+        hintType = "correct";
       }
+
+      // Add fade-in effect
+      setTimeout(() => {
+        const hintElement = document.getElementById(
+          `hint-${hintType}-${step.id}`
+        );
+        if (hintElement) {
+          hintElement.classList.add("fade-in");
+          hintElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
 
       return newSteps;
     });
-
-    // Since we call setSteps, React re-renders,
-    // which calls renderTree again and re-runs getNumberForStep.
   };
 
+  //get the number for the hint
   function getNumberForStep(step: Step): number | null {
-    if (step.general_hint) {
+    if (step.general_hint && step.showGeneralHint1 === false) {
       return 3;
-    } else if (step.detailed_hint) {
+    } else if (step.detailed_hint && step.showDetailedHint1 === false) {
       return 2;
-    } else if (step.correctStep) {
+    } else if (step.correctStep && step.showCorrectStep1 === false) {
       return 1;
     } else {
       return null;
     }
   }
+
+  const hintKeys = {
+    general: "showGeneralHint2",
+    detailed: "showDetailedHint2",
+    correct: "showCorrectStep2",
+  } as const;
+
+  //Show or not Show the hint in steptree
+  const toggleHint = (
+    type: "general" | "detailed" | "correct",
+    stepId: string
+  ) => {
+    setSteps((prevSteps) =>
+      prevSteps.map((step) => {
+        if (step.id !== stepId) return step;
+
+        const key = hintKeys[type]; // Get the correct key
+        const isExpanding = !step[key];
+
+        setTimeout(() => {
+          const hintElement = document.getElementById(`hint-${type}-${stepId}`);
+          if (hintElement) {
+            if (isExpanding) {
+              // Get the current height before changing content
+              const prevHeight = hintElement.scrollHeight;
+              hintElement.style.maxHeight = `${prevHeight}px`; // Lock previous height
+
+              setTimeout(() => {
+                // Now expand to the new height
+                hintElement.style.maxHeight = `${hintElement.scrollHeight}px`;
+                hintElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }, 50); // Small delay before applying new height
+            } else {
+              // Set height before collapsing
+              hintElement.style.maxHeight = `${hintElement.scrollHeight}px`;
+
+              setTimeout(() => {
+                // Collapse smoothly
+                hintElement.style.maxHeight = "0";
+              }, 10);
+            }
+          }
+        }, 50);
+
+        return { ...step, [key]: !step[key] }; // Toggle state last to prevent instant content change
+      })
+    );
+  };
 
   // ================================================================
   // Background color AND Opacity
@@ -550,7 +630,13 @@ const StartRight = () => {
       elements.push(
         <Fragment key={`step-${currentPath.join("-")}`}>
           <div
-            className={`step-box ${step.isDeleting ? "fade-out" : ""}`}
+            className={`step-box ${step.isDeleting ? "fade-out" : ""} ${
+              step.showGeneralHint2 ||
+              step.showDetailedHint2 ||
+              step.showCorrectStep2
+                ? "has-hint"
+                : ""
+            }`}
             id={step.id}
             style={{
               backgroundColor: getBackgroundColor(step),
@@ -597,6 +683,65 @@ const StartRight = () => {
             {step.children && step.children.length > 0 && (
               <div className="substeps">
                 {renderTree(step.children, currentPath)}
+              </div>
+            )}
+          </div>
+          {/* Collapsible container for all hints */}
+          <div className="hint-container">
+            {step.general_hint && step.showGeneralHint1 && (
+              <div
+                id={`hint-general-${step.id}`}
+                className={`hint-block ${
+                  step.showGeneralHint2 ? "expanded" : ""
+                }`}
+                onMouseEnter={(e) => e.currentTarget.classList.add("hovered")}
+                onMouseLeave={(e) =>
+                  e.currentTarget.classList.remove("hovered")
+                }
+                onClick={() => toggleHint("general", step.id)}
+              >
+                General Hint:
+                <span className="hint-content">
+                  {step.showGeneralHint2 ? `\n${step.general_hint}` : ""}
+                </span>
+              </div>
+            )}
+
+            {step.detailed_hint && step.showDetailedHint1 && (
+              <div
+                id={`hint-detailed-${step.id}`}
+                className={`hint-block ${
+                  step.showDetailedHint2 ? "expanded" : ""
+                }`}
+                onMouseEnter={(e) => e.currentTarget.classList.add("hovered")}
+                onMouseLeave={(e) =>
+                  e.currentTarget.classList.remove("hovered")
+                }
+                onClick={() => toggleHint("detailed", step.id)}
+              >
+                Detailed Hint:
+                <span className="hint-content">
+                  {step.showDetailedHint2 ? `\n${step.detailed_hint}` : ""}
+                </span>
+              </div>
+            )}
+
+            {step.correctStep && step.showCorrectStep1 && (
+              <div
+                id={`hint-correct-${step.id}`}
+                className={`hint-block ${
+                  step.showCorrectStep2 ? "expanded" : ""
+                }`}
+                onMouseEnter={(e) => e.currentTarget.classList.add("hovered")}
+                onMouseLeave={(e) =>
+                  e.currentTarget.classList.remove("hovered")
+                }
+                onClick={() => toggleHint("correct", step.id)}
+              >
+                Correct Step:
+                <span className="hint-content">
+                  {step.showCorrectStep2 ? `\n${step.correctStep}` : ""}
+                </span>
               </div>
             )}
           </div>

@@ -43,6 +43,10 @@
   overflow-y: auto;
 }
 
+.container-step-tree > .step-box.has-hint {
+  margin-bottom: 0;
+}
+
 .container-step-tree .step-box {
   margin: 1rem 0;
   padding: 1rem;
@@ -174,7 +178,7 @@
 @keyframes fadeInScale {
   0% {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.85);
   }
   100% {
     opacity: 1;
@@ -183,7 +187,7 @@
 }
 
 .fade-in {
-  animation: fadeInScale 0.25s ease forwards;
+  animation: fadeInScale 0.5s ease forwards;
 }
 
 @keyframes fadeOutScale {
@@ -219,4 +223,105 @@
 
 .step-content {
   word-break: break-all;
+}
+
+/* ------------------------------------------- 
+HINT HANDLING
+------------------------------------------- */
+
+.hint-block {
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 4px;
+  margin-top: -3vh;
+  padding: 0.5rem;
+  font-size: 1vw;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  max-height: 0px;
+}
+
+.hint-block:nth-child(1) {
+  z-index: 3;
+}
+.hint-block:nth-child(2) {
+  z-index: 2;
+}
+.hint-block:nth-child(3) {
+  z-index: 1;
+}
+
+.hint-block.hovered {
+  white-space: normal;
+  background-color: lightgrey;
+  z-index: 5;
+}
+
+.hint-block:not(.expanded) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.6vw;
+}
+
+.hint-block.expanded {
+  white-space: normal;
+  background-color: #fffbe6;
+  font-weight: bold;
+  z-index: 6;
+  margin-top: 0.5vh;
+}
+
+.hint-content {
+  display: block;
+  margin-top: 5px;
+  font-weight: normal;
+  font-size: 0.85vw;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Expand/Collapse animation */
+@keyframes expand {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 300px;
+    opacity: 1;
+  }
+}
+
+@keyframes collapse {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hint-block.expanded {
+  animation: expand 0.5s ease-in-out;
+}
+
+.hint-block:not(.expanded) {
+  animation: collapse 0.5s ease-in-out;
 }
