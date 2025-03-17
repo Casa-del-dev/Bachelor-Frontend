@@ -478,25 +478,36 @@ const StartRight = () => {
   }
 
   // ================================================================
-  // Background color
+  // Background color AND Opacity
   // ================================================================
 
   const getBackgroundColor = (step: Step): string => {
-    if (step.status.correctness === "") return "transparent";
+    if (
+      step.status.correctness === "" &&
+      step.status.can_be_further_divided === ""
+    )
+      return "transparent";
     else if (
       step.status.correctness === "correct" &&
       step.status.can_be_further_divided === "cannot"
     ) {
-      return "green";
+      return "rgb(96, 230, 96)";
     } else if (
       step.status.correctness === "incorrect" &&
       step.status.can_be_further_divided === "cannot"
     ) {
-      return "red";
+      return "rgb(255, 99, 99)";
     } else if (step.status.can_be_further_divided === "can") {
       return "lightblue";
     } else {
       return "transparent";
+    }
+  };
+
+  const getBorder = (step: Step): string => {
+    if (step.status.correctness === "missing") return "dashed";
+    else {
+      return "solid";
     }
   };
 
@@ -541,7 +552,10 @@ const StartRight = () => {
           <div
             className={`step-box ${step.isDeleting ? "fade-out" : ""}`}
             id={step.id}
-            style={{ backgroundColor: getBackgroundColor(step) }}
+            style={{
+              backgroundColor: getBackgroundColor(step),
+              border: "1px " + getBorder(step) + " black",
+            }}
           >
             <div className="step-title">
               Step {displayPath}:{" "}

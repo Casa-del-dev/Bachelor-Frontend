@@ -25,7 +25,6 @@
 }
 
 .container-step-tree > .step-box:first-of-type {
-  border: 2px solid #000;
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -35,19 +34,19 @@
 }
 
 .container-step-tree > .step-box:not(:first-of-type) {
-  border: 2px solid #000;
   border-radius: 4px;
   padding: 1rem;
   margin-bottom: 1rem;
   box-sizing: border-box;
   height: 25vh;
+  font-size: 1vw;
   overflow-y: auto;
 }
 
 .container-step-tree .step-box {
-  border-left: 1px solid #ccc;
   margin: 1rem 0;
   padding: 1rem;
+  font-size: 1vw;
   border-radius: 3px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -62,6 +61,7 @@
 
 .step-title {
   font-weight: bold;
+  font-size: 1.25vw;
   margin-bottom: 0.5rem;
   display: flex;
   flex-direction: row;
