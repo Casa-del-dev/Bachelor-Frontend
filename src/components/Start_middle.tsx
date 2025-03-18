@@ -128,7 +128,7 @@ export default function ResizableSplitView() {
     if (!isResizing.current) return;
     event.preventDefault();
 
-    const newHeight = ((event.clientY - 42) / window.innerHeight) * 100; // adjust for header
+    const newHeight = ((event.clientY - 40) / window.innerHeight) * 100; // adjust for header
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());

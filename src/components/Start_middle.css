@@ -3,7 +3,6 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .top-section,
@@ -12,6 +11,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  overflow: auto;
 }
 
 .resizer {
@@ -59,10 +59,9 @@
   justify-content: flex-end;
   box-sizing: border-box;
   align-items: start;
-  overflow-y: auto;
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 .bottom-section input {
@@ -79,7 +78,6 @@
   font-size: 1vw;
   white-space: pre-line;
   padding-bottom: 1rem;
-  overflow-y: auto;
   width: 100%;
   display: flex;
   flex-direction: column-reverse;
