@@ -9,6 +9,118 @@ import { apiCall } from "./AI_Prompt";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
 import { apiCallCheck } from "./AI_Check";
 
+function Collapsible({
+  isOpen,
+  children,
+  id,
+  toggleHint,
+  stepId,
+  what,
+}: {
+  isOpen: boolean;
+  children: React.ReactNode;
+  id?: string;
+  toggleHint: (type: "general" | "detailed", stepId: string) => void;
+  stepId: string;
+  what: "general" | "detailed";
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (isOpen) {
+      el.style.maxHeight = "0px";
+      el.getBoundingClientRect(); // Force reflow
+      el.style.maxHeight = el.scrollHeight + "px";
+    } else {
+      const currentHeight = el.scrollHeight;
+      el.style.maxHeight = currentHeight + "px";
+      el.getBoundingClientRect(); // Force reflow
+      el.style.maxHeight = "0px";
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={ref}
+      id={id}
+      className="hint-block"
+      style={{
+        maxHeight: "0px",
+        overflow: "hidden",
+        transition: "max-height 0.4s ease",
+      }}
+      onClick={() => toggleHint(what, stepId)}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ======================
+// CORRECT STEP OVERLAY
+// ======================
+interface CorrectStepOverlayProps {
+  onClose: () => void;
+  onConfirm: () => void;
+  saveChecked: boolean;
+  setSaveChecked: (val: boolean) => void;
+}
+const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
+  onClose,
+  onConfirm,
+  saveChecked,
+  setSaveChecked,
+}) => {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  // Close when clicking outside the box
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        overlayRef.current &&
+        !overlayRef.current.contains(event.target as Node)
+      ) {
+        onClose(); // Close overlay
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
+  return (
+    <div className="fullscreen-overlay">
+      <div className="overlay-box" ref={overlayRef}>
+        <div className="title-overlay-hint">
+          Are you sure you want to reveal the correct step?
+        </div>
+        <label className="mini-overlay-save">
+          <input
+            type="checkbox"
+            checked={saveChecked}
+            onChange={() => setSaveChecked(!saveChecked)}
+          />
+          Save this answer for future
+        </label>
+        <div className="overlay-buttons">
+          <button className="overlay-button-yes" onClick={onConfirm}>
+            Yes, Reveal
+          </button>
+          <button className="overlay-button-no" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ======================
+// STEPS
+// ======================
+
 export interface Step {
   id: string; // unique ID for each step
   code: string;
@@ -30,7 +142,6 @@ export interface Step {
   showCorrectStep1: boolean;
   showGeneralHint2: boolean;
   showDetailedHint2: boolean;
-  showCorrectStep2: boolean;
 }
 
 function createBlankStep(): Step {
@@ -49,12 +160,15 @@ function createBlankStep(): Step {
     hasparent: false,
     children: [],
     isDeleting: false,
+
+    // '1' means the user has unlocked this hint at all
     showGeneralHint1: false,
     showDetailedHint1: false,
     showCorrectStep1: false,
+
+    // '2' means is currently open or collapsed
     showGeneralHint2: false,
     showDetailedHint2: false,
-    showCorrectStep2: false,
   };
 }
 
@@ -64,6 +178,24 @@ const StartRight = () => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
+
+  // For revealing correct steps
+  const [showCorrectStepOverlay, setShowCorrectStepOverlay] = useState<
+    number[] | null
+  >(null);
+  const [saveCorrectStep, setSaveCorrectStep] = useState(false);
+  const [savedCorrectSteps, setSavedCorrectSteps] = useState<string[]>([]);
+
+  // ephemeral for fade-in
+  const [justUnlockedHintId, setJustUnlockedHintId] = useState<string | null>(
+    null
+  );
+
+  // Load from localStorage
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("savedCorrectSteps") || "[]");
+    setSavedCorrectSteps(saved);
+  }, []);
 
   // Build a storage key based on the selected problem name.
   const selectedProblemName =
@@ -78,21 +210,21 @@ const StartRight = () => {
         const parsedSteps = JSON.parse(savedSteps);
         setSteps(parsedSteps);
       } catch (error) {
-        console.error("Error parsing saved steps from localStorage:", error);
+        console.error("Error parsing saved steps:", error);
       }
     } else {
       setSteps([]);
     }
   }, [StorageKey]);
 
-  // Save steps to localStorage when they change.
+  // Save steps to localStorage whenever they change
   useEffect(() => {
     if (steps.length > 0) {
       localStorage.setItem(StorageKey, JSON.stringify(steps));
     }
   }, [steps, StorageKey]);
 
-  // Adjust textarea height on input.
+  // Adjust textarea height on input
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const target = e.target;
     target.style.height = "auto";
@@ -100,67 +232,7 @@ const StartRight = () => {
     setText(target.value);
   };
 
-  // Transform JSON data into the Step interface recursively.
-  const transformStep = (stepData: any, hasParent: boolean = false): Step => {
-    return {
-      id:
-        stepData.id ||
-        `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-      code: stepData.code || "",
-      content: stepData.content || "",
-      correctStep: stepData.correctStep || "",
-      prompt: stepData.prompt || "",
-      status: stepData.status || "",
-      general_hint: stepData.generalHint || "",
-      detailed_hint: stepData.generalHint || "",
-      hasparent: hasParent,
-      children: stepData.subSteps
-        ? transformStepsObject(stepData.subSteps, true)
-        : [],
-      isDeleting: false,
-      showGeneralHint1: false,
-      showDetailedHint1: false,
-      showCorrectStep1: false,
-      showGeneralHint2: false,
-      showDetailedHint2: false,
-      showCorrectStep2: false,
-    };
-  };
-
-  const transformStepsObject = (
-    obj: any,
-    hasParent: boolean = false
-  ): Step[] => {
-    return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
-  };
-
-  // Parse JSON input into a tree structure.
-  const parseJSONSteps = (input: string): Step[] => {
-    try {
-      const parsed = JSON.parse(input);
-      if (parsed.steps) {
-        return transformStepsObject(parsed.steps, false);
-      }
-      return transformStepsObject(parsed, false);
-    } catch (error) {
-      console.error("Invalid JSON input:", error);
-      return [];
-    }
-  };
-
-  // Trigger parsing and setting the steps tree.
-  const handleSubmit = () => {
-    if (text.trim() === "") return;
-    const parsedTree = parseJSONSteps(text);
-    setSteps(parsedTree);
-    console.log("Parsed Steps:", parsedTree);
-    setText("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
-
-  // Reset textarea height when clicking outside.
+  // reset textarea height when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -171,22 +243,76 @@ const StartRight = () => {
         textareaRef.current.style.height = "auto";
       }
     };
-
     document.addEventListener("click", handleClickOutside);
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
-  /**
-   * API Call to generate steps with ChatGPT.
-   */
-  const handleGenerateWithChatGPT = async (Context: string) => {
+  // Transform JSON -> Step
+  function transformStep(stepData: any, hasParent: boolean = false): Step {
+    return {
+      id:
+        stepData.id ||
+        `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      code: stepData.code || "",
+      content: stepData.content || "",
+      correctStep: stepData.correctStep || "",
+      prompt: stepData.prompt || "",
+      status: stepData.status || {
+        correctness: "",
+        can_be_further_divided: "",
+      },
+      general_hint: stepData.generalHint || "",
+      detailed_hint: stepData.detailedHint || "",
+      hasparent: hasParent,
+      children: stepData.subSteps
+        ? transformStepsObject(stepData.subSteps, true)
+        : [],
+      isDeleting: false,
+
+      showGeneralHint1: false,
+      showDetailedHint1: false,
+      showCorrectStep1: false,
+      showGeneralHint2: false,
+      showDetailedHint2: false,
+    };
+  }
+
+  function transformStepsObject(obj: any, hasParent: boolean = false): Step[] {
+    return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
+  }
+
+  // parse JSON input -> Step Tree
+  function parseJSONSteps(input: string): Step[] {
+    try {
+      const parsed = JSON.parse(input);
+      if (parsed.steps) {
+        return transformStepsObject(parsed.steps, false);
+      }
+      return transformStepsObject(parsed, false);
+    } catch (error) {
+      console.error("Invalid JSON input:", error);
+      return [];
+    }
+  }
+
+  // Trigger parse
+  const handleSubmit = () => {
+    if (text.trim() === "") return;
+    const parsedTree = parseJSONSteps(text);
+    setSteps(parsedTree);
+    setText("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
+
+  async function handleGenerateWithChatGPT(Context: string) {
     if (!isAuthenticated) {
       console.log("Login Needed");
       return;
     }
-
     if (Context === "From Prompt" && text.trim() === "") return;
 
     const selectedProblem =
@@ -197,11 +323,10 @@ const StartRight = () => {
 
     try {
       const gptResponse = await apiCall(text, selectedProblemDetails);
-      console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
 
-      // Extract the steps if available.
+      // Extract steps
       const stepsData = parsedResponse.steps
         ? parsedResponse.steps
         : parsedResponse;
@@ -215,52 +340,35 @@ const StartRight = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  /**
-   * Recursively converts an array of Step objects into a string.
-   * Each step is numbered according to its level in the hierarchy.
-   *
-   * @param steps - An array of Step objects.
-   * @param prefix - A string prefix to keep track of the numbering (used recursively).
-   * @returns A string representation of the steps tree.
-   */
-  const stepsToString = (steps: Step[], prefix: string = ""): string => {
+  function stepsToString(steps: Step[], prefix: string = ""): string {
     return steps
       .map((step, index) => {
-        // Build a numbering prefix (e.g., "1", "1.2", "1.2.3", etc.)
         const currentPrefix = prefix
           ? `${prefix}.${index + 1}`
           : `${index + 1}`;
-        // Start with the step header and its content
         let stepStr = `Step ${currentPrefix}: ${step.content}\n`;
 
-        // Optionally include code if it exists
         if (step.code) {
           stepStr += `  Code: ${step.code}\n`;
         }
-
-        // Optionally include hints if they exist
         if (step.general_hint || step.detailed_hint) {
           stepStr += `  Hints: ${step.general_hint} ${step.detailed_hint}\n`;
         }
-
-        // Recursively process children (sub-steps)
         if (step.children && step.children.length > 0) {
           stepStr += stepsToString(step.children, currentPrefix);
         }
-
         return stepStr;
       })
       .join("");
-  };
+  }
 
-  const handleGenerateWithChatGPTCheck = async (Context: string) => {
+  async function handleGenerateWithChatGPTCheck(Context: string) {
     if (!isAuthenticated) {
       console.log("Login Needed");
       return;
     }
-
     if (Context === "From Prompt" && text.trim() === "") return;
 
     const selectedProblem =
@@ -268,18 +376,15 @@ const StartRight = () => {
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
     setLoading(true);
-    console.log("Steps", stepsToString(steps));
 
     try {
       const gptResponse = await apiCallCheck(
         selectedProblemDetails,
         stepsToString(steps)
       );
-      console.log(gptResponse);
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
 
-      // Extract the steps if available.
       const stepsData = parsedResponse.steps
         ? parsedResponse.steps
         : parsedResponse;
@@ -293,22 +398,22 @@ const StartRight = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  // Delete the entire tree.
+  // Delete entire tree
   const HandleDeleteTree = () => {
     setSteps([]);
     localStorage.setItem(StorageKey, "[]");
   };
 
-  // Update the content of a step at the given path.
-  const updateStepContentAtPath = (
+  // update step content
+  function updateStepContentAtPath(
     steps: Step[],
     path: number[],
     newContent: string
-  ): Step[] => {
+  ): Step[] {
     const updatedSteps = steps.map((step) => ({ ...step }));
-    let current: Step[] = updatedSteps;
+    let current = updatedSteps;
     for (let i = 0; i < path.length; i++) {
       const idx = path[i];
       if (i === path.length - 1) {
@@ -322,22 +427,19 @@ const StartRight = () => {
       }
     }
     return updatedSteps;
-  };
+  }
 
-  // ==============================================
-  // === REMOVAL with Fade-Out (by id)
-  // ==============================================
+  // Removal with fade-out
   const handleRemoveStep = (id: string) => {
     setSteps((prevSteps) =>
       prevSteps.map((step) => markStepAndChildrenAsDeleting(step, id))
     );
-
     setTimeout(() => {
       setSteps((prevSteps) => removeStepById(prevSteps, id));
-    }, 300); // Matches animation duration
+    }, 300);
   };
 
-  const markStepAndChildrenAsDeleting = (step: Step, id: string): Step => {
+  function markStepAndChildrenAsDeleting(step: Step, id: string): Step {
     if (step.id === id) {
       return {
         ...step,
@@ -348,22 +450,17 @@ const StartRight = () => {
         })),
       };
     }
-
     return {
       ...step,
       children: step.children.map((child) =>
         markStepAndChildrenAsDeleting(child, id)
       ),
     };
-  };
+  }
 
-  // Helper: Remove a step (and its children) by id.
   function removeStepById(steps: Step[], id: string): Step[] {
     return steps.reduce<Step[]>((acc, step) => {
-      if (step.id === id) {
-        // Skip this step (i.e. remove it)
-        return acc;
-      }
+      if (step.id === id) return acc; // skip
       const newStep = { ...step };
       if (newStep.children && newStep.children.length > 0) {
         newStep.children = removeStepById(newStep.children, id);
@@ -373,9 +470,7 @@ const StartRight = () => {
     }, []);
   }
 
-  // ==============================================
-  // === INSERT (Top-Level, SubStep) with Fade-In + Scroll
-  // ==============================================
+  // Insert with fade-in
   const insertTopLevelStepAt = (index: number) => {
     const newStep = createBlankStep();
     setSteps((prevSteps) => {
@@ -383,7 +478,6 @@ const StartRight = () => {
       newSteps.splice(index, 0, newStep);
       return newSteps;
     });
-
     setTimeout(() => {
       animateAndScrollTo(newStep.id);
     }, 0);
@@ -406,7 +500,6 @@ const StartRight = () => {
       parent.splice(insertionIndex, 0, newSubStep);
       return newSteps;
     });
-
     setTimeout(() => {
       animateAndScrollTo(newSubStep.id);
     }, 0);
@@ -415,11 +508,8 @@ const StartRight = () => {
   function animateAndScrollTo(elementId: string) {
     const el = document.getElementById(elementId);
     if (!el) return;
-
     el.classList.add("fade-in");
-
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-
     const handleAnimationEnd = () => {
       el.classList.remove("fade-in");
       el.removeEventListener("animationend", handleAnimationEnd);
@@ -427,18 +517,16 @@ const StartRight = () => {
     el.addEventListener("animationend", handleAnimationEnd);
   }
 
-  // ================================================================
-  // === EDITING LOGIC (Inline Editing)
-  // ================================================================
+  // Editing logic
   const [editingPath, setEditingPath] = useState<number[] | null>(null);
   const [tempContent, setTempContent] = useState("");
 
-  const handleStartEditing = (path: number[], initialValue: string) => {
+  function handleStartEditing(path: number[], initialValue: string) {
     setEditingPath(path);
     setTempContent(initialValue);
-  };
+  }
 
-  const handleBlur = () => {
+  function handleBlur() {
     if (editingPath !== null) {
       setSteps((prev) =>
         updateStepContentAtPath(prev, editingPath!, tempContent)
@@ -446,161 +534,137 @@ const StartRight = () => {
       setEditingPath(null);
       setTempContent("");
     }
-  };
+  }
 
-  // ================================================================
-  // HINT FUNCTIONS
-  // ================================================================
+  // HINT Logic
+  function getNumberForStep(step: Step): number | null {
+    if (step.general_hint && !step.showGeneralHint1) return 3;
+    else if (step.detailed_hint && !step.showDetailedHint1) return 2;
+    else if (step.correctStep && !step.showCorrectStep1) return 1;
+    return null;
+  }
 
-  const handleGiveHint = (path: number[], hintNumber: number | null) => {
-    if (hintNumber === null) return;
+  // Actually open/close an unlocked hint
+  const hintKeys = {
+    general: "showGeneralHint2",
+    detailed: "showDetailedHint2",
+  } as const;
 
+  function toggleHint(type: "general" | "detailed", stepId: string) {
+    setSteps((prevSteps) =>
+      prevSteps.map((step) => {
+        if (step.id !== stepId) return step;
+        const key = hintKeys[type];
+        return {
+          ...step,
+          [key]: !step[key],
+        };
+      })
+    );
+  }
+
+  // Reveal correct step
+  function revealCorrectStep(path: number[]) {
     setSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
+      let current = newSteps;
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]].children;
+      }
+      const stepIndex = path[path.length - 1];
+      current[stepIndex].showCorrectStep1 = true;
+      current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
+      return newSteps;
+    });
+    const stepId = `step-${path.join("-")}-correct`;
+    setJustUnlockedHintId(stepId);
+    setTimeout(() => {
+      setJustUnlockedHintId(null);
+    }, 500);
+  }
 
+  function handleGiveCorrectStep() {
+    if (!showCorrectStepOverlay) return;
+    // reveal correct
+    revealCorrectStep(showCorrectStepOverlay);
+
+    // save?
+    if (saveCorrectStep) {
+      const stepId = `step-${showCorrectStepOverlay.join("-")}-correct`;
+      const updated = [...savedCorrectSteps, stepId];
+      setSavedCorrectSteps(updated);
+      localStorage.setItem("savedCorrectSteps", JSON.stringify(updated));
+    }
+    // done
+    setShowCorrectStepOverlay(null);
+    setSaveCorrectStep(false);
+  }
+
+  // handleGiveHint
+  function handleGiveHint(path: number[], hintNumber: number | null) {
+    if (hintNumber === null) return;
+
+    // correct step => show overlay or reveal immediately if saved
+    if (hintNumber === 1) {
+      const stepId = `step-${path.join("-")}-correct`;
+      if (savedCorrectSteps.includes(stepId)) {
+        revealCorrectStep(path);
+      } else {
+        setShowCorrectStepOverlay(path); // triggers overlay
+      }
+      return;
+    }
+
+    // otherwise, general/detailed hints
+    setSteps((prevSteps) => {
+      const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
       let current = newSteps;
       for (let i = 0; i < path.length - 1; i++) {
         current = current[path[i]].children;
       }
       const stepIndex = path[path.length - 1];
       const step = current[stepIndex];
-
-      let hintType = "";
-
-      if (hintNumber === 3) {
-        step.showGeneralHint1 = true; // Reveal hint
-        hintType = "general";
-      } else if (hintNumber === 2) {
-        step.showDetailedHint1 = true;
-        hintType = "detailed";
-      } else if (hintNumber === 1) {
-        step.showCorrectStep1 = true;
-        hintType = "correct";
-      }
-
-      // Add fade-in effect
-      setTimeout(() => {
-        const hintElement = document.getElementById(
-          `hint-${hintType}-${step.id}`
-        );
-        if (hintElement) {
-          hintElement.classList.add("fade-in");
-          hintElement.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 100);
-
+      if (hintNumber === 3) step.showGeneralHint1 = true;
+      else if (hintNumber === 2) step.showDetailedHint1 = true;
       return newSteps;
     });
-  };
 
-  //get the number for the hint
-  function getNumberForStep(step: Step): number | null {
-    if (step.general_hint && step.showGeneralHint1 === false) {
-      return 3;
-    } else if (step.detailed_hint && step.showDetailedHint1 === false) {
-      return 2;
-    } else if (step.correctStep && step.showCorrectStep1 === false) {
-      return 1;
-    } else {
-      return null;
-    }
+    const stepId = `step-${path.join("-")}-${hintNumber}`;
+    setJustUnlockedHintId(stepId);
+    setTimeout(() => {
+      setJustUnlockedHintId(null);
+    }, 500);
   }
 
-  const hintKeys = {
-    general: "showGeneralHint2",
-    detailed: "showDetailedHint2",
-    correct: "showCorrectStep2",
-  } as const;
-
-  //Show or not Show the hint in steptree
-  const toggleHint = (
-    type: "general" | "detailed" | "correct",
-    stepId: string
-  ) => {
-    setSteps((prevSteps) =>
-      prevSteps.map((step) => {
-        if (step.id !== stepId) return step;
-
-        const key = hintKeys[type]; // Get the correct key
-        const isExpanding = !step[key];
-
-        setTimeout(() => {
-          const hintElement = document.getElementById(`hint-${type}-${stepId}`);
-          if (hintElement) {
-            if (isExpanding) {
-              // Get the current height before changing content
-              const prevHeight = hintElement.scrollHeight;
-              hintElement.style.maxHeight = `${prevHeight}px`; // Lock previous height
-
-              setTimeout(() => {
-                // Now expand to the new height
-                hintElement.style.maxHeight = `${hintElement.scrollHeight}px`;
-                hintElement.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-              }, 50); // Small delay before applying new height
-            } else {
-              // Set height before collapsing
-              hintElement.style.maxHeight = `${hintElement.scrollHeight}px`;
-
-              setTimeout(() => {
-                // Collapse smoothly
-                hintElement.style.maxHeight = "0";
-              }, 10);
-            }
-          }
-        }, 50);
-
-        return { ...step, [key]: !step[key] }; // Toggle state last to prevent instant content change
-      })
-    );
-  };
-
-  // ================================================================
-  // Background color AND Opacity
-  // ================================================================
-
-  const getBackgroundColor = (step: Step): string => {
+  // Rendering logic
+  function getBackgroundColor(step: Step): string {
     if (
       step.status.correctness === "" &&
       step.status.can_be_further_divided === ""
     )
       return "transparent";
-    else if (
+    if (
       step.status.correctness === "correct" &&
       step.status.can_be_further_divided === "cannot"
-    ) {
+    )
       return "rgb(96, 230, 96)";
-    } else if (
+    if (
       step.status.correctness === "incorrect" &&
       step.status.can_be_further_divided === "cannot"
-    ) {
+    )
       return "rgb(255, 99, 99)";
-    } else if (step.status.can_be_further_divided === "can") {
-      return "lightblue";
-    } else {
-      return "transparent";
-    }
-  };
+    if (step.status.can_be_further_divided === "can") return "lightblue";
+    return "transparent";
+  }
 
-  const getBorder = (step: Step): string => {
+  function getBorder(step: Step): string {
     if (step.status.correctness === "missing") return "dashed";
-    else {
-      return "solid";
-    }
-  };
+    return "solid";
+  }
 
-  // ================================================================
-  // RENDER THE TREE
-  // ================================================================
-  const renderTree = (
-    steps: Step[],
-    parentPath: number[] = []
-  ): JSX.Element[] => {
+  function renderTree(steps: Step[], parentPath: number[] = []): JSX.Element[] {
     const elements: JSX.Element[] = [];
-
-    // Render a plus button at the beginning.
+    // plus top
     if (parentPath.length === 0) {
       elements.push(
         <PlusbetweenSteps
@@ -621,7 +685,6 @@ const StartRight = () => {
       const currentPath = [...parentPath, index];
       const displayPath = currentPath.map((i) => i + 1).join(".");
       const hintNumber = getNumberForStep(step);
-
       const isCurrentlyEditing =
         editingPath &&
         editingPath.length === currentPath.length &&
@@ -630,13 +693,7 @@ const StartRight = () => {
       elements.push(
         <Fragment key={`step-${currentPath.join("-")}`}>
           <div
-            className={`step-box ${step.isDeleting ? "fade-out" : ""} ${
-              step.showGeneralHint2 ||
-              step.showDetailedHint2 ||
-              step.showCorrectStep2
-                ? "has-hint"
-                : ""
-            }`}
+            className={`step-box ${step.isDeleting ? "fade-out" : ""}`}
             id={step.id}
             style={{
               backgroundColor: getBackgroundColor(step),
@@ -644,7 +701,7 @@ const StartRight = () => {
             }}
           >
             <div className="step-title">
-              Step {displayPath}:{" "}
+              Step {displayPath}:
               <div className="icon-container-start-right">
                 <The_muskeltiers
                   number={hintNumber}
@@ -657,13 +714,15 @@ const StartRight = () => {
                   }
                   onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
                 />
-                <Trash
-                  onClick={() => handleRemoveStep(step.id)}
-                  cursor="pointer"
-                  strokeWidth={1}
-                  width={"1.5vw"}
-                  className="trash"
-                />
+                <div className="trash">
+                  <Trash
+                    onClick={() => handleRemoveStep(step.id)}
+                    cursor="pointer"
+                    strokeWidth={1}
+                    width={"1.5vw"}
+                    className="trash-icon"
+                  />
+                </div>
               </div>
             </div>
 
@@ -680,72 +739,93 @@ const StartRight = () => {
               <div className="step-content">{step.content}</div>
             )}
 
+            {/* substeps */}
             {step.children && step.children.length > 0 && (
               <div className="substeps">
                 {renderTree(step.children, currentPath)}
               </div>
             )}
           </div>
-          {/* Collapsible container for all hints */}
+
+          {/* Collapsible containers for hints */}
           <div className="hint-container">
-            {step.general_hint && step.showGeneralHint1 && (
-              <div
-                id={`hint-general-${step.id}`}
-                className={`hint-block ${
-                  step.showGeneralHint2 ? "expanded" : ""
-                }`}
-                onMouseEnter={(e) => e.currentTarget.classList.add("hovered")}
-                onMouseLeave={(e) =>
-                  e.currentTarget.classList.remove("hovered")
-                }
-                onClick={() => toggleHint("general", step.id)}
-              >
-                General Hint:
-                <span className="hint-content">
-                  {step.showGeneralHint2 ? `\n${step.general_hint}` : ""}
-                </span>
-              </div>
-            )}
-
             {step.detailed_hint && step.showDetailedHint1 && (
-              <div
+              <Collapsible
+                isOpen={step.showDetailedHint2}
                 id={`hint-detailed-${step.id}`}
-                className={`hint-block ${
-                  step.showDetailedHint2 ? "expanded" : ""
-                }`}
-                onMouseEnter={(e) => e.currentTarget.classList.add("hovered")}
-                onMouseLeave={(e) =>
-                  e.currentTarget.classList.remove("hovered")
-                }
-                onClick={() => toggleHint("detailed", step.id)}
+                toggleHint={toggleHint}
+                stepId={step.id}
+                what={"detailed"}
               >
-                Detailed Hint:
-                <span className="hint-content">
-                  {step.showDetailedHint2 ? `\n${step.detailed_hint}` : ""}
-                </span>
-              </div>
+                {/* Show fade-in if we just unlocked it */}
+                <div
+                  className={
+                    "hint-inner " +
+                    (step.showDetailedHint2 ? "extended " : "") +
+                    (justUnlockedHintId === `step-${currentPath.join("-")}-2`
+                      ? "fade-in "
+                      : "")
+                  }
+                >
+                  {step.showDetailedHint2 ? (
+                    <>
+                      <strong>Detailed Hint:</strong>
+                      <span className="hint-content">{step.detailed_hint}</span>
+                    </>
+                  ) : (
+                    <div className="not-extented-hint">
+                      <strong>Detailed Hint:</strong>
+                      <span
+                        className="hint-content"
+                        style={{ visibility: "hidden" }}
+                      >
+                        {step.detailed_hint}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Collapsible>
             )}
 
-            {step.correctStep && step.showCorrectStep1 && (
-              <div
-                id={`hint-correct-${step.id}`}
-                className={`hint-block ${
-                  step.showCorrectStep2 ? "expanded" : ""
-                }`}
-                onMouseEnter={(e) => e.currentTarget.classList.add("hovered")}
-                onMouseLeave={(e) =>
-                  e.currentTarget.classList.remove("hovered")
-                }
-                onClick={() => toggleHint("correct", step.id)}
+            {step.general_hint && step.showGeneralHint1 && (
+              <Collapsible
+                isOpen={step.showGeneralHint2}
+                id={`hint-general-${step.id}`}
+                toggleHint={toggleHint}
+                stepId={step.id}
+                what={"general"}
               >
-                Correct Step:
-                <span className="hint-content">
-                  {step.showCorrectStep2 ? `\n${step.correctStep}` : ""}
-                </span>
-              </div>
+                <div
+                  className={
+                    "hint-inner " +
+                    (step.showGeneralHint2 ? "extended " : "") +
+                    (justUnlockedHintId === `step-${currentPath.join("-")}-3`
+                      ? "fade-in "
+                      : "")
+                  }
+                >
+                  {step.showGeneralHint2 ? (
+                    <>
+                      <strong>General Hint:</strong>
+                      <span className="hint-content">{step.general_hint}</span>
+                    </>
+                  ) : (
+                    <div className="not-extented-hint">
+                      <strong>General Hint</strong>
+                      <span
+                        className="hint-content"
+                        style={{ visibility: "hidden" }}
+                      >
+                        {step.general_hint}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Collapsible>
             )}
           </div>
 
+          {/* plus between steps */}
           {parentPath.length === 0 ? (
             <PlusbetweenSteps
               key={`plus-top-${index + 1}`}
@@ -762,29 +842,29 @@ const StartRight = () => {
     });
 
     return elements;
-  };
+  }
 
   return (
     <div className="Right-Side-main">
       <div className="right-sidecontent-main">
         <div className="right-header-main">
-          Step Tree{" "}
-          {steps && steps.length > 0 ? (
-            <Trash
-              color="black"
-              size={"1vw"}
-              strokeWidth={1}
-              cursor="pointer"
-              onClick={HandleDeleteTree}
-              className="trash"
-            />
-          ) : (
-            ""
+          Step Tree
+          {steps.length > 0 && (
+            <div className="trash">
+              <Trash
+                color="black"
+                size={"1vw"}
+                strokeWidth={1}
+                cursor="pointer"
+                onClick={HandleDeleteTree}
+                className="trash-icon"
+              />
+            </div>
           )}
         </div>
         <div className="right-main-main">
           <div className="container-step-tree">
-            {steps && steps.length > 0 ? (
+            {steps.length > 0 ? (
               <>
                 <div className="button-container">
                   <button
@@ -810,7 +890,7 @@ const StartRight = () => {
                   value={text}
                   onChange={handleInput}
                   className="text-input"
-                  placeholder={`Enter Your Thoughts`}
+                  placeholder="Enter Your Thoughts"
                   style={{
                     height: "75vh",
                     minHeight: "75vh",
@@ -841,6 +921,16 @@ const StartRight = () => {
           </div>
         </div>
       </div>
+
+      {/* ========== FULLSCREEN OVERLAY ========== */}
+      {showCorrectStepOverlay && (
+        <CorrectStepOverlay
+          onClose={() => setShowCorrectStepOverlay(null)}
+          onConfirm={handleGiveCorrectStep}
+          saveChecked={saveCorrectStep}
+          setSaveChecked={setSaveCorrectStep}
+        />
+      )}
     </div>
   );
 };
