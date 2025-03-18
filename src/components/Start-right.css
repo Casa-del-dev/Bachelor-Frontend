@@ -338,6 +338,7 @@ Overlay for when the user selects to get the Correct Step
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
 .overlay-box {

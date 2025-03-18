@@ -75,27 +75,33 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   setSaveChecked,
 }) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
+  const [fadeState, setFadeState] = useState("fade-in"); // Initial fade-in
 
-  // Close when clicking outside the box
+  // Handle fade-out before closing
+  const handleClose = () => {
+    setFadeState("fade-out");
+    setTimeout(() => onClose(), 300); // Delay removal after fade-out
+  };
+
+  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         overlayRef.current &&
         !overlayRef.current.contains(event.target as Node)
       ) {
-        onClose(); // Close overlay
+        handleClose(); // Trigger fade-out
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
+  }, []);
 
   return (
-    <div className="fullscreen-overlay">
+    <div className={`fullscreen-overlay ${fadeState}`}>
       <div className="overlay-box" ref={overlayRef}>
-        <div className="title-overlay-hint">
-          Are you sure you want to reveal the correct step?
-        </div>
+        <h3>Are you sure you want to reveal the correct step?</h3>
         <label className="mini-overlay-save">
           <input
             type="checkbox"
@@ -105,10 +111,10 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
           Save this answer for future
         </label>
         <div className="overlay-buttons">
-          <button className="overlay-button-yes" onClick={onConfirm}>
+          <button className="overlay-button" onClick={onConfirm}>
             Yes, Reveal
           </button>
-          <button className="overlay-button-no" onClick={onClose}>
+          <button className="overlay-button" onClick={handleClose}>
             Cancel
           </button>
         </div>
@@ -736,7 +742,13 @@ const StartRight = () => {
                 onBlur={handleBlur}
               />
             ) : (
-              <div className="step-content">{step.content}</div>
+              <div
+                className={`step-content ${
+                  !step.showCorrectStep1 ? "" : "step-content-hinted"
+                }`}
+              >
+                {step.content}
+              </div>
             )}
 
             {/* substeps */}
