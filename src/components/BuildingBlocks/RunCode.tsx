@@ -2,25 +2,27 @@ import axios from "axios";
 
 export const handleRunCode = async (
   code: string,
-  codeOutput: string,
   setCodeOutput: (output: string) => void,
   isAuthenticated: boolean,
-  setOutput: (output: string) => void
+  setOutput: (output: string) => void,
+  action: "run" | "compile" | "test"
 ): Promise<void> => {
-  setCodeOutput("Running...");
-  setOutput(codeOutput);
+  setCodeOutput(`Executing ${action}...`);
+  setOutput("");
+
   if (!isAuthenticated) {
     setCodeOutput("Need to login");
-    setOutput(codeOutput);
     return;
   }
 
   try {
-    const response = await axios.post("http://127.0.0.1:8000/run-python/", {
-      code: code,
+    const response = await axios.post("http://127.0.0.1:8000/execute/", {
+      code,
+      action,
     });
+
     setCodeOutput(response.data.output);
-    setOutput(codeOutput);
+    setOutput(response.data.output);
   } catch (error) {
     console.error("Error:", error);
 
@@ -28,10 +30,8 @@ export const handleRunCode = async (
       setCodeOutput(
         `Error: ${error.response?.data?.message || "Unknown error from server"}`
       );
-      setOutput("Results: " + codeOutput);
     } else {
       setCodeOutput("Error: Could not connect to backend.");
-      setOutput(codeOutput);
     }
   }
 };
