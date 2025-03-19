@@ -1,6 +1,14 @@
 import _, { useState, useEffect } from "react";
 import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
+import { useCodeContext } from "../CodeContext"; // <-- import context here
 import "./Project_files.css";
+
+interface FileItem {
+  id: number;
+  name: string;
+  type: "file" | "folder";
+  children?: FileItem[];
+}
 
 // Initial file structure example
 const initialFiles: FileItem[] = [
@@ -8,48 +16,38 @@ const initialFiles: FileItem[] = [
     id: 1,
     name: "src",
     type: "folder",
-    children: [
-      { id: 2, name: "Test.tsx", type: "file" },
-      { id: 3, name: "App.jsx", type: "file" },
-    ],
+    children: [{ id: 2, name: "Solution.py", type: "file" }],
   },
-  { id: 4, name: "README.md", type: "file" },
+  { id: 4, name: "Tests.py", type: "file" },
 ];
 
-interface FileItem {
-  id: number;
-  name: string;
-  type: "file" | "folder";
-  children?: FileItem[]; // Only folders have children
-}
-
 const Project_files = () => {
-  // Get the selected problem name from localStorage (stored as a plain string).
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "Default Problem";
-  // Create a unique key for the system file tree for this problem.
+
   const systemStorageKey =
     "sys" + `selectedSystemProblem_${selectedProblemName}`;
 
-  // Initialize the file tree state from localStorage using the systemStorageKey.
-  // If not present, fall back to initialFiles.
   const [files, setFiles] = useState<FileItem[]>(() => {
     const storedTree = localStorage.getItem(systemStorageKey);
     return storedTree ? JSON.parse(storedTree) : initialFiles;
   });
 
-  // When the file tree changes, update the state and save it to localStorage
-  // using the system-specific key.
+  // Get setCurrentFile from our CodeContext.
+  const { setCurrentFile } = useCodeContext();
+
+  // When the file tree changes, update both state and localStorage.
   const updateFileTree = (newTree: FileItem[]) => {
     setFiles(newTree);
     localStorage.setItem(systemStorageKey, JSON.stringify(newTree));
   };
 
-  // Example function to handle file click.
+  // When a file is clicked, update the CodeContext with its name.
   const handleFileClick = (item: FileItem) => {
     if (item.type === "file") {
-      localStorage.setItem("selectedFile", item.name);
+      setCurrentFile(item.name);
       console.log(`Selected file: ${item.name}`);
+      window.location.reload();
     }
   };
 
@@ -110,7 +108,7 @@ const Project_files = () => {
     }
   };
 
-  // Recursively delete an item (file or folder) by id from the tree.
+  // Recursively delete an item by id.
   const deleteFromTree = (tree: FileItem[], itemId: number): FileItem[] => {
     return tree
       .filter((item) => item.id !== itemId)
@@ -149,7 +147,7 @@ const Project_files = () => {
     });
   };
 
-  // Rename an item on double click (using a prompt).
+  // Rename an item on double click.
   const renameItem = (itemId: number) => {
     const newName = prompt("Enter the new name:");
     if (!newName) return;
@@ -208,7 +206,7 @@ const Project_files = () => {
     );
   };
 
-  // Ensure that if the selected problem changes externally, we update our file tree.
+  // Update file tree if the selected problem changes.
   useEffect(() => {
     const storedTree = localStorage.getItem(systemStorageKey);
     if (storedTree) {

@@ -202,6 +202,7 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
 
   const handleCheckClick = () => {
     localStorage.setItem("selectedProblem", selectedProblem);
+    localStorage.setItem("selectedSection", "Problem");
     navigate(`/start/${selectedProblem}`);
   };
 

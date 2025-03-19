@@ -7,6 +7,7 @@ import { useCodeContext } from "../CodeContext";
 import { useAuth } from "../AuthContext";
 import "./Start_middle.css";
 import PythonPlayground from "./Program-interface"; // your editor
+import { getActionMessage } from "./BuildingBlocks/ActionMessage";
 
 export default function ResizableSplitView() {
   const [topHeight, setTopHeight] = useState<number>(() => {
@@ -22,7 +23,6 @@ export default function ResizableSplitView() {
   const { isAuthenticated } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
 
-  // We'll store the current typed line in inputBuffer
   const inputBuffer = useRef("");
 
   /** Setup xterm.js on mount */
@@ -32,8 +32,8 @@ export default function ResizableSplitView() {
     term.current = new Terminal({
       cursorBlink: true,
       theme: {
-        background: "#f1f1f1", // black background
-        foreground: "#000", // white text
+        background: "#f1f1f1",
+        foreground: "#000",
         cursor: "black",
       },
     });
@@ -74,7 +74,6 @@ export default function ResizableSplitView() {
     term.current.writeln("Attempting WebSocket connection...");
   }, []);
 
-  /** Connect to backend WebSocket */
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -90,11 +89,11 @@ export default function ResizableSplitView() {
     };
 
     socketRef.current.onclose = () => {
-      term.current?.writeln("\r\n⚠️ WebSocket disconnected.");
+      term.current?.writeln("\r\n>> ⚠️ WebSocket disconnected.");
     };
 
     socketRef.current.onerror = (err) => {
-      term.current?.writeln(`\r\n⚠️ WebSocket error: ${err}`);
+      term.current?.writeln(`\r\n>> ⚠️ WebSocket error: ${err}`);
     };
 
     return () => {
@@ -108,12 +107,14 @@ export default function ResizableSplitView() {
    */
   const sendCodeToBackend = (action: "run" | "compile" | "test") => {
     if (!isAuthenticated || !socketRef.current) {
-      term.current?.writeln("⚠️ Not authenticated. Please log in.");
+      term.current?.writeln(">>⚠️ Not authenticated. Please log in.");
       return;
     }
+
+    const actionMessage = getActionMessage(action);
     // Clear the terminal
     term.current?.clear();
-    term.current?.writeln(`$ Running ${action}...\r\n`);
+    term.current?.writeln(`${actionMessage}...\r\n`);
 
     // Send the code from the editor
     socketRef.current.send(JSON.stringify({ code }));
@@ -163,19 +164,19 @@ export default function ResizableSplitView() {
         <div className="icon-terminal">
           <FaPlay
             className="icons-for-terminal"
-            size={"2vw"}
+            size={"1.5vw"}
             onClick={() => sendCodeToBackend("run")}
             style={{ cursor: "pointer" }}
           />
           <FaCog
             className="icons-for-terminal"
-            size={"2vw"}
+            size={"1.5vw"}
             onClick={() => sendCodeToBackend("compile")}
             style={{ cursor: "pointer" }}
           />
           <FaHourglassHalf
             className="icons-for-terminal"
-            size={"2vw"}
+            size={"1.5vw"}
             onClick={() => sendCodeToBackend("test")}
             style={{ cursor: "pointer" }}
           />

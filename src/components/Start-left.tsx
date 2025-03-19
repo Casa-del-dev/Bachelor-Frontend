@@ -6,42 +6,41 @@ import { problemDetailsMap } from "./Problem_detail";
 import { HiMenu, HiX } from "react-icons/hi";
 
 const StartLeft = () => {
-  // "Problem" is the default selected section
+  // Retrieve the last selected section from localStorage (default is "Problem" only on first load)
+  const storedSection = localStorage.getItem("selectedSection") as
+    | "Project"
+    | "Problem"
+    | "Blocks"
+    | null;
   const [selectedSection, setSelectedSection] = useState<
     "Project" | "Problem" | "Blocks"
-  >("Problem");
+  >(storedSection || "Problem");
 
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
 
-  const openProjectFiles = () => {
-    setSelectedSection("Project");
-  };
-
-  const openProblem = () => {
-    setSelectedSection("Problem");
-  };
-
-  const openBuildingBlocks = () => {
-    setSelectedSection("Blocks");
-  };
-
+  // Retrieve the last selected problem from localStorage
   const storedProblem = localStorage.getItem("selectedProblem");
   const details = storedProblem
     ? problemDetailsMap[storedProblem]?.trim()
     : null;
-
   const problemKeys = Object.keys(problemDetailsMap);
 
-  const handleHamburgerClick = () => {
-    setMenuOpen(!menuOpen);
+  // Save the selected section to localStorage
+  const selectSection = (section: "Project" | "Problem" | "Blocks") => {
+    setSelectedSection(section);
+    localStorage.setItem("selectedSection", section);
   };
 
+  // Change problem without refreshing the page
   const handleProblemSelect = (problemKey: string) => {
     localStorage.setItem("selectedProblem", problemKey);
     setMenuOpen(false);
-
     window.location.reload();
+  };
+
+  const handleHamburgerClick = () => {
+    setMenuOpen(!menuOpen);
   };
 
   useEffect(() => {
@@ -54,13 +53,9 @@ const StartLeft = () => {
       }
     }
 
-    if (menuOpen) {
-      setMenuOpen(true);
-    }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+  }, []);
 
   // Render the chosen content
   const renderContent = () => {
@@ -71,9 +66,8 @@ const StartLeft = () => {
         return (
           <div className="container-problem-left">
             <div className="problem-title-left">
-              {" "}
-              <div className="title-left-problem-start">{storedProblem} </div>
-              {storedProblem ? (
+              <div className="title-left-problem-start">{storedProblem}</div>
+              {storedProblem && (
                 <div
                   className="Hamburger-left-start"
                   ref={problemDropdownRef}
@@ -95,16 +89,13 @@ const StartLeft = () => {
                     </div>
                   )}
                 </div>
-              ) : (
-                ""
               )}
             </div>
 
             <div className="problem-text-left">
               {details || (
                 <div className="defaulttextytext">
-                  {" "}
-                  "No problem selected yet"{" "}
+                  "No problem selected yet"
                 </div>
               )}
             </div>
@@ -113,38 +104,7 @@ const StartLeft = () => {
       case "Blocks":
         return <div>Building Blocks Content</div>;
       default:
-        return (
-          <div className="container-problem-left">
-            <div className="problem-title-left">
-              {" "}
-              <div className="title-left-problem-start">{storedProblem} </div>
-              <div
-                className="Hamburger-left-start"
-                onClick={handleHamburgerClick}
-              >
-                {menuOpen ? <HiX /> : <HiMenu />}
-                {/* Dropdown menu */}
-                {menuOpen && (
-                  <div className="dropdown-menu">
-                    {problemKeys.map((key) => (
-                      <div
-                        key={key}
-                        className="dropdown-item"
-                        onClick={() => handleProblemSelect(key)}
-                      >
-                        {key}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="problem-text-left">
-              {details || "No problem selected yet"}
-            </div>
-          </div>
-        );
+        return <div>No content available</div>;
     }
   };
 
@@ -156,21 +116,21 @@ const StartLeft = () => {
             {/* Three "buttons" */}
             <div
               className="Project-system-files invisible-button"
-              onClick={openProjectFiles}
+              onClick={() => selectSection("Project")}
             >
               Project <br /> system files
             </div>
             <div className="custom-separator-for-start-purpose"></div>
             <div
               className="Problem-description-main invisible-button"
-              onClick={openProblem}
+              onClick={() => selectSection("Problem")}
             >
               Problem
             </div>
             <div className="custom-separator-for-start-purpose"></div>
             <div
               className="Building-blocks invisible-button"
-              onClick={openBuildingBlocks}
+              onClick={() => selectSection("Blocks")}
             >
               Building <br /> Blocks
             </div>
