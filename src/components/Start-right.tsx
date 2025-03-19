@@ -30,14 +30,23 @@ function Collapsible({
     const el = ref.current;
     if (!el) return;
 
+    // Add both max-height AND opacity transitions
+    el.style.transition = "max-height 0.4s ease, margin-top 0.4s ease";
+
     if (isOpen) {
+      // Force from 0 → expanded
       el.style.maxHeight = "0px";
+      el.style.marginTop = "-2vh";
       el.getBoundingClientRect(); // Force reflow
+      el.style.marginTop = "0.5vh";
       el.style.maxHeight = el.scrollHeight + "px";
     } else {
+      // Force from expanded → 0
       const currentHeight = el.scrollHeight;
       el.style.maxHeight = currentHeight + "px";
+      el.style.marginTop = "0.5vh";
       el.getBoundingClientRect(); // Force reflow
+      el.style.marginTop = "-2vh";
       el.style.maxHeight = "0px";
     }
   }, [isOpen]);
@@ -48,10 +57,11 @@ function Collapsible({
       id={id}
       className="hint-block"
       style={{
+        // Start with these defaults; they’ll be overwritten by JS.
         maxHeight: "0px",
         overflow: "hidden",
-        transition: "max-height 0.4s ease",
       }}
+      // Toggle the hint on click (optional if you want that behavior).
       onClick={() => toggleHint(what, stepId)}
     >
       {children}
@@ -75,11 +85,11 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   setSaveChecked,
 }) => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
-  const [fadeState, setFadeState] = useState("fade-in"); // Initial fade-in
+  const [fadeState, setFadeState] = useState("fade-in-correctStep"); // Initial fade-in
 
   // Handle fade-out before closing
   const handleClose = () => {
-    setFadeState("fade-out");
+    setFadeState("fade-out-correctStep");
     setTimeout(() => onClose(), 300); // Delay removal after fade-out
   };
 
@@ -508,7 +518,7 @@ const StartRight = () => {
     });
     setTimeout(() => {
       animateAndScrollTo(newSubStep.id);
-    }, 0);
+    }, 300);
   };
 
   function animateAndScrollTo(elementId: string) {
@@ -586,7 +596,7 @@ const StartRight = () => {
     setJustUnlockedHintId(stepId);
     setTimeout(() => {
       setJustUnlockedHintId(null);
-    }, 500);
+    }, 300);
   }
 
   function handleGiveCorrectStep() {
@@ -639,7 +649,7 @@ const StartRight = () => {
     setJustUnlockedHintId(stepId);
     setTimeout(() => {
       setJustUnlockedHintId(null);
-    }, 500);
+    }, 300);
   }
 
   // Rendering logic
@@ -773,9 +783,9 @@ const StartRight = () => {
                 <div
                   className={
                     "hint-inner " +
-                    (step.showDetailedHint2 ? "extended " : "") +
+                    (step.showDetailedHint2 ? "extended " : "fade-out-hint") +
                     (justUnlockedHintId === `step-${currentPath.join("-")}-2`
-                      ? "fade-in "
+                      ? "fade-in-hint "
                       : "")
                   }
                 >
@@ -812,7 +822,7 @@ const StartRight = () => {
                     "hint-inner " +
                     (step.showGeneralHint2 ? "extended " : "") +
                     (justUnlockedHintId === `step-${currentPath.join("-")}-3`
-                      ? "fade-in "
+                      ? "fade-in-hint "
                       : "")
                   }
                 >
