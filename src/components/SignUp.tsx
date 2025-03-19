@@ -121,7 +121,7 @@ export default function SignUp({
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="form-input"
+              className="form-input-signup"
               placeholder="JohnDoe"
             />
             {errors.username && (
@@ -137,7 +137,7 @@ export default function SignUp({
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="form-input"
+              className="form-input-signup"
               placeholder="john@example.com"
             />
             {errors.email && (

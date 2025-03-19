@@ -105,6 +105,7 @@
   align-items: center;
   justify-content: center;
   background-color: blue;
+  color: white;
 }
 
 .signup-button:hover {
@@ -155,12 +156,12 @@
   }
 
   .form-group label {
-    font-size: 3vw; /* Reduce label size */
+    font-size: 1vw; /* Reduce label size */
   }
 
   .form-group input {
     padding: 6px; /* Reduce input padding */
-    font-size: 3vw; /* Make text inside inputs smaller */
+    font-size: 1vw; /* Make text inside inputs smaller */
   }
 
   .form-input {
@@ -200,12 +201,12 @@
   }
 
   .form-group label {
-    font-size: 3vw; /* Reduce label size */
+    font-size: 1vw; /* Reduce label size */
   }
 
   .form-group input {
     padding: 6px; /* Reduce input padding */
-    font-size: 3vw; /* Make text inside inputs smaller */
+    font-size: 1vw; /* Make text inside inputs smaller */
   }
 
   .form-input {
@@ -245,7 +246,7 @@
 
   .form-group input {
     padding: 6px; /* Reduce input padding */
-    font-size: 5vw; /* Make text inside inputs smaller */
+    font-size: 1vw; /* Make text inside inputs smaller */
   }
 
   .form-input {
