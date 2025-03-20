@@ -8,6 +8,11 @@ import { useAuth } from "../AuthContext";
 import { apiCall } from "./AI_Prompt";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
 import { apiCallCheck } from "./AI_Check";
+import {
+  getStepsData,
+  getChanged,
+  setChanged,
+} from "./BuildingBlocks/StepsData";
 
 function Collapsible({
   isOpen,
@@ -357,6 +362,32 @@ const StartRight = () => {
       setLoading(false);
     }
   }
+
+  //This is for editor to steptree
+  useEffect(() => {
+    const fetchStepsData = () => {
+      if (getChanged()) {
+        const newStepsData = getStepsData();
+        if (!newStepsData) return;
+
+        try {
+          const stepsArray = transformStepsObject(newStepsData);
+          localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
+          setSteps(stepsArray);
+          setText("");
+        } catch (error) {
+          console.error("Error processing steps data:", error);
+        } finally {
+          setLoading(false);
+          setChanged(false);
+        }
+      }
+    };
+
+    // Poll every 5 seconds for changes
+    const interval = setInterval(fetchStepsData, 5000);
+    return () => clearInterval(interval);
+  }, [StorageKey]);
 
   function stepsToString(steps: Step[], prefix: string = ""): string {
     return steps

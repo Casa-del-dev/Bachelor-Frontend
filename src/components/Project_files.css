@@ -48,9 +48,34 @@
   text-align: end;
   gap: 1vw;
   height: 2vw;
-  padding-left: 0.5vw;
+  cursor: pointer;
 }
 
 .file-item:hover {
   background-color: lightgrey;
+}
+
+.file {
+  cursor: text;
+  max-width: 5vw;
+  overflow: hidden;
+}
+
+.folder {
+  cursor: text;
+}
+
+.editing-stepTree {
+  background-color: transparent;
+  color: black;
+  font-size: 1vw;
+  width: 5vw;
+}
+
+.title-middle-programming {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }

@@ -7,8 +7,8 @@ import _, {
 } from "react";
 
 interface CodeContextType {
-  currentFile: string;
-  setCurrentFile: (filename: string) => void;
+  currentFile: number | null;
+  setCurrentFile: (fileId: number | null) => void;
   code: string;
   setCode: (updatedCode: string) => void;
 }
@@ -16,42 +16,47 @@ interface CodeContextType {
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
 
 export function CodeProvider({ children }: { children: ReactNode }) {
-  // Which problem is currently selected?
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "DefaultProblem";
-
-  // We store the "last opened file" under `selectedFile_<problem>`.
   const selectedFileKey = `selectedFile_${selectedProblemName}`;
 
-  // Initialize currentFile from localStorage; default to "README.md" if none.
-  const [currentFile, setCurrentFile] = useState<string>(() => {
-    return localStorage.getItem(selectedFileKey) || "Solution.py";
+  // Initialize currentFile from localStorage, parsed as a number.
+  const [currentFile, setCurrentFile] = useState<number | null>(() => {
+    const storedFileId = localStorage.getItem(selectedFileKey);
+    return storedFileId ? parseInt(storedFileId, 10) : null;
   });
 
-  // Build the localStorage key for file content like `code_<problem>_<file>`.
-  const buildCodeKey = (problem: string, file: string) =>
-    `code_${problem}_${file}`;
+  const buildCodeKey = (problem: string, fileId: number | null) =>
+    fileId !== null ? `code_${problem}_${fileId}` : "";
 
-  // Load the code for the current file from localStorage immediately.
+  // Load the initial code if a file is selected.
   const [code, setCode] = useState<string>(() => {
-    const codeKey = buildCodeKey(selectedProblemName, currentFile);
-    return localStorage.getItem(codeKey) || "";
+    if (currentFile !== null) {
+      const codeKey = buildCodeKey(selectedProblemName, currentFile);
+      return localStorage.getItem(codeKey) || "";
+    }
+    return "";
   });
 
-  // If the user switches to a different file, load that file’s code from localStorage.
+  // When the current file changes, load its code and persist the selected file.
   useEffect(() => {
-    const codeKey = buildCodeKey(selectedProblemName, currentFile);
-    const storedCode = localStorage.getItem(codeKey) || "";
-    setCode(storedCode);
+    if (currentFile !== null) {
+      const codeKey = buildCodeKey(selectedProblemName, currentFile);
+      const storedCode = localStorage.getItem(codeKey) || "";
+      setCode(storedCode);
+      localStorage.setItem(selectedFileKey, currentFile.toString());
+    } else {
+      // If currentFile is null, remove the selected file key.
+      localStorage.removeItem(selectedFileKey);
+    }
+  }, [currentFile, selectedProblemName, selectedFileKey]);
 
-    // Also save the "selectedFile" so we restore it on refresh.
-    localStorage.setItem(selectedFileKey, currentFile);
-  }, [currentFile, selectedProblemName]);
-
-  // Whenever code changes, save it to localStorage under the correct key.
+  // Save code changes to localStorage if a file is selected.
   useEffect(() => {
-    const codeKey = buildCodeKey(selectedProblemName, currentFile);
-    localStorage.setItem(codeKey, code);
+    if (currentFile !== null) {
+      const codeKey = buildCodeKey(selectedProblemName, currentFile);
+      localStorage.setItem(codeKey, code);
+    }
   }, [code, currentFile, selectedProblemName]);
 
   return (

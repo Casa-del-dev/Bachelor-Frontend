@@ -56,12 +56,11 @@
   grid-area: Right;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   box-sizing: border-box;
   align-items: start;
   height: 100%;
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .bottom-section input {
@@ -97,6 +96,9 @@
   fill: darkgrey;
 }
 
-.xterm .xterm-viewport {
-  overflow-y: hidden;
+.xterm-screen {
+  width: 100% !important;
+  background-color: #f1f1f1;
+  word-break: break-all;
+  overflow-x: hidden;
 }
