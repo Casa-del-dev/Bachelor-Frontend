@@ -116,35 +116,38 @@ export default function SignUp({
           {/* Username Field */}
           <div className="form-group">
             <label>Username</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="form-input-signup"
-              placeholder="JohnDoe"
-            />
-            {errors.username && (
-              <p className="error-text-signup">{errors.username}</p>
-            )}
-          </div>
 
+            <div className="password-container">
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="form-input-signup"
+                placeholder="JohnDoe"
+              />
+              {errors.username && (
+                <p className="error-text-signup">{errors.username}</p>
+              )}
+            </div>
+          </div>
           {/* Email Field */}
           <div className="form-group">
             <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="form-input-signup"
-              placeholder="john@example.com"
-            />
-            {errors.email && (
-              <p className="error-text-signup">{errors.email}</p>
-            )}
+            <div className="password-container">
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="form-input-signup"
+                placeholder="john@example.com"
+              />
+              {errors.email && (
+                <p className="error-text-signup">{errors.email}</p>
+              )}
+            </div>
           </div>
-
           {/* Password Field */}
           <div className="form-group">
             <label>Password</label>

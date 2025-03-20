@@ -61,6 +61,7 @@
   border-radius: 5px;
   background-color: white;
   color: black;
+  width: 100%;
 }
 
 .form-input {
@@ -72,14 +73,16 @@
 }
 
 .password-container {
+  position: relative;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 10px;
   align-items: center;
+  width: fit-content;
+  width: 100%;
 }
 
 .password-toggle {
+  position: absolute;
+  right: 1vw;
   display: flex;
   align-items: center; /* Aligns icon vertically */
   justify-content: center;

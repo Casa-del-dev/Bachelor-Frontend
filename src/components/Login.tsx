@@ -98,18 +98,20 @@ export default function Login({
           {/* Username Field */}
           <div className="form-group">
             <label>Username</label>
-            {errors.username && <p className="error-text">{errors.username}</p>}
-
-            <input
-              type="text"
-              name="username" // Fixed field name
-              value={formData.username}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="JohnDoe"
-            />
+            <div className="password-container">
+              <input
+                type="text"
+                name="username" // Fixed field name
+                value={formData.username}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="JohnDoe"
+              />
+              {errors.username && (
+                <p className="error-text">{errors.username}</p>
+              )}
+            </div>
           </div>
-
           {/* Password Field */}
           <div className="form-group">
             <label>Password</label>
