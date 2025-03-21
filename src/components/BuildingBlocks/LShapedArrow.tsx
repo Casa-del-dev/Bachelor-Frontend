@@ -7,8 +7,8 @@ interface AddSubstep {
 const LShapedArrow: React.FC<AddSubstep> = ({ onClick }) => {
   return (
     <svg
-      width="1.9vw"
-      height="1.9vw"
+      width="1.5vw"
+      height="1.5vw"
       viewBox="0 -10 100 100"
       fill="none"
       stroke="black"

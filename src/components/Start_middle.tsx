@@ -6,7 +6,7 @@ import "xterm/css/xterm.css";
 import { useCodeContext } from "../CodeContext";
 import { useAuth } from "../AuthContext";
 import "./Start_middle.css";
-import PythonPlayground from "./Program-interface"; // your editor
+import PythonPlayground from "./Program-interface";
 import { getActionMessage } from "./BuildingBlocks/ActionMessage";
 
 export default function ResizableSplitView() {
@@ -19,15 +19,14 @@ export default function ResizableSplitView() {
   const term = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
 
-  const { code } = useCodeContext(); // Editor code
+  const { code } = useCodeContext();
   const { isAuthenticated } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
-
   const inputBuffer = useRef("");
 
   /** Setup xterm.js on mount */
   useEffect(() => {
-    if (!terminalRef.current || term.current) return; // Prevent multiple init
+    if (!terminalRef.current || term.current) return;
 
     term.current = new Terminal({
       cursorBlink: true,
@@ -40,40 +39,47 @@ export default function ResizableSplitView() {
 
     fitAddon.current = new FitAddon();
     term.current.loadAddon(fitAddon.current);
+
+    term.current.attachCustomKeyEventHandler((e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === "r") {
+        return false; // allow browser refresh
+      }
+      return true;
+    });
+
     term.current.open(terminalRef.current);
     fitAddon.current.fit();
-    term.current.focus();
 
-    // Handle user input
+    // ✅ Reattach input handling here
     term.current.onData((key) => {
       if (key === "\r") {
-        // ENTER pressed
-        // Move to a new line in the local terminal
         term.current?.writeln("");
 
-        // Send the typed line to the server
         if (socketRef.current?.readyState === WebSocket.OPEN) {
           socketRef.current.send(JSON.stringify({ code: inputBuffer.current }));
         }
-        // Clear the input buffer
+
         inputBuffer.current = "";
       } else if (key === "\u007F") {
-        // BACKSPACE
         if (inputBuffer.current.length > 0) {
           inputBuffer.current = inputBuffer.current.slice(0, -1);
-          // Erase the last char on the screen
           term.current?.write("\b \b");
         }
       } else {
-        // Normal character
         inputBuffer.current += key;
         term.current?.write(key);
       }
     });
 
     term.current.writeln("Attempting WebSocket connection...");
+
+    return () => {
+      term.current?.dispose();
+      term.current = null;
+    };
   }, []);
 
+  /** Setup WebSocket connection */
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -84,7 +90,6 @@ export default function ResizableSplitView() {
     };
 
     socketRef.current.onmessage = (event) => {
-      // Print each message on its own line
       term.current?.writeln(event.data);
     };
 
@@ -101,10 +106,6 @@ export default function ResizableSplitView() {
     };
   }, [isAuthenticated]);
 
-  /**
-   * When you click RUN (or COMPILE / TEST),
-   * we clear the terminal and send the entire editor code.
-   */
   const sendCodeToBackend = (action: "run" | "compile" | "test") => {
     if (!isAuthenticated || !socketRef.current) {
       term.current?.writeln(">>⚠️ Not authenticated. Please log in.");
@@ -112,15 +113,12 @@ export default function ResizableSplitView() {
     }
 
     const actionMessage = getActionMessage(action);
-    // Clear the terminal
     term.current?.clear();
     term.current?.writeln(`${actionMessage}...\r\n`);
-
-    // Send the code from the editor
     socketRef.current.send(JSON.stringify({ code }));
+    term.current?.focus();
   };
 
-  /** Handle Resizing */
   const handleMouseDown = () => {
     isResizing.current = true;
   };
@@ -129,7 +127,7 @@ export default function ResizableSplitView() {
     if (!isResizing.current) return;
     event.preventDefault();
 
-    const newHeight = ((event.clientY - 40) / window.innerHeight) * 100; // adjust for header
+    const newHeight = ((event.clientY - 40) / window.innerHeight) * 100;
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());
@@ -151,15 +149,12 @@ export default function ResizableSplitView() {
 
   return (
     <div className="container">
-      {/* Editor (top) */}
       <div className="top-section" style={{ height: `${topHeight}%` }}>
         <PythonPlayground />
       </div>
 
-      {/* Resizer */}
       <div className="resizer" onMouseDown={handleMouseDown} />
 
-      {/* Terminal (bottom) */}
       <div className="bottom-section" style={{ height: `${100 - topHeight}%` }}>
         <div className="icon-terminal">
           <FaPlay
@@ -185,7 +180,12 @@ export default function ResizableSplitView() {
         <div className="bottom-terminal-start">
           <div
             ref={terminalRef}
-            style={{ height: "100%", width: "100%", cursor: "pointer" }}
+            onClick={() => {
+              setTimeout(() => {
+                term.current?.focus();
+              }, 0);
+            }}
+            style={{ height: "100%", width: "100%", cursor: "text" }}
           ></div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, JSX, Fragment } from "react";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
-import { Trash } from "lucide-react";
+import { Trash, Plus, Minus } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
@@ -163,9 +163,12 @@ export interface Step {
   showCorrectStep1: boolean;
   showGeneralHint2: boolean;
   showDetailedHint2: boolean;
+
+  isNewlyInserted: boolean;
+  isexpanded: boolean;
 }
 
-function createBlankStep(): Step {
+function createBlankStep(Expanding: boolean): Step {
   return {
     id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     code: "",
@@ -190,6 +193,9 @@ function createBlankStep(): Step {
     // '2' means is currently open or collapsed
     showGeneralHint2: false,
     showDetailedHint2: false,
+
+    isNewlyInserted: true,
+    isexpanded: Expanding,
   };
 }
 
@@ -297,6 +303,9 @@ const StartRight = () => {
       showCorrectStep1: false,
       showGeneralHint2: false,
       showDetailedHint2: false,
+
+      isNewlyInserted: false,
+      isexpanded: hasParent ? false : true,
     };
   }
 
@@ -519,7 +528,7 @@ const StartRight = () => {
 
   // Insert with fade-in
   const insertTopLevelStepAt = (index: number) => {
-    const newStep = createBlankStep();
+    const newStep = createBlankStep(true);
     setSteps((prevSteps) => {
       const newSteps = [...prevSteps];
       newSteps.splice(index, 0, newStep);
@@ -534,9 +543,20 @@ const StartRight = () => {
     parentPath: number[],
     insertionIndex: number
   ) => {
-    const newSubStep = createBlankStep();
+    const newSubStep = createBlankStep(false);
     newSubStep.content = "New Substep";
     newSubStep.hasparent = true;
+
+    let shouldAnimate = false;
+
+    const parentStep = parentPath.reduce(
+      (acc: Step | null, index) => (acc ? acc.children[index] : steps[index]),
+      null
+    );
+
+    if (parentStep?.isexpanded) {
+      shouldAnimate = true;
+    }
 
     setSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps));
@@ -547,16 +567,23 @@ const StartRight = () => {
       parent.splice(insertionIndex, 0, newSubStep);
       return newSteps;
     });
-    setTimeout(() => {
-      animateAndScrollTo(newSubStep.id);
-    }, 300);
+
+    if (shouldAnimate) {
+      setTimeout(() => {
+        animateAndScrollTo(newSubStep.id);
+      }, 0);
+    }
   };
 
   function animateAndScrollTo(elementId: string) {
     const el = document.getElementById(elementId);
     if (!el) return;
+
+    el.classList.remove("hidden-before-fade");
     el.classList.add("fade-in");
+
     el.scrollIntoView({ behavior: "smooth", block: "center" });
+
     const handleAnimationEnd = () => {
       el.classList.remove("fade-in");
       el.removeEventListener("animationend", handleAnimationEnd);
@@ -709,6 +736,19 @@ const StartRight = () => {
     return "solid";
   }
 
+  function toggleStepExpanded(path: number[]) {
+    setSteps((prevSteps) => {
+      const newSteps = JSON.parse(JSON.stringify(prevSteps)); // Deep clone
+      let current = newSteps;
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]].children;
+      }
+      const idx = path[path.length - 1];
+      current[idx].isexpanded = !current[idx].isexpanded;
+      return newSteps;
+    });
+  }
+
   function renderTree(steps: Step[], parentPath: number[] = []): JSX.Element[] {
     const elements: JSX.Element[] = [];
     // plus top
@@ -740,7 +780,10 @@ const StartRight = () => {
       elements.push(
         <Fragment key={`step-${currentPath.join("-")}`}>
           <div
-            className={`step-box ${step.isDeleting ? "fade-out" : ""}`}
+            className={`step-box ${step.isDeleting ? "fade-out" : ""} ${
+              parentPath.length > 0 ? "sub-steps" : ""
+            }
+            ${!step.isexpanded ? "" : "expanded"} `}
             id={step.id}
             style={{
               backgroundColor: getBackgroundColor(step),
@@ -748,27 +791,46 @@ const StartRight = () => {
             }}
           >
             <div className="step-title">
-              Step {displayPath}:
+              <div className="step-title-inner">Step {displayPath}:</div>
               <div className="icon-container-start-right">
-                <The_muskeltiers
-                  number={hintNumber}
-                  fill={hintNumber ? "yellow" : "none"}
-                  prompt={step.prompt}
-                  stepNumber={displayPath}
-                  onAddChild={() => insertSubStepAtPath(currentPath, 0)}
-                  onEditStep={() =>
-                    handleStartEditing(currentPath, step.content)
-                  }
-                  onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
-                />
-                <div className="trash">
-                  <Trash
-                    onClick={() => handleRemoveStep(step.id)}
-                    cursor="pointer"
-                    strokeWidth={1}
-                    width={"1.5vw"}
-                    className="trash-icon"
+                <div className="leftSide-Icons">
+                  <The_muskeltiers
+                    number={hintNumber}
+                    fill={hintNumber ? "yellow" : "none"}
+                    prompt={step.prompt}
+                    stepNumber={displayPath}
+                    onAddChild={() => insertSubStepAtPath(currentPath, 0)}
+                    onEditStep={() =>
+                      handleStartEditing(currentPath, step.content)
+                    }
+                    onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
                   />
+                  <div className="trash">
+                    <Trash
+                      onClick={() => handleRemoveStep(step.id)}
+                      cursor="pointer"
+                      strokeWidth={1}
+                      size={"1.5vw"}
+                      className="trash-icon"
+                    />
+                  </div>
+                </div>
+                <div className="plus">
+                  {!step.isexpanded ? (
+                    <Plus
+                      cursor="pointer"
+                      strokeWidth={1}
+                      size={"1.5vw"}
+                      onClick={() => toggleStepExpanded(currentPath)}
+                    />
+                  ) : (
+                    <Minus
+                      cursor="pointer"
+                      strokeWidth={1}
+                      size={"1.5vw"}
+                      onClick={() => toggleStepExpanded(currentPath)}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -788,12 +850,12 @@ const StartRight = () => {
                   !step.showCorrectStep1 ? "" : "step-content-hinted"
                 }`}
               >
-                {step.content}
+                {step.isexpanded ? step.content : ""}
               </div>
             )}
 
             {/* substeps */}
-            {step.children && step.children.length > 0 && (
+            {step.children && step.children.length > 0 && step.isexpanded && (
               <div className="substeps">
                 {renderTree(step.children, currentPath)}
               </div>

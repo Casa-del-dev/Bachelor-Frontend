@@ -28,7 +28,12 @@ const Project_files = () => {
 
   const [files, setFiles] = useState<FileItem[]>(() => {
     const storedTree = localStorage.getItem(systemStorageKey);
-    return storedTree ? JSON.parse(storedTree) : initialFiles;
+    if (storedTree) {
+      return JSON.parse(storedTree);
+    } else {
+      localStorage.setItem(systemStorageKey, JSON.stringify(initialFiles));
+      return initialFiles;
+    }
   });
 
   const [editingId, setEditingId] = useState<number | null>(null);

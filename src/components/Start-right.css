@@ -29,7 +29,7 @@
   padding: 1rem;
   margin-bottom: 1rem;
   position: relative;
-  height: 25vh;
+  height: 35vh;
   overflow-y: auto;
 }
 
@@ -38,7 +38,7 @@
   padding: 1rem;
   margin-bottom: 1rem;
   box-sizing: border-box;
-  height: 25vh;
+  height: 35vh;
   font-size: 1vw;
   overflow-y: auto;
 }
@@ -56,11 +56,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: 1vw;
-}
-
-.substeps {
-  margin-left: 1rem;
 }
 
 .step-title {
@@ -69,9 +66,14 @@
   margin-bottom: 0.5rem;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: start;
   gap: 1vw;
-  word-break: break-all;
+}
+
+.step-title-inner {
+  display: inline-block;
+  white-space: nowrap;
+  align-items: start;
 }
 
 .button-container {
@@ -79,6 +81,61 @@
   display: flex;
   justify-content: center;
 }
+
+.step-box.hidden-before-fade {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* ---------------------------------------------
+How the substeps should be displayed START
+--------------------------------------------- */
+.step-box .sub-steps {
+  height: 6vh;
+  overflow: hidden;
+  margin: 0.1rem;
+  display: flex;
+}
+
+.step-box .sub-steps .step-title {
+  display: flex;
+  height: 100%;
+  flex-direction: row;
+  align-items: center;
+  margin: 0;
+  width: 100%;
+}
+
+.step-box .sub-steps .icon-container-start-right {
+  height: auto;
+}
+/* -------------------- */
+
+.step-box .expanded {
+  height: 15vh; /*25vh if I wanna keep the heights*/
+  overflow: auto;
+  margin: 0.1rem;
+  padding: 1vw;
+  flex-direction: column;
+}
+
+.step-box .expanded .step-title {
+  display: flex;
+  align-items: start;
+}
+
+.plus {
+  display: flex;
+  align-items: start;
+}
+
+.plus:hover {
+  color: grey;
+}
+
+/* ---------------------------------------------
+How the substeps should be displayed END
+--------------------------------------------- */
 
 .Check-button {
   cursor: pointer;
@@ -155,10 +212,19 @@
   display: flex;
 }
 
+.leftSide-Icons {
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+}
+
 .icon-container-start-right {
   display: flex;
   flex-direction: row;
   visibility: visible;
+  width: 100%;
+  height: 100%;
+  justify-content: space-between;
 }
 
 .step-box:hover .icon-container-start-right {
@@ -167,7 +233,6 @@
 
 .trash {
   display: flex;
-  height: 100px;
   align-items: center;
 }
 
@@ -226,7 +291,7 @@
 .step-content-hinted {
   color: red;
   font-weight: 1000;
-  animation: fadeIn 0.5s ease-in forwards;
+  animation: fadeInHintContent 0.5s ease-in forwards;
 }
 
 /* ------------------------------------------- 
@@ -275,6 +340,15 @@ HINT HANDLING
   display: block;
   font-weight: normal;
   font-size: 0.85vw;
+}
+
+@keyframes fadeInHintContent {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInHint {
