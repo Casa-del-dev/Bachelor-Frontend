@@ -19,6 +19,9 @@ const Start: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [_, setSelectedProblem] = useState<string>("");
 
+  const rightRef = useRef<HTMLDivElement>(null);
+  const [rightFontSize, setRightFontSize] = useState("1vw");
+
   const draggingLeftDivider = useRef(false);
   const draggingRightDivider = useRef(false);
 
@@ -112,6 +115,23 @@ const Start: React.FC = () => {
   };
 
   useEffect(() => {
+    const updateFontSize = () => {
+      if (rightRef.current) {
+        const widthPx = rightRef.current.offsetWidth;
+        const fontSize = widthPx * 0.05; // adjust this ratio as needed
+        setRightFontSize(`${fontSize}px`);
+      }
+    };
+
+    updateFontSize(); // initial
+    window.addEventListener("resize", updateFontSize);
+
+    return () => {
+      window.removeEventListener("resize", updateFontSize);
+    };
+  }, [layout]);
+
+  useEffect(() => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
     return () => {
@@ -141,7 +161,14 @@ const Start: React.FC = () => {
       <div className="divider" onMouseDown={startDragRight} />
 
       {/* Right Column */}
-      <div className="right-column" style={{ width: `${layout.right}%` }}>
+      <div
+        className="right-column"
+        ref={rightRef}
+        style={{
+          width: `${layout.right}%`,
+          ["--step-font-size" as any]: rightFontSize,
+        }}
+      >
         <StartRight />
       </div>
     </div>
