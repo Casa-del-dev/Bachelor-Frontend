@@ -39,7 +39,6 @@
   margin-bottom: 1rem;
   box-sizing: border-box;
   height: 35vh;
-  font-size: 1vw;
   overflow-y: auto;
 }
 
@@ -50,10 +49,11 @@
 .container-step-tree .step-box {
   margin: 1rem 0;
   padding: 1rem;
-  font-size: 1vw;
+  font-size: var(--step-font-size, 1rem);
   border-radius: 3px;
   box-sizing: border-box;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
