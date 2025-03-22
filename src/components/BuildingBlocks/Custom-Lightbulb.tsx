@@ -17,7 +17,7 @@ const CustomLightbulb = ({
         viewBox="0 0 24 20"
         fill={fill}
         stroke="black"
-        strokeWidth="1"
+        strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"
         onClick={() => onGiveHint()}

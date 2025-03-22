@@ -7,12 +7,14 @@ interface AddSubstep {
 const LShapedArrow: React.FC<AddSubstep> = ({ onClick }) => {
   return (
     <svg
-      width="1.5vw"
-      height="1.5vw"
-      viewBox="0 -10 100 100"
+      style={{
+        width: "calc(var(--step-font-size, 1vw) * 1.4)",
+        height: "calc(var(--step-font-size, 1vw) * 1.2)",
+      }}
+      viewBox="0 -7 100 100"
       fill="none"
       stroke="black"
-      strokeWidth="5"
+      strokeWidth="3"
       className="LshapedArrow"
       onClick={onClick}
     >

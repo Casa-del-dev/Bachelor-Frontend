@@ -1,5 +1,5 @@
 import "./Start.css";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
@@ -17,7 +17,7 @@ const MIN_RIGHT = 20; // Minimum width for right column
 
 const Start: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [_, setSelectedProblem] = useState<string>("");
+  const [selectedProblem, setSelectedProblem] = useState<string>("");
 
   const rightRef = useRef<HTMLDivElement>(null);
   const [rightFontSize, setRightFontSize] = useState("1vw");
@@ -40,10 +40,12 @@ const Start: React.FC = () => {
     return { left: 30, middle: 50, right: 20 };
   });
 
+  // Save layout changes to local storage
   useEffect(() => {
     localStorage.setItem("layoutDimensions", JSON.stringify(layout));
   }, [layout]);
 
+  // Set selected problem from URL or local storage
   useEffect(() => {
     if (id) {
       setSelectedProblem(id);
@@ -55,9 +57,9 @@ const Start: React.FC = () => {
     }
   }, [id]);
 
+  // Update layout based on divider dragging
   const updateLayout = (deltaX: number, divider: "left" | "right") => {
     const deltaPercent = (deltaX / window.innerWidth) * 100;
-
     setLayout((prev) => {
       let { left, middle, right } = { ...prev };
 
@@ -67,25 +69,15 @@ const Start: React.FC = () => {
         right -= deltaPercent;
       }
 
-      if (left < MIN_LEFT) {
-        left = MIN_LEFT;
-      }
-      if (right < MIN_RIGHT) {
-        right = MIN_RIGHT;
-      }
+      if (left < MIN_LEFT) left = MIN_LEFT;
+      if (right < MIN_RIGHT) right = MIN_RIGHT;
 
       const maxLeft = 80 - right;
       const maxRight = 80 - left;
-      if (left > maxLeft) {
-        left = maxLeft;
-      }
-
-      if (right > maxRight) {
-        right = maxRight;
-      }
+      if (left > maxLeft) left = maxLeft;
+      if (right > maxRight) right = maxRight;
 
       middle = 100 - (left + right);
-
       return { left, middle, right };
     });
   };
@@ -99,11 +91,8 @@ const Start: React.FC = () => {
   };
 
   const handleMouseUp = () => {
-    if (draggingLeftDivider.current || draggingRightDivider.current) {
-      draggingLeftDivider.current = false;
-
-      draggingRightDivider.current = false;
-    }
+    draggingLeftDivider.current = false;
+    draggingRightDivider.current = false;
   };
 
   const startDragLeft = () => {
@@ -114,23 +103,43 @@ const Start: React.FC = () => {
     draggingRightDivider.current = true;
   };
 
-  useEffect(() => {
-    const updateFontSize = () => {
-      if (rightRef.current) {
-        const widthPx = rightRef.current.offsetWidth;
-        const fontSize = widthPx * 0.05; // adjust this ratio as needed
-        setRightFontSize(`${fontSize}px`);
+  // Helper function to update font size
+  const updateFontSize = useCallback(() => {
+    if (rightRef.current) {
+      const widthPx = rightRef.current.offsetWidth;
+      const fontSizeValue = Math.max(widthPx * 0.04, 15); // adjust ratio as needed
+      const computedFontSize = `${fontSizeValue}px`;
+      if (computedFontSize !== rightFontSize) {
+        setRightFontSize(computedFontSize);
+        localStorage.setItem("rightFontSize", computedFontSize);
       }
-    };
+    }
+  }, [rightFontSize]);
 
-    updateFontSize(); // initial
+  // Update font size when layout changes (e.g. during dragging)
+  useEffect(() => {
+    updateFontSize();
+  }, [layout, updateFontSize]);
+
+  // Update font size on window resize
+  useEffect(() => {
     window.addEventListener("resize", updateFontSize);
-
     return () => {
       window.removeEventListener("resize", updateFontSize);
     };
-  }, [layout]);
+  }, [updateFontSize]);
 
+  // On mount, try to load font size from local storage or compute it
+  useEffect(() => {
+    const storedFontSize = localStorage.getItem("rightFontSize");
+    if (storedFontSize) {
+      setRightFontSize(storedFontSize);
+    } else {
+      updateFontSize();
+    }
+  }, [updateFontSize]);
+
+  // Global mouse event listeners for divider dragging
   useEffect(() => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);

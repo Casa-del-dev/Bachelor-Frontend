@@ -809,8 +809,7 @@ const StartRight = () => {
                     <Trash
                       onClick={() => handleRemoveStep(step.id)}
                       cursor="pointer"
-                      strokeWidth={1}
-                      size={"1.5vw"}
+                      strokeWidth={"1.2"}
                       className="trash-icon"
                     />
                   </div>
@@ -818,16 +817,16 @@ const StartRight = () => {
                 <div className="plus">
                   {!step.isexpanded ? (
                     <Plus
+                      className="plus-icon-check"
                       cursor="pointer"
-                      strokeWidth={1}
-                      size={"1.5vw"}
+                      strokeWidth={1.2}
                       onClick={() => toggleStepExpanded(currentPath)}
                     />
                   ) : (
                     <Minus
+                      className="plus-icon-check"
                       cursor="pointer"
-                      strokeWidth={1}
-                      size={"1.5vw"}
+                      strokeWidth={1.2}
                       onClick={() => toggleStepExpanded(currentPath)}
                     />
                   )}

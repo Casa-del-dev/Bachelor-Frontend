@@ -47,10 +47,13 @@ export default function ResizableSplitView() {
       return true;
     });
 
-    term.current.open(terminalRef.current);
-    fitAddon.current.fit();
+    setTimeout(() => {
+      if (term.current && terminalRef.current) {
+        term.current.open(terminalRef.current);
+        fitAddon.current?.fit();
+      }
+    }, 100);
 
-    // ✅ Reattach input handling here
     term.current.onData((key) => {
       if (key === "\r") {
         term.current?.writeln("");

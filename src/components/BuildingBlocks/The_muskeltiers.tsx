@@ -52,22 +52,20 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
 
   return (
     <div className="container-for-triplets">
-      <ShieldCheck className="Check-tree" size="1.5vw" strokeWidth="1" />
+      <ShieldCheck className="Check-tree" strokeWidth="1.2" />
       <CustomLightbulb number={number} fill={fill} onGiveHint={onGiveHint} />
 
       {/* Prompt overlay icon */}
       <FileText
         className="Filetext-tree"
-        size="1.5vw"
-        strokeWidth="1"
+        strokeWidth="1.2"
         onClick={() => setIsPromptOpen(true)}
       />
 
       {/* Pen icon now calls `onEditStep` instead of opening an edit overlay */}
       <Pen
         className="Filetext-tree"
-        size="1.5vw"
-        strokeWidth="1"
+        strokeWidth="1.2"
         onClick={() => {
           if (onEditStep) {
             onEditStep();

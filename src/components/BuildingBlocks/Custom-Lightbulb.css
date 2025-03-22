@@ -1,7 +1,7 @@
 .lightbulb-container {
   position: relative;
   display: flex;
-  width: 1.9vw;
+  width: calc(var(--step-font-size, 1vw) * 1.3);
   align-items: start;
 }
 
@@ -19,7 +19,7 @@
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 0.5vw;
+  font-size: calc(var(--step-font-size, 1vw) * 0.4);
   font-weight: bold;
   color: black;
 }

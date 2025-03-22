@@ -1,13 +1,25 @@
 .container-for-triplets {
   display: flex;
   flex-direction: row;
-  align-items: start;
+  align-items: center;
   justify-content: center;
+}
+
+.Filetext-tree {
+  display: flex;
+  align-items: center;
+  width: calc(var(--step-font-size, 1vw) * 1);
+  height: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .Filetext-tree:hover {
   fill: lightgray;
   cursor: pointer;
+}
+
+.Check-tree {
+  width: calc(var(--step-font-size, 1vw) * 1);
+  height: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .Check-tree:hover {

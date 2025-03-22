@@ -49,7 +49,7 @@
 .container-step-tree .step-box {
   margin: 1rem 0;
   padding: 1rem;
-  font-size: var(--step-font-size, 1rem);
+  font-size: var(--step-font-size, 1vw);
   border-radius: 3px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -62,7 +62,7 @@
 
 .step-title {
   font-weight: bold;
-  font-size: 1.25vw;
+  font-size: calc(var(--step-font-size, 1vw) * 1.2);
   margin-bottom: 0.5rem;
   display: flex;
   flex-direction: row;
@@ -126,7 +126,12 @@ How the substeps should be displayed START
 
 .plus {
   display: flex;
-  align-items: start;
+  align-items: center;
+}
+
+.plus-icon-check {
+  width: calc(var(--step-font-size, 1vw) * 1);
+  height: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .plus:hover {
@@ -183,7 +188,6 @@ How the substeps should be displayed END
   cursor: pointer;
   margin-left: 0.5rem;
   color: blue;
-  font-size: 1.5vw;
 }
 
 .submit-icon:hover {
@@ -215,7 +219,7 @@ How the substeps should be displayed END
 .leftSide-Icons {
   display: flex;
   flex-direction: row;
-  align-items: start;
+  align-items: center;
 }
 
 .icon-container-start-right {
@@ -234,6 +238,12 @@ How the substeps should be displayed END
 .trash {
   display: flex;
   align-items: center;
+  justify-content: center;
+}
+
+.trash-icon {
+  width: calc(var(--step-font-size, 1vw) * 1);
+  height: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .trash-icon:hover {
@@ -304,7 +314,7 @@ HINT HANDLING
   border-radius: 4px;
 
   padding: 1rem;
-  font-size: 1vw;
+  font-size: calc(var(--step-font-size, 1vw) * 0.9);
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -339,7 +349,7 @@ HINT HANDLING
 .hint-content {
   display: block;
   font-weight: normal;
-  font-size: 0.85vw;
+  font-size: calc(var(--step-font-size, 1vw) * 0.8);
 }
 
 @keyframes fadeInHintContent {
@@ -460,7 +470,7 @@ Overlay for when the user selects to get the Correct Step
 .mini-overlay-save input:checked::after {
   content: "✔";
   color: white;
-  font-size: 12px;
+  font-size: 0.5vw;
   font-weight: bold;
   position: absolute;
   top: 50%;
