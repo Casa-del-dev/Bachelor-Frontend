@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, JSX, Fragment } from "react";
 import "./Start-right.css";
-import { HiArrowRight } from "react-icons/hi";
 import { Trash, Plus, Minus, MoveDiagonal, Martini } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
@@ -315,31 +314,6 @@ const StartRight = () => {
   function transformStepsObject(obj: any, hasParent: boolean = false): Step[] {
     return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
   }
-
-  // parse JSON input -> Step Tree
-  function parseJSONSteps(input: string): Step[] {
-    try {
-      const parsed = JSON.parse(input);
-      if (parsed.steps) {
-        return transformStepsObject(parsed.steps, false);
-      }
-      return transformStepsObject(parsed, false);
-    } catch (error) {
-      console.error("Invalid JSON input:", error);
-      return [];
-    }
-  }
-
-  // Trigger parse
-  const handleSubmit = () => {
-    if (text.trim() === "") return;
-    const parsedTree = parseJSONSteps(text);
-    setSteps(parsedTree);
-    setText("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  };
 
   async function handleGenerateWithChatGPT(Context: string) {
     if (!isAuthenticated) {
