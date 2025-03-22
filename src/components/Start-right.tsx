@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, JSX, Fragment } from "react";
 import "./Start-right.css";
 import { HiArrowRight } from "react-icons/hi";
-import { Trash, Plus, Minus } from "lucide-react";
+import { Trash, Plus, Minus, MoveDiagonal, Martini } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
@@ -166,6 +166,7 @@ export interface Step {
 
   isNewlyInserted: boolean;
   isexpanded: boolean;
+  isHyperExpanded: boolean;
 }
 
 function createBlankStep(Expanding: boolean): Step {
@@ -196,6 +197,7 @@ function createBlankStep(Expanding: boolean): Step {
 
     isNewlyInserted: true,
     isexpanded: Expanding,
+    isHyperExpanded: false,
   };
 }
 
@@ -306,6 +308,7 @@ const StartRight = () => {
 
       isNewlyInserted: false,
       isexpanded: hasParent ? false : true,
+      isHyperExpanded: false,
     };
   }
 
@@ -749,6 +752,22 @@ const StartRight = () => {
     });
   }
 
+  function toggleHyperExpanded(path: number[]) {
+    setSteps((prevSteps) => {
+      const newSteps = JSON.parse(JSON.stringify(prevSteps)); // Deep clone
+      let current = newSteps;
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]].children;
+      }
+      const idx = path[path.length - 1];
+      current[idx].isHyperExpanded = !current[idx].isHyperExpanded;
+      if (current[idx].isHyperExpanded) {
+        current[idx].isexpanded = true;
+      }
+      return newSteps;
+    });
+  }
+
   function renderTree(steps: Step[], parentPath: number[] = []): JSX.Element[] {
     const elements: JSX.Element[] = [];
     // plus top
@@ -783,7 +802,9 @@ const StartRight = () => {
             className={`step-box ${step.isDeleting ? "fade-out" : ""} ${
               parentPath.length > 0 ? "sub-steps" : ""
             }
-            ${!step.isexpanded ? "" : "expanded"} `}
+            ${!step.isexpanded ? "" : "expanded"}
+
+            ${!step.isHyperExpanded ? "" : "hyperExpanded"} `}
             id={step.id}
             style={{
               backgroundColor: getBackgroundColor(step),
@@ -814,22 +835,41 @@ const StartRight = () => {
                     />
                   </div>
                 </div>
-                <div className="plus">
-                  {!step.isexpanded ? (
-                    <Plus
-                      className="plus-icon-check"
-                      cursor="pointer"
-                      strokeWidth={1.2}
-                      onClick={() => toggleStepExpanded(currentPath)}
-                    />
-                  ) : (
-                    <Minus
-                      className="plus-icon-check"
-                      cursor="pointer"
-                      strokeWidth={1.2}
-                      onClick={() => toggleStepExpanded(currentPath)}
-                    />
-                  )}
+                <div className="rightSide-Icons">
+                  <div className="plus">
+                    {!step.isexpanded ? (
+                      <Plus
+                        className="plus-icon-check"
+                        cursor="pointer"
+                        strokeWidth={1.2}
+                        onClick={() => toggleStepExpanded(currentPath)}
+                      />
+                    ) : (
+                      <Minus
+                        className="plus-icon-check"
+                        cursor="pointer"
+                        strokeWidth={1.2}
+                        onClick={() => toggleStepExpanded(currentPath)}
+                      />
+                    )}
+                  </div>
+                  <div className="grow">
+                    {step.isHyperExpanded ? (
+                      <Martini
+                        className="grow-icon"
+                        strokeWidth={1.2}
+                        cursor={"Pointer"}
+                        onClick={() => toggleHyperExpanded(currentPath)}
+                      />
+                    ) : (
+                      <MoveDiagonal
+                        className="grow-icon"
+                        strokeWidth={1.2}
+                        cursor={"Pointer"}
+                        onClick={() => toggleHyperExpanded(currentPath)}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -999,35 +1039,21 @@ const StartRight = () => {
               </>
             ) : (
               <div className="input-container">
-                <textarea
-                  ref={textareaRef}
-                  value={text}
-                  onChange={handleInput}
-                  className="text-input"
-                  placeholder="Enter Your Thoughts"
-                  style={{
-                    height: "75vh",
-                    minHeight: "75vh",
-                    maxHeight: "75vh",
-                    overflowY: "auto",
-                  }}
-                  rows={1}
-                />
-                <div className="arrow-container">
-                  <HiArrowRight
-                    className="submit-icon"
-                    onClick={handleSubmit}
+                <div className="textarea-wrapper">
+                  <textarea
+                    ref={textareaRef}
+                    value={text}
+                    onChange={handleInput}
+                    className="text-input"
+                    placeholder="Enter Your Thoughts"
+                    rows={1}
                   />
                   <button
-                    className="button-cahtgpt"
+                    className="button-inside"
                     onClick={() => handleGenerateWithChatGPT("From Prompt")}
                     disabled={loading}
-                    style={{
-                      padding: "6px 12px",
-                      cursor: loading ? "not-allowed" : "pointer",
-                    }}
                   >
-                    {loading ? "Generating..." : "Generate"}
+                    {loading ? "..." : "✔"}
                   </button>
                 </div>
               </div>

@@ -107,7 +107,7 @@ const Start: React.FC = () => {
   const updateFontSize = useCallback(() => {
     if (rightRef.current) {
       const widthPx = rightRef.current.offsetWidth;
-      const fontSizeValue = Math.max(widthPx * 0.04, 15); // adjust ratio as needed
+      const fontSizeValue = Math.min(Math.max(widthPx * 0.04, 15), 30);
       const computedFontSize = `${fontSizeValue}px`;
       if (computedFontSize !== rightFontSize) {
         setRightFontSize(computedFontSize);
