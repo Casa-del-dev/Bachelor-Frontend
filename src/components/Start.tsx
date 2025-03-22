@@ -17,7 +17,7 @@ const MIN_RIGHT = 20; // Minimum width for right column
 
 const Start: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [selectedProblem, setSelectedProblem] = useState<string>("");
+  const [_, setSelectedProblem] = useState<string>("");
 
   const rightRef = useRef<HTMLDivElement>(null);
   const [rightFontSize, setRightFontSize] = useState("1vw");
