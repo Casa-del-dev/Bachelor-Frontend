@@ -1047,22 +1047,24 @@ const StartRight = () => {
                 {renderTree(steps)}
               </>
             ) : (
-              <div className="input-container">
+              <div className={`input-container ${loading ? "loading" : ""}`}>
                 <div className="textarea-wrapper">
-                  <textarea
-                    ref={textareaRef}
-                    value={text}
-                    onChange={handleInput}
-                    className="text-input"
-                    placeholder="Enter Your Thoughts"
-                    rows={1}
-                  />
+                  {!loading && (
+                    <textarea
+                      ref={textareaRef}
+                      value={text}
+                      onChange={handleInput}
+                      className="text-input"
+                      placeholder="Enter Your Thoughts"
+                      rows={1}
+                    />
+                  )}
                   <button
-                    className="button-inside"
+                    className={`button-inside  ${loading ? "loadingB" : ""}`}
                     onClick={() => handleGenerateWithChatGPT("From Prompt")}
                     disabled={loading}
                   >
-                    {loading ? "..." : "✔"}
+                    {loading ? <span className="spinner">✔</span> : "✔"}
                   </button>
                 </div>
               </div>
