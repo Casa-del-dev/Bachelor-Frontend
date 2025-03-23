@@ -722,6 +722,9 @@ const StartRight = () => {
       }
       const idx = path[path.length - 1];
       current[idx].isexpanded = !current[idx].isexpanded;
+      if (!current[idx].isexpanded) {
+        current[idx].isHyperExpanded = false;
+      }
       return newSteps;
     });
   }

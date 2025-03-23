@@ -26,14 +26,12 @@
   padding: 2vw;
   display: flex;
   flex-direction: column;
-  height: 100%;
   box-sizing: border-box;
 }
 
 .container-step-tree > .step-box.expanded:first-of-type:not(.hyperExpanded) {
   border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 2vw;
   position: relative;
   height: 35vh;
   overflow-y: auto;
@@ -42,8 +40,8 @@
 .container-step-tree
   > .step-box.expanded:not(:first-of-type):not(.hyperExpanded) {
   border-radius: 4px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 2vw;
+
   box-sizing: border-box;
   height: 35vh;
   overflow-y: auto;
@@ -54,10 +52,10 @@
 }
 
 .container-step-tree .step-box {
-  margin: 1rem 0;
-  padding: 1rem;
+  margin: 2vw 0;
+  padding: 2vw;
   font-size: var(--step-font-size, 1vw);
-  border-radius: 3px;
+  border-radius: 4px;
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
@@ -70,11 +68,15 @@
 .step-title {
   font-weight: bold;
   font-size: calc(var(--step-font-size, 1vw) * 1.2);
-  margin-bottom: 0.5rem;
   display: flex;
   flex-direction: row;
   align-items: start;
   gap: 1vw;
+  flex: 1;
+}
+
+.expanded .step-title {
+  flex: 0;
 }
 
 .step-title-inner {
@@ -97,11 +99,13 @@
 /* ---------------------------------------------
 How the substeps should be displayed START
 --------------------------------------------- */
-.step-box:not(.expanded) {
+.step-box:not(.expanded):not(.hyperExpanded) {
   height: 6vh;
   overflow: hidden;
-  margin: 0.1rem;
+  padding: 2vw;
   display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .step-box .sub-steps .step-title {
@@ -111,14 +115,16 @@ How the substeps should be displayed START
   align-items: center;
   margin: 0;
   width: 100%;
+  flex: 1;
 }
 
-.step-box .sub-steps .icon-container-start-right {
-  height: auto !important;
+.step-box .sub-steps.expanded .step-title {
+  flex: 0;
 }
+
 /* -------------------- */
 
-.step-box .expanded {
+.step-box .expanded:not(.hyperExpanded) {
   height: 15vh; /*25vh if I wanna keep the heights*/
   overflow: auto;
   margin: 0.1rem;
@@ -126,8 +132,14 @@ How the substeps should be displayed START
   flex-direction: column;
 }
 
-.step-box .expanded .hyperExpanded {
+.hyperExpanded {
   height: auto;
+  min-height: 35vh;
+}
+
+.substeps .hyperExpanded {
+  height: auto;
+  min-height: 25vh;
 }
 
 .step-box .expanded .step-title {
@@ -273,8 +285,8 @@ Textarea for starting prompt END
   flex-direction: row;
   visibility: visible;
   width: 100%;
-  height: 100%;
   justify-content: space-between;
+  flex: 1;
 }
 
 .step-box:hover .icon-container-start-right {
