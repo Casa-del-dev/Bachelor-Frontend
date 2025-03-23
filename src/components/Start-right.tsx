@@ -221,6 +221,11 @@ const StartRight = () => {
 
   const [justExpanding, setJustExpanding] = useState<number[]>([]);
 
+  const [sentPrompt, setSentPrompt] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSentPrompt(steps.length > 0);
+  }, [steps]);
   // Load from localStorage
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("savedCorrectSteps") || "[]");
@@ -344,6 +349,7 @@ const StartRight = () => {
       localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
       setSteps(stepsArray);
       setText("");
+      setSentPrompt(true);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
@@ -438,6 +444,7 @@ const StartRight = () => {
   // Delete entire tree
   const HandleDeleteTree = () => {
     setSteps([]);
+    setSentPrompt(false);
     localStorage.setItem(StorageKey, "[]");
   };
 
@@ -1016,7 +1023,10 @@ const StartRight = () => {
           )}
         </div>
         <div className="right-main-main">
-          <div className="container-step-tree">
+          <div
+            className={`container-step-tree
+          ${!sentPrompt ? "height100" : ""}`}
+          >
             {steps.length > 0 ? (
               <>
                 <div className="button-container">

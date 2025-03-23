@@ -26,6 +26,13 @@
   padding: 2vw;
   display: flex;
   flex-direction: column;
+}
+
+.container-step-tree.height100 {
+  padding: 2vw;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   box-sizing: border-box;
 }
 
