@@ -696,6 +696,75 @@ const StartRight = () => {
     }, 300);
   }
 
+  /* ---------------------------------------
+  Splitting step function START
+  --------------------------------------- */
+  function HandleOnSplitStep(path: number[]) {
+    return () => {
+      let stepToClone!: Step;
+      let clonedStep!: Step;
+
+      setSteps((prevSteps) => {
+        const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
+
+        let current = newSteps;
+        for (let i = 0; i < path.length - 1; i++) {
+          current = current[path[i]].children;
+        }
+
+        const idx = path[path.length - 1];
+        stepToClone = current[idx];
+
+        clonedStep = {
+          ...JSON.parse(JSON.stringify(stepToClone)),
+          id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+          isNewlyInserted: true,
+          isDeleting: false,
+        };
+
+        current.splice(idx + 1, 0, clonedStep);
+        return newSteps;
+      });
+
+      setTimeout(() => {
+        const originalEl = document.getElementById(stepToClone.id);
+        const clonedEl = document.getElementById(clonedStep.id);
+
+        if (originalEl && clonedEl) {
+          // Remove classes in case they're still there from a previous animation
+          originalEl.classList.remove("dividing-original");
+          clonedEl.classList.remove("dividing-new");
+
+          // Force reflow to reset animation
+          void originalEl.offsetWidth;
+          void clonedEl.offsetWidth;
+
+          // Add animation classes again
+          originalEl.classList.add("dividing-original");
+          clonedEl.classList.add("dividing-new");
+
+          // Use separate cleanup functions to avoid removing both too early
+          const removeOriginalClass = () => {
+            originalEl.classList.remove("dividing-original");
+            originalEl.removeEventListener("animationend", removeOriginalClass);
+          };
+
+          const removeClonedClass = () => {
+            clonedEl.classList.remove("dividing-new");
+            clonedEl.removeEventListener("animationend", removeClonedClass);
+          };
+
+          originalEl.addEventListener("animationend", removeOriginalClass);
+          clonedEl.addEventListener("animationend", removeClonedClass);
+        }
+      }, 50);
+    };
+  }
+
+  /* ---------------------------------------
+  Splitting step function END
+  --------------------------------------- */
+
   // Rendering logic
   function getBackgroundColor(step: Step): string {
     if (
@@ -831,6 +900,7 @@ const StartRight = () => {
                       handleStartEditing(currentPath, step.content)
                     }
                     onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
+                    onSplitStep={HandleOnSplitStep(currentPath)}
                   />
                   <div className="trash">
                     <Trash

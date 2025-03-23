@@ -620,3 +620,48 @@ Overlay for when the user selects to get the Correct Step
 .overlay-button-no:hover {
   background: rgb(148, 17, 0);
 }
+
+/* ---------------------------------------
+  Splitting step function START
+  --------------------------------------- */
+
+/* The original step briefly contracts */
+@keyframes divideOriginal {
+  0% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.85);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.dividing-original {
+  animation: divideOriginal 1s ease-out;
+}
+
+/* The new (cloned) step slides upward from slightly overlapped position */
+@keyframes divideNew {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.8);
+  }
+  10% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dividing-new {
+  animation: divideNew 1s ease-out;
+  transform-origin: top center;
+}
+
+/* ---------------------------------------
+  Splitting step function END
+  --------------------------------------- */

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Pen, X, FileText } from "lucide-react";
+import { ShieldCheck, Pen, X, FileText, TableRowsSplit } from "lucide-react";
 import CustomLightbulb from "./Custom-Lightbulb";
 import "./The_muskeltiers.css";
 import LShapedArrow from "./LShapedArrow";
@@ -12,6 +12,7 @@ interface TheMuskeltiersProps {
   onAddChild?: () => void;
   onEditStep?: () => void;
   onGiveHint: () => void;
+  onSplitStep: () => void;
 }
 
 const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
@@ -22,6 +23,7 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   onAddChild,
   onEditStep,
   onGiveHint,
+  onSplitStep,
 }) => {
   /**
    * We'll keep the prompt overlay only. The edit overlay is removed
@@ -53,6 +55,7 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   return (
     <div className="container-for-triplets">
       <ShieldCheck className="Check-tree" strokeWidth="1.2" />
+
       <CustomLightbulb number={number} fill={fill} onGiveHint={onGiveHint} />
 
       {/* Prompt overlay icon */}
@@ -60,6 +63,12 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
         className="Filetext-tree"
         strokeWidth="1.2"
         onClick={() => setIsPromptOpen(true)}
+      />
+
+      <TableRowsSplit
+        className="Filetext-tree"
+        strokeWidth="1.2"
+        onClick={() => onSplitStep()}
       />
 
       {/* Pen icon now calls `onEditStep` instead of opening an edit overlay */}
