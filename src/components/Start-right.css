@@ -75,7 +75,7 @@
 }
 
 .container-step-tree .step-box.hyperExpanded {
-  transition: max-height 4s ease;
+  transition: max-height 5s ease;
 }
 
 .step-title {
