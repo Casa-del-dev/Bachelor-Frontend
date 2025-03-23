@@ -35,16 +35,17 @@
   position: relative;
   height: 35vh;
   overflow-y: auto;
+  max-height: 35vh;
 }
 
 .container-step-tree
   > .step-box.expanded:not(:first-of-type):not(.hyperExpanded) {
   border-radius: 4px;
   padding: 2vw;
-
   box-sizing: border-box;
   height: 35vh;
   overflow-y: auto;
+  max-height: 35vh;
 }
 
 .container-step-tree > .step-box.has-hint {
@@ -63,6 +64,11 @@
   flex-direction: column;
   justify-content: flex-start;
   gap: 1vw;
+  transition: max-height 0.4s ease;
+}
+
+.container-step-tree .step-box.hyperExpanded {
+  transition: max-height 4s ease;
 }
 
 .step-title {
@@ -106,6 +112,7 @@ How the substeps should be displayed START
   display: flex;
   flex-direction: row;
   align-items: center;
+  max-height: 6vh;
 }
 
 .step-box .sub-steps .step-title {
@@ -130,14 +137,17 @@ How the substeps should be displayed START
   margin: 0.1rem;
   padding: 1vw;
   flex-direction: column;
+  max-height: 15vh;
 }
 
 .hyperExpanded {
+  max-height: 1500vh;
   height: auto;
   min-height: 35vh;
 }
 
 .substeps .hyperExpanded {
+  max-height: 200vh;
   height: auto;
   min-height: 25vh;
 }

@@ -219,6 +219,8 @@ const StartRight = () => {
     null
   );
 
+  const [justExpanding, setJustExpanding] = useState<number[]>([]);
+
   // Load from localStorage
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("savedCorrectSteps") || "[]");
@@ -713,6 +715,8 @@ const StartRight = () => {
     return "solid";
   }
 
+  const [expandedblock, setExpadedBlock] = useState<boolean | null>(null);
+
   function toggleStepExpanded(path: number[]) {
     setSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps)); // Deep clone
@@ -720,13 +724,19 @@ const StartRight = () => {
       for (let i = 0; i < path.length - 1; i++) {
         current = current[path[i]].children;
       }
+      setExpadedBlock(true);
       const idx = path[path.length - 1];
       current[idx].isexpanded = !current[idx].isexpanded;
       if (!current[idx].isexpanded) {
+        setExpadedBlock(false);
         current[idx].isHyperExpanded = false;
       }
       return newSteps;
     });
+    setJustExpanding(path);
+    setTimeout(() => {
+      setJustExpanding([]);
+    }, 300);
   }
 
   function toggleHyperExpanded(path: number[]) {
@@ -741,8 +751,15 @@ const StartRight = () => {
       if (current[idx].isHyperExpanded) {
         current[idx].isexpanded = true;
       }
+      if (!current[idx].isHyperExpanded && !expandedblock) {
+        current[idx].isexpanded = false;
+      }
       return newSteps;
     });
+    setJustExpanding(path);
+    setTimeout(() => {
+      setJustExpanding([]);
+    }, 300);
   }
 
   function renderTree(steps: Step[], parentPath: number[] = []): JSX.Element[] {
@@ -776,12 +793,17 @@ const StartRight = () => {
       elements.push(
         <Fragment key={`step-${currentPath.join("-")}`}>
           <div
-            className={`step-box ${step.isDeleting ? "fade-out" : ""} ${
-              parentPath.length > 0 ? "sub-steps" : ""
-            }
-            ${!step.isexpanded ? "" : "expanded"}
-
-            ${!step.isHyperExpanded ? "" : "hyperExpanded"} `}
+            className={`step-box 
+              ${step.isDeleting ? "fade-out" : ""} 
+              ${parentPath.length > 0 ? "sub-steps" : ""}
+              ${!step.isexpanded ? "" : "expanded"}
+              ${!step.isHyperExpanded ? "" : "hyperExpanded"} 
+              ${
+                justExpanding?.toString() === currentPath.toString()
+                  ? "isexpanding"
+                  : ""
+              }
+            `}
             id={step.id}
             style={{
               backgroundColor: getBackgroundColor(step),
