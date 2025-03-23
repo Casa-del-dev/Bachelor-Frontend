@@ -23,7 +23,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   // Initialize currentFile from localStorage, parsed as a number.
   const [currentFile, setCurrentFile] = useState<number | null>(() => {
     const storedFileId = localStorage.getItem(selectedFileKey);
-    return storedFileId ? parseInt(storedFileId, 10) : null;
+    return storedFileId ? parseInt(storedFileId, 10) : 2;
   });
 
   const buildCodeKey = (problem: string, fileId: number | null) =>
