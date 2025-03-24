@@ -298,8 +298,8 @@ const StartRight = () => {
         correctness: "",
         can_be_further_divided: "",
       },
-      general_hint: stepData.generalHint || "",
-      detailed_hint: stepData.detailedHint || "",
+      general_hint: stepData.general_hint || "",
+      detailed_hint: stepData.detailed_hint || "",
       hasparent: hasParent,
       children: stepData.subSteps
         ? transformStepsObject(stepData.subSteps, true)
@@ -576,25 +576,46 @@ const StartRight = () => {
     };
     el.addEventListener("animationend", handleAnimationEnd);
   }
-
-  // Editing logic
+  /* ----------------------------------------------------------
+Editing logic START
+---------------------------------------------------------- */
   const [editingPath, setEditingPath] = useState<number[] | null>(null);
   const [tempContent, setTempContent] = useState("");
 
   function handleStartEditing(path: number[], initialValue: string) {
-    setEditingPath(path);
-    setTempContent(initialValue);
+    const isSamePath =
+      editingPath &&
+      editingPath.length === path.length &&
+      editingPath.every((val, i) => val === path[i]);
+
+    if (isSamePath) {
+      setEditingPath(null);
+      setTempContent("");
+    } else {
+      setEditingPath(path);
+      setTempContent(initialValue);
+    }
   }
 
   function handleBlur() {
-    if (editingPath !== null) {
-      setSteps((prev) =>
-        updateStepContentAtPath(prev, editingPath!, tempContent)
-      );
-      setEditingPath(null);
-      setTempContent("");
-    }
+    setTimeout(() => {
+      if (editingPath !== null) {
+        setSteps((prev) =>
+          updateStepContentAtPath(prev, editingPath!, tempContent)
+        );
+        setEditingPath(null);
+        setTempContent("");
+      }
+    }, 100);
   }
+
+  /* ----------------------------------------------------------
+  Editing logic END
+  ---------------------------------------------------------- */
+
+  /* ---------------------------------------
+  Giving hint step END
+  --------------------------------------- */
 
   // HINT Logic
   function getNumberForStep(step: Step): number | null {
@@ -611,16 +632,27 @@ const StartRight = () => {
   } as const;
 
   function toggleHint(type: "general" | "detailed", stepId: string) {
-    setSteps((prevSteps) =>
-      prevSteps.map((step) => {
-        if (step.id !== stepId) return step;
-        const key = hintKeys[type];
-        return {
-          ...step,
-          [key]: !step[key],
-        };
-      })
-    );
+    const key = hintKeys[type];
+
+    function updateStepHints(steps: Step[]): Step[] {
+      return steps.map((step) => {
+        if (step.id === stepId) {
+          return {
+            ...step,
+            [key]: !step[key],
+          };
+        } else if (step.children && step.children.length > 0) {
+          return {
+            ...step,
+            children: updateStepHints(step.children),
+          };
+        } else {
+          return step;
+        }
+      });
+    }
+
+    setSteps((prevSteps) => updateStepHints(prevSteps));
   }
 
   // Reveal correct step
@@ -697,6 +729,10 @@ const StartRight = () => {
   }
 
   /* ---------------------------------------
+  Giving hint step END
+  --------------------------------------- */
+
+  /* ---------------------------------------
   Splitting step function START
   --------------------------------------- */
   function HandleOnSplitStep(path: number[]) {
@@ -771,7 +807,7 @@ const StartRight = () => {
       step.status.correctness === "" &&
       step.status.can_be_further_divided === ""
     )
-      return "transparent";
+      return "white";
     if (
       step.status.correctness === "correct" &&
       step.status.can_be_further_divided === "cannot"
@@ -783,7 +819,7 @@ const StartRight = () => {
     )
       return "rgb(255, 99, 99)";
     if (step.status.can_be_further_divided === "can") return "lightblue";
-    return "transparent";
+    return "white";
   }
 
   function getBorder(step: Step): string {
@@ -837,6 +873,10 @@ const StartRight = () => {
       setJustExpanding([]);
     }, 300);
   }
+
+  /* ------------------------------------
+Biggest render Tree ever recored START
+------------------------------------ */
 
   function renderTree(steps: Step[], parentPath: number[] = []): JSX.Element[] {
     const elements: JSX.Element[] = [];
@@ -954,7 +994,7 @@ const StartRight = () => {
               <textarea
                 autoFocus
                 className="inline-edit-textarea-editing"
-                rows={10}
+                rows={3}
                 value={tempContent}
                 onChange={(e) => setTempContent(e.target.value)}
                 onBlur={handleBlur}
@@ -1073,6 +1113,10 @@ const StartRight = () => {
 
     return elements;
   }
+
+  /* ------------------------------------
+Biggest render Tree ever recored END
+------------------------------------ */
 
   return (
     <div className="Right-Side-main">
