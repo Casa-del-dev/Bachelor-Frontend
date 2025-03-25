@@ -40,7 +40,7 @@ function Collapsible({
     if (isOpen) {
       // Force from 0 → expanded
       el.style.maxHeight = "0px";
-      el.style.marginTop = "-2vh";
+      el.style.marginTop = "calc(var(--step-font-size, 1vw) * -1)";
       el.getBoundingClientRect(); // Force reflow
       el.style.marginTop = "0.5vh";
       el.style.maxHeight = el.scrollHeight + "px";
@@ -50,7 +50,7 @@ function Collapsible({
       el.style.maxHeight = currentHeight + "px";
       el.style.marginTop = "0.5vh";
       el.getBoundingClientRect(); // Force reflow
-      el.style.marginTop = "-2vh";
+      el.style.marginTop = "calc(var(--step-font-size, 1vw) * -1)";
       el.style.maxHeight = "0px";
     }
   }, [isOpen]);
