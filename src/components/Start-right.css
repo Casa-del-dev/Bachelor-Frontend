@@ -60,7 +60,6 @@
 }
 
 .container-step-tree .step-box {
-  margin: calc(var(--step-font-size, 1vw) * 1.5) 0;
   padding: 2vw;
   font-size: var(--step-font-size, 1vw);
   border-radius: 4px;
@@ -72,12 +71,12 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  container-type: inline-size;
+  container-type: size;
   container-name: stepBox;
 }
 
 .container-step-tree .step-box.hyperExpanded {
-  transition: max-height 5s ease;
+  transition: max-height 8s ease;
 }
 
 .step-title {
@@ -200,8 +199,7 @@ How the substeps should be displayed END
 
 .Check-button {
   cursor: pointer;
-  background: rgb(82, 202, 82);
-  border: 1px solid rgb(70, 172, 70);
+  background: rgb(43, 170, 43);
   border-radius: 4px;
   color: #fff;
   padding: 0.5rem 1rem;
@@ -209,7 +207,7 @@ How the substeps should be displayed END
 }
 
 .Check-button:hover {
-  background: rgb(43, 170, 43);
+  background: rgb(49, 124, 49);
   border: 1px solid rgb(34, 138, 34);
 }
 
@@ -680,7 +678,7 @@ Overlay for when the user selects to get the Correct Step
 /* -------------------------------------------------------------
   Difining meseurements for smaller window sizes START
   ------------------------------------------------------------- */
-@container stepBox (max-width: 268px) {
+@container stepBox (max-width: 300px) {
   .step-box:not(.substeps) .step-title {
     display: grid;
     grid-template-areas:
@@ -695,6 +693,11 @@ Overlay for when the user selects to get the Correct Step
     margin: 0;
     width: 100%;
     flex: 0;
+  }
+
+  .step-box:not(.expanded):not(.hyperExpanded) {
+    display: inherit;
+    align-items: normal;
   }
 
   .icon-container-start-right {

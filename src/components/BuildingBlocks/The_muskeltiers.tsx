@@ -13,6 +13,7 @@ interface TheMuskeltiersProps {
   onEditStep?: () => void;
   onGiveHint: () => void;
   onSplitStep: () => void;
+  onShowImplemented: () => void;
 }
 
 const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
@@ -24,6 +25,7 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   onEditStep,
   onGiveHint,
   onSplitStep,
+  onShowImplemented,
 }) => {
   /**
    * We'll keep the prompt overlay only. The edit overlay is removed
@@ -54,7 +56,11 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
 
   return (
     <div className="container-for-triplets">
-      <ShieldCheck className="Check-tree" strokeWidth="1.2" />
+      <ShieldCheck
+        className="Check-tree"
+        strokeWidth="1.2"
+        onClick={() => onShowImplemented()}
+      />
 
       <CustomLightbulb number={number} fill={fill} onGiveHint={onGiveHint} />
 

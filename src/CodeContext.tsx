@@ -20,7 +20,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     localStorage.getItem("selectedProblem") || "DefaultProblem";
   const selectedFileKey = `selectedFile_${selectedProblemName}`;
 
-  // Initialize currentFile from localStorage, parsed as a number.
   const [currentFile, setCurrentFile] = useState<number | null>(() => {
     const storedFileId = localStorage.getItem(selectedFileKey);
     return storedFileId ? parseInt(storedFileId, 10) : 2;
@@ -29,7 +28,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   const buildCodeKey = (problem: string, fileId: number | null) =>
     fileId !== null ? `code_${problem}_${fileId}` : "";
 
-  // Load the initial code if a file is selected.
   const [code, setCode] = useState<string>(() => {
     if (currentFile !== null) {
       const codeKey = buildCodeKey(selectedProblemName, currentFile);
@@ -38,7 +36,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     return "";
   });
 
-  // When the current file changes, load its code and persist the selected file.
   useEffect(() => {
     if (currentFile !== null) {
       const codeKey = buildCodeKey(selectedProblemName, currentFile);
@@ -46,12 +43,10 @@ export function CodeProvider({ children }: { children: ReactNode }) {
       setCode(storedCode);
       localStorage.setItem(selectedFileKey, currentFile.toString());
     } else {
-      // If currentFile is null, remove the selected file key.
       localStorage.removeItem(selectedFileKey);
     }
   }, [currentFile, selectedProblemName, selectedFileKey]);
 
-  // Save code changes to localStorage if a file is selected.
   useEffect(() => {
     if (currentFile !== null) {
       const codeKey = buildCodeKey(selectedProblemName, currentFile);

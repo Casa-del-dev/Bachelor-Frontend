@@ -1,17 +1,26 @@
 import { useState, useEffect, useRef, JSX, Fragment } from "react";
 import "./Start-right.css";
-import { Trash, Plus, Minus, MoveDiagonal, Martini } from "lucide-react";
+import {
+  Trash,
+  Plus,
+  Minus,
+  MoveDiagonal,
+  Martini,
+  ShieldCheck,
+} from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
 import { apiCall } from "./AI_Prompt";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";
 import { apiCallCheck } from "./AI_Check";
+import apiCallTree from "./AI_Tree";
 import {
   getStepsData,
   getChanged,
   setChanged,
 } from "./BuildingBlocks/StepsData";
+import { useCodeContext } from "../CodeContext";
 
 function Collapsible({
   isOpen,
@@ -206,6 +215,7 @@ const StartRight = () => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { code } = useCodeContext();
 
   // For revealing correct steps
   const [showCorrectStepOverlay, setShowCorrectStepOverlay] = useState<
@@ -322,6 +332,55 @@ const StartRight = () => {
     return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
   }
 
+  async function HandleImplemented() {
+    if (!isAuthenticated) {
+      console.log("Login Needed");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const gptResponse = await apiCallTree(JSON.stringify(steps), code);
+      const rawMessage = gptResponse.choices[0].message.content;
+      console.log(rawMessage);
+      const parsedResponse = JSON.parse(rawMessage);
+      // Extract steps
+      const stepsData = parsedResponse.steps
+        ? parsedResponse.steps
+        : parsedResponse;
+
+      const stepsArray = transformStepsObject(stepsData);
+      localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
+      setSteps(stepsArray);
+      setText("");
+      setSentPrompt(true);
+    } catch (error) {
+      console.error("Error generating steps with ChatGPT:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* -------------------------------------------------------------
+Checking Code and Tree START
+------------------------------------------------------------- */
+
+  function getStepBoxColor(step: Step): string {
+    if (step.code !== "") {
+      if (step.code === "Not implemented correctely") {
+        return "darkgrey";
+      }
+      return "green";
+    }
+
+    return getBackgroundColor(step);
+  }
+
+  /* -------------------------------------------------------------
+Checking Code and Tree END
+------------------------------------------------------------- */
+
   async function handleGenerateWithChatGPT(Context: string) {
     if (!isAuthenticated) {
       console.log("Login Needed");
@@ -379,7 +438,7 @@ const StartRight = () => {
     };
 
     // Poll every 5 seconds for changes
-    const interval = setInterval(fetchStepsData, 5000);
+    const interval = setInterval(fetchStepsData, 3000);
     return () => clearInterval(interval);
   }, [StorageKey]);
 
@@ -529,7 +588,7 @@ const StartRight = () => {
     parentPath: number[],
     insertionIndex: number
   ) => {
-    const newSubStep = createBlankStep(false);
+    const newSubStep = createBlankStep(true);
     newSubStep.content = "New Substep";
     newSubStep.hasparent = true;
 
@@ -922,7 +981,7 @@ Biggest render Tree ever recored START
             `}
             id={step.id}
             style={{
-              backgroundColor: getBackgroundColor(step),
+              backgroundColor: getStepBoxColor(step),
               border: "1px " + getBorder(step) + " black",
             }}
           >
@@ -941,6 +1000,7 @@ Biggest render Tree ever recored START
                     }
                     onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
                     onSplitStep={HandleOnSplitStep(currentPath)}
+                    onShowImplemented={async () => HandleImplemented()}
                   />
                   <div className="trash">
                     <Trash
@@ -1125,6 +1185,14 @@ Biggest render Tree ever recored END
           Step Tree
           {steps.length > 0 && (
             <div className="trash">
+              <ShieldCheck
+                color="black"
+                size={"1vw"}
+                strokeWidth={1}
+                cursor="pointer"
+                className="trash-icon"
+                onClick={async () => HandleImplemented()}
+              />
               <Trash
                 color="black"
                 size={"1vw"}
