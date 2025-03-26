@@ -71,12 +71,12 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  container-type: size;
+  container-type: inline-size;
   container-name: stepBox;
 }
 
 .container-step-tree .step-box.hyperExpanded {
-  transition: max-height 8s ease;
+  transition: max-height 2s ease;
 }
 
 .step-title {
@@ -116,10 +116,8 @@ How the substeps should be displayed START
 .step-box:not(.expanded):not(.hyperExpanded) {
   height: 6vh;
   overflow: hidden;
-  padding: 2vw;
+  padding: calc(2.5vh - var(--step-font-size, 1vw) / 2);
   display: flex;
-  flex-direction: row;
-  align-items: center;
   max-height: 6vh;
 }
 
@@ -140,16 +138,16 @@ How the substeps should be displayed START
 /* -------------------- */
 
 .step-box .expanded:not(.hyperExpanded) {
-  height: 15vh; /*25vh if I wanna keep the heights*/
-  overflow: auto;
-  padding: 1vw;
+  height: 25vh; /*25vh if I wanna keep the heights*/
+  overflow-y: auto;
+  padding: 2vw;
   flex-direction: column;
-  max-height: 15vh;
+  max-height: 25vh;
   overflow-x: hidden;
 }
 
 .hyperExpanded {
-  max-height: 1500vh;
+  max-height: 200vh;
   height: auto;
   min-height: 35vh;
 }
@@ -678,7 +676,8 @@ Overlay for when the user selects to get the Correct Step
 /* -------------------------------------------------------------
   Difining meseurements for smaller window sizes START
   ------------------------------------------------------------- */
-@container stepBox (max-width: 300px) {
+
+@container stepBox (max-width: 370px) {
   .step-box:not(.substeps) .step-title {
     display: grid;
     grid-template-areas:
@@ -698,6 +697,7 @@ Overlay for when the user selects to get the Correct Step
   .step-box:not(.expanded):not(.hyperExpanded) {
     display: inherit;
     align-items: normal;
+    padding: calc(var(--step-font-size, 1vw) * 1);
   }
 
   .icon-container-start-right {
@@ -723,6 +723,10 @@ Overlay for when the user selects to get the Correct Step
 
   .step-box .expanded .step-title {
     align-items: none;
+  }
+
+  .step-box:not(.expanded):not(.hyperExpanded) .leftSide-Icons {
+    visibility: hidden;
   }
 }
 /* -------------------------------------------------------------
