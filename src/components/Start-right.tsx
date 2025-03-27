@@ -1064,6 +1064,9 @@ Biggest render Tree ever recored START
                 className={`step-content ${
                   !step.showCorrectStep1 ? "" : "step-content-hinted"
                 }`}
+                onDoubleClick={() =>
+                  handleStartEditing(currentPath, step.content)
+                }
               >
                 {step.isexpanded ? step.content : ""}
               </div>
