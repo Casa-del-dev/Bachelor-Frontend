@@ -346,6 +346,14 @@ Textarea for starting prompt END
 HINT HANDLING
 ------------------------------------------- */
 
+.hint-container {
+  width: 100%;
+}
+
+.hint-container.promoted {
+  width: 80%;
+}
+
 .hint-block {
   background-color: white;
   border: 1px solid black;
