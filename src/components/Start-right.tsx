@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, JSX, Fragment } from "react";
 import "./Start-right.css";
 import {
   Trash,
-  Plus,
+  /*   Plus,
   Minus,
   MoveDiagonal,
-  Martini,
+  Martini, */
   ShieldCheck,
 } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
@@ -233,7 +233,7 @@ const StartRight = () => {
     null
   );
 
-  const [justExpanding, setJustExpanding] = useState<number[]>([]);
+  const [justExpanding] = useState<number[]>([]); // used for hyper expanding
 
   const [sentPrompt, setSentPrompt] = useState<boolean>(false);
 
