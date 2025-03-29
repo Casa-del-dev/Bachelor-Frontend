@@ -26,6 +26,7 @@
   padding: 2vw;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .container-step-tree.height100 {
@@ -36,30 +37,30 @@
   box-sizing: border-box;
 }
 
-.container-step-tree > .step-box.expanded:first-of-type:not(.hyperExpanded) {
-  border-radius: 4px;
-  padding: 2vw;
-  position: relative;
-  height: 35vh;
-  overflow-y: auto;
-  max-height: 35vh;
-}
-
-.container-step-tree
-  > .step-box.expanded:not(:first-of-type):not(.hyperExpanded) {
-  border-radius: 4px;
-  padding: 2vw;
-  box-sizing: border-box;
-  height: 35vh;
-  overflow-y: auto;
-  max-height: 35vh;
-}
-
 .container-step-tree > .step-box.has-hint {
   margin-bottom: 0;
 }
 
 .container-step-tree .step-box {
+  width: 100%;
+  padding: 2vw;
+  font-size: var(--step-font-size, 1vw);
+  border-radius: 4px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: break-all;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1vw;
+  transition: max-height 0.4s ease;
+  height: 35vh;
+  max-height: 35vh;
+}
+
+.container-step-tree .step-box.promoted {
+  width: 80%;
   padding: 2vw;
   font-size: var(--step-font-size, 1vw);
   border-radius: 4px;
@@ -71,8 +72,17 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  container-type: inline-size;
-  container-name: stepBox;
+  height: 35vh;
+  max-height: 35vh;
+}
+
+.promotedPlus {
+  width: 80%;
+}
+
+.container-step-tree .substeps .step-box {
+  height: auto;
+  padding: 1vw;
 }
 
 .container-step-tree .step-box.hyperExpanded {
@@ -84,13 +94,8 @@
   font-size: calc(var(--step-font-size, 1vw) * 1.2);
   display: flex;
   flex-direction: row;
-  align-items: start;
+  align-items: center;
   gap: 1vw;
-  flex: 1;
-}
-
-.expanded .step-title {
-  flex: 0;
 }
 
 .step-title-inner {
@@ -110,104 +115,22 @@
   transform: scale(0.8);
 }
 
-/* ---------------------------------------------
-How the substeps should be displayed START
---------------------------------------------- */
-.step-box:not(.expanded):not(.hyperExpanded) {
-  height: 6vh;
-  overflow: hidden;
-  padding: calc(2.5vh - var(--step-font-size, 1vw) / 2);
-  display: flex;
-  max-height: 6vh;
-}
-
-.step-box .sub-steps .step-title {
-  display: flex;
-  height: 100%;
-  flex-direction: row;
-  align-items: center;
-  margin: 0;
-  width: 100%;
-  flex: 1;
-}
-
-.step-box .sub-steps.expanded .step-title {
-  flex: 0;
-}
-
-/* -------------------- */
-
-.step-box .expanded:not(.hyperExpanded) {
-  height: 25vh; /*25vh if I wanna keep the heights*/
-  overflow-y: auto;
-
-  padding: 2vw;
-  flex-direction: column;
-  max-height: 25vh;
-  overflow-x: hidden;
-}
-
-.hyperExpanded {
-  max-height: 200vh;
-  height: auto;
-  min-height: 35vh;
-}
-
-.substeps .hyperExpanded {
-  max-height: 200vh;
-  height: auto;
-  min-height: 25vh;
-}
-
-.step-box .expanded .step-title {
-  display: flex;
-  align-items: start;
-}
-
-.plus {
-  display: flex;
-  align-items: center;
-}
-
-.plus-icon-check {
-  width: calc(var(--step-font-size, 1vw) * 1);
-  height: calc(var(--step-font-size, 1vw) * 1);
-}
-
-.plus-icon-check:hover {
-  color: grey;
-}
-
-.rightSide-Icons {
-  display: flex;
-  flex-direction: row;
-}
-
-.grow-icon {
-  width: calc(var(--step-font-size, 1vw) * 1);
-  height: calc(var(--step-font-size, 1vw) * 1);
-}
-
-.grow-icon:hover {
-  color: grey;
-}
-
-/* ---------------------------------------------
-How the substeps should be displayed END
---------------------------------------------- */
-
 .Check-button {
   cursor: pointer;
   background: rgb(43, 170, 43);
+  border: 1px solid rgb(3, 88, 10);
   border-radius: 4px;
   color: #fff;
-  padding: 0.5rem 1rem;
-  margin-bottom: 1rem;
+  width: calc(var(--step-font-size, 1vw) * 5);
+  height: calc(var(--step-font-size, 1vw) * 2);
+  font-size: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .Check-button:hover {
   background: rgb(49, 124, 49);
-  border: 1px solid rgb(34, 138, 34);
+  border: 1px solid rgb(3, 88, 10);
+  scale: 1.1;
+  transition: scale 0.2s;
 }
 
 /* -----------------------------------
@@ -673,63 +596,3 @@ Overlay for when the user selects to get the Correct Step
 /* ---------------------------------------
   Splitting step function END
   --------------------------------------- */
-
-/* -------------------------------------------------------------
-  Difining meseurements for smaller window sizes START
-  ------------------------------------------------------------- */
-
-@container stepBox (max-width: 370px) {
-  .step-box:not(.substeps) .step-title {
-    display: grid;
-    grid-template-areas:
-      "leftTop rightTop"
-      "bottom bottom";
-    grid-template-rows:
-      auto
-      auto;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    height: 100%;
-    margin: 0;
-    width: 100%;
-    flex: 0;
-  }
-
-  .step-box:not(.expanded):not(.hyperExpanded) {
-    display: inherit;
-    align-items: normal;
-    padding: calc(var(--step-font-size, 1vw) * 1);
-  }
-
-  .icon-container-start-right {
-    display: contents;
-  }
-
-  .step-title-inner {
-    grid-area: leftTop;
-  }
-
-  .rightSide-Icons {
-    grid-area: rightTop;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .leftSide-Icons {
-    grid-area: bottom;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .step-box .expanded .step-title {
-    align-items: none;
-  }
-
-  .step-box:not(.expanded):not(.hyperExpanded) .leftSide-Icons {
-    visibility: hidden;
-  }
-}
-/* -------------------------------------------------------------
-  Difining meseurements for smaller window sizes END
-  ------------------------------------------------------------- */

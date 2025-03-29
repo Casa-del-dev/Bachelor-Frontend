@@ -175,9 +175,11 @@ export interface Step {
   isNewlyInserted: boolean;
   isexpanded: boolean;
   isHyperExpanded: boolean;
+
+  selected: boolean;
 }
 
-function createBlankStep(Expanding: boolean): Step {
+function createBlankStep(Selected: boolean): Step {
   return {
     id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     code: "",
@@ -204,8 +206,10 @@ function createBlankStep(Expanding: boolean): Step {
     showDetailedHint2: false,
 
     isNewlyInserted: true,
-    isexpanded: Expanding,
+    isexpanded: true,
     isHyperExpanded: false,
+
+    selected: Selected,
   };
 }
 
@@ -325,6 +329,8 @@ const StartRight = () => {
       isNewlyInserted: false,
       isexpanded: hasParent ? false : true,
       isHyperExpanded: false,
+
+      selected: hasParent ? true : false,
     };
   }
 
@@ -500,7 +506,10 @@ Checking Code and Tree END
     }
   }
 
-  // Delete entire tree
+  /* ------------------------------------------------------
+Delete Functions START
+------------------------------------------------------ */
+
   const HandleDeleteTree = () => {
     setSteps([]);
     setSentPrompt(false);
@@ -571,6 +580,14 @@ Checking Code and Tree END
     }, []);
   }
 
+  /* ------------------------------------------------------
+Delete Functions END
+------------------------------------------------------ */
+
+  /* ------------------------------------------------------
+Insert Steps Functions START
+------------------------------------------------------ */
+
   // Insert with fade-in
   const insertTopLevelStepAt = (index: number) => {
     const newStep = createBlankStep(true);
@@ -586,9 +603,10 @@ Checking Code and Tree END
 
   const insertSubStepAtPath = (
     parentPath: number[],
-    insertionIndex: number
+    insertionIndex: number,
+    selected: boolean
   ) => {
-    const newSubStep = createBlankStep(true);
+    const newSubStep = createBlankStep(selected);
     newSubStep.content = "New Substep";
     newSubStep.hasparent = true;
 
@@ -620,11 +638,84 @@ Checking Code and Tree END
     }
   };
 
+  const insertSubStepAtPathFromSelected = (
+    parentPath: number[],
+    insertionIndex: number,
+    selected: boolean
+  ) => {
+    const newSubStep = createBlankStep(selected);
+    newSubStep.content = "New Substep";
+    newSubStep.hasparent = true;
+
+    let shouldAnimate = false;
+
+    const parentStep = parentPath.reduce(
+      (acc: Step | null, index) => (acc ? acc.children[index] : steps[index]),
+      null
+    );
+
+    if (parentStep?.isexpanded) {
+      shouldAnimate = true;
+    }
+
+    setSteps((prevSteps) => {
+      const newSteps = JSON.parse(JSON.stringify(prevSteps));
+      let parent = newSteps;
+      for (let i = 0; i < parentPath.length; i++) {
+        parent = parent[parentPath[i]].children;
+      }
+      parent.splice(insertionIndex, 0, newSubStep);
+      return newSteps;
+    });
+
+    if (shouldAnimate) {
+      setTimeout(() => {
+        animateAndScrollTo(newSubStep.id + "-promoted");
+      }, 0);
+    }
+  };
+
+  function animatePromotedFadeIn(promotedElementId: string) {
+    const el = document.getElementById(promotedElementId);
+    if (!el) return;
+    el.classList.remove("fade-in");
+    // Force reflow to restart the animation
+    void el.offsetWidth;
+    el.classList.add("fade-in");
+    el.addEventListener(
+      "animationend",
+      () => {
+        el.classList.remove("fade-in");
+      },
+      { once: true }
+    );
+  }
+
+  function animatePromotedFadeOut(promotedElementId: string) {
+    const el = document.getElementById(promotedElementId);
+    if (!el) return;
+    el.classList.remove("fade-out");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add("fade-out");
+        el.addEventListener(
+          "animationend",
+          () => {
+            el.classList.remove("fade-out");
+          },
+          { once: true }
+        );
+      });
+    });
+  }
+
   function animateAndScrollTo(elementId: string) {
     const el = document.getElementById(elementId);
     if (!el) return;
 
-    el.classList.remove("hidden-before-fade");
+    // Reset animation by forcing a reflow
+    el.classList.remove("fade-in");
+    void el.offsetWidth; // 🔥 This line forces reflow
     el.classList.add("fade-in");
 
     el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -635,6 +726,10 @@ Checking Code and Tree END
     };
     el.addEventListener("animationend", handleAnimationEnd);
   }
+
+  /* ------------------------------------------------------
+Insert Steps Functions END
+------------------------------------------------------ */
   /* ----------------------------------------------------------
 Editing logic START
 ---------------------------------------------------------- */
@@ -933,13 +1028,190 @@ Editing logic START
     }, 300);
   }
 
+  // Toggle function: simply toggles the "selected" flag on the step at currentPath.
+  const toggleSelected = (currentPath: number[]) => {
+    setSteps((prevSteps: Step[]) => {
+      const updateSteps = (steps: Step[], path: number[]): Step[] => {
+        if (path.length === 0) return steps;
+        const index = path[0];
+        return steps.map((step, i) => {
+          if (i !== index) return step;
+          if (path.length === 1) {
+            return { ...step, selected: !step.selected };
+          } else {
+            return {
+              ...step,
+              children: updateSteps(step.children || [], path.slice(1)),
+            };
+          }
+        });
+      };
+      return updateSteps(prevSteps, currentPath);
+    });
+  };
+
+  // Helper to collect promoted substeps from a (nested) children array.
+  // This function returns an array of JSX elements representing the promoted
+  // substeps (i.e. those with selected === true) that should be rendered
+  // at the top-level domain, immediately after their parent.
+  function collectPromotedSubsteps(
+    steps: Step[],
+    parentPath: number[]
+  ): JSX.Element[] {
+    let promotedElements: JSX.Element[] = [];
+    let lastPromotedPath: number[] | null = null;
+
+    steps.forEach((step, index) => {
+      const currentPath = [...parentPath, index];
+
+      if (step.selected) {
+        lastPromotedPath = [...currentPath] as number[]; // Save this path
+
+        const displayPath = currentPath.map((i) => i + 1).join(".");
+        const titleLabel = `Substep ${displayPath}:`;
+
+        promotedElements.push(
+          <Fragment key={`promoted-${currentPath.join("-")}`}>
+            {/* Top PLUS: insert before this substep */}
+            <div
+              className="promotedPlus"
+              key={`wrapper-promoted-plus-top-${currentPath.join("-")}`}
+            >
+              <PlusbetweenSteps
+                key={`external-promoted-plus-top-${currentPath.join("-")}`}
+                onClick={() => {
+                  const parentPathOfSubstep = currentPath.slice(0, -1);
+                  const indexInParent = currentPath[currentPath.length - 1];
+                  insertSubStepAtPathFromSelected(
+                    parentPathOfSubstep,
+                    indexInParent,
+                    true
+                  );
+                }}
+              />
+            </div>
+
+            {/* Promoted Step */}
+            <div
+              className={`step-box promoted
+                ${step.isDeleting && step.selected ? "fade-out" : ""} 
+                ${step.isexpanded ? "expanded" : ""}
+                ${step.isHyperExpanded ? "hyperExpanded" : ""} 
+                ${
+                  justExpanding?.toString() === currentPath.toString()
+                    ? "isexpanding"
+                    : ""
+                }
+              `}
+              id={`${step.id}-promoted`}
+              style={{
+                backgroundColor: getBackgroundColor(step),
+                border: "1px " + getBorder(step) + " black",
+              }}
+            >
+              <div className="step-title">
+                <div className="step-title-inner">{titleLabel}</div>
+                <div className="icon-container-start-right">
+                  <div className="leftSide-Icons">
+                    <The_muskeltiers
+                      number={getNumberForStep(step)}
+                      fill={getNumberForStep(step) ? "yellow" : "none"}
+                      prompt={step.prompt}
+                      stepNumber={displayPath}
+                      onAddChild={() =>
+                        insertSubStepAtPathFromSelected(currentPath, 0, false)
+                      }
+                      onEditStep={() =>
+                        handleStartEditing(currentPath, step.content)
+                      }
+                      onGiveHint={() =>
+                        handleGiveHint(currentPath, getNumberForStep(step))
+                      }
+                      onSplitStep={HandleOnSplitStep(currentPath)}
+                      onShowImplemented={async () => HandleImplemented()}
+                    />
+                    <div className="trash">
+                      <Trash
+                        onClick={() => handleRemoveStep(step.id)}
+                        cursor="pointer"
+                        strokeWidth={"1.2"}
+                        className="trash-icon"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {editingPath &&
+              editingPath.length === currentPath.length &&
+              editingPath.every((val, i) => val === currentPath[i]) ? (
+                <textarea
+                  autoFocus
+                  className="inline-edit-textarea-editing"
+                  rows={3}
+                  value={tempContent}
+                  onChange={(e) => setTempContent(e.target.value)}
+                  onBlur={handleBlur}
+                />
+              ) : (
+                <div
+                  className={`step-content ${
+                    step.showCorrectStep1 ? "step-content-hinted" : ""
+                  }`}
+                  onDoubleClick={() =>
+                    handleStartEditing(currentPath, step.content)
+                  }
+                >
+                  {step.isexpanded ? step.content : ""}
+                </div>
+              )}
+
+              {step.children && step.children.length > 0 && step.isexpanded && (
+                <div className="substeps">
+                  {renderTree(step.children, currentPath)}
+                </div>
+              )}
+            </div>
+          </Fragment>
+        );
+      }
+
+      // Recurse
+      if (step.children && step.children.length > 0) {
+        promotedElements = promotedElements.concat(
+          collectPromotedSubsteps(step.children, currentPath)
+        );
+      }
+    });
+
+    if (promotedElements.length > 0 && lastPromotedPath !== null) {
+      const safePath: number[] = lastPromotedPath; // Now safePath is guaranteed to be number[]
+      const parentPath = safePath.slice(0, -1);
+      const index = safePath[safePath.length - 1] + 1;
+
+      promotedElements.push(
+        <div className="promotedPlus">
+          <PlusbetweenSteps
+            key={`final-promoted-plus-${parentPath.join("-")}`}
+            onClick={() => {
+              insertSubStepAtPathFromSelected(parentPath, index, true);
+            }}
+          />
+        </div>
+      );
+    }
+
+    return promotedElements;
+  }
+
   /* ------------------------------------
 Biggest render Tree ever recored START
 ------------------------------------ */
 
   function renderTree(steps: Step[], parentPath: number[] = []): JSX.Element[] {
     const elements: JSX.Element[] = [];
-    // plus top
+
+    // Render the plus button at the top of the current list.
     if (parentPath.length === 0) {
       elements.push(
         <PlusbetweenSteps
@@ -951,7 +1223,7 @@ Biggest render Tree ever recored START
       elements.push(
         <PlusbetweenSteps
           key={`${parentPath.join("-")}-plus-0`}
-          onClick={() => insertSubStepAtPath(parentPath, 0)}
+          onClick={() => insertSubStepAtPath(parentPath, 0, false)}
         />
       );
     }
@@ -965,20 +1237,50 @@ Biggest render Tree ever recored START
         editingPath.length === currentPath.length &&
         editingPath.every((val, i) => val === currentPath[i]);
 
-      elements.push(
-        <Fragment key={`step-${currentPath.join("-")}`}>
+      // Determine title label: use "Substep" if not top-level.
+      const titleLabel =
+        parentPath.length > 0
+          ? `Substep ${displayPath}:`
+          : `Step ${displayPath}:`;
+
+      // For substeps, clicking on the title toggles its selected state.
+      /* const handleTitleClick = () => {
+        if (parentPath.length > 0) {
+          toggleSelected(currentPath);
+        }
+      }; */
+
+      const handleTitleClick = () => {
+        // If not selected, toggle selection and animate promoted element fade-in.
+        if (!step.selected) {
+          toggleSelected(currentPath);
+          setTimeout(() => {
+            animatePromotedFadeIn(`${step.id}-promoted`);
+          }, 0);
+        } else {
+          animatePromotedFadeOut(`${step.id}-promoted`);
+          setTimeout(() => {
+            toggleSelected(currentPath);
+          }, 300);
+        }
+      };
+
+      // TOP LEVEL: NO PARENTS <-> NOT A SUBSTEP
+      let view: JSX.Element;
+      if (parentPath.length === 0) {
+        // Top-level steps always show the full view.
+        view = (
           <div
             className={`step-box 
-              ${step.isDeleting ? "fade-out" : ""} 
-              ${parentPath.length > 0 ? "sub-steps" : ""}
-              ${!step.isexpanded ? "" : "expanded"}
-              ${!step.isHyperExpanded ? "" : "hyperExpanded"} 
-              ${
-                justExpanding?.toString() === currentPath.toString()
-                  ? "isexpanding"
-                  : ""
-              }
-            `}
+            ${step.isDeleting ? "fade-out" : ""} 
+            ${step.isexpanded ? "expanded" : ""} 
+            ${step.isHyperExpanded ? "hyperExpanded" : ""} 
+            ${
+              justExpanding?.toString() === currentPath.toString()
+                ? "isexpanding"
+                : ""
+            }
+          `}
             id={step.id}
             style={{
               backgroundColor: getStepBoxColor(step),
@@ -986,7 +1288,7 @@ Biggest render Tree ever recored START
             }}
           >
             <div className="step-title">
-              <div className="step-title-inner">Step {displayPath}:</div>
+              <div className="step-title-inner">{titleLabel}</div>
               <div className="icon-container-start-right">
                 <div className="leftSide-Icons">
                   <The_muskeltiers
@@ -994,7 +1296,9 @@ Biggest render Tree ever recored START
                     fill={hintNumber ? "yellow" : "none"}
                     prompt={step.prompt}
                     stepNumber={displayPath}
-                    onAddChild={() => insertSubStepAtPath(currentPath, 0)}
+                    onAddChild={() =>
+                      insertSubStepAtPath(currentPath, 0, false)
+                    }
                     onEditStep={() =>
                       handleStartEditing(currentPath, step.content)
                     }
@@ -1009,42 +1313,6 @@ Biggest render Tree ever recored START
                       strokeWidth={"1.2"}
                       className="trash-icon"
                     />
-                  </div>
-                </div>
-                <div className="rightSide-Icons">
-                  <div className="plus">
-                    {!step.isexpanded ? (
-                      <Plus
-                        className="plus-icon-check"
-                        cursor="pointer"
-                        strokeWidth={1.2}
-                        onClick={() => toggleStepExpanded(currentPath)}
-                      />
-                    ) : (
-                      <Minus
-                        className="plus-icon-check"
-                        cursor="pointer"
-                        strokeWidth={1.2}
-                        onClick={() => toggleStepExpanded(currentPath)}
-                      />
-                    )}
-                  </div>
-                  <div className="grow">
-                    {step.isHyperExpanded ? (
-                      <Martini
-                        className="grow-icon"
-                        strokeWidth={1.2}
-                        cursor={"Pointer"}
-                        onClick={() => toggleHyperExpanded(currentPath)}
-                      />
-                    ) : (
-                      <MoveDiagonal
-                        className="grow-icon"
-                        strokeWidth={1.2}
-                        cursor={"Pointer"}
-                        onClick={() => toggleHyperExpanded(currentPath)}
-                      />
-                    )}
                   </div>
                 </div>
               </div>
@@ -1062,7 +1330,7 @@ Biggest render Tree ever recored START
             ) : (
               <div
                 className={`step-content ${
-                  !step.showCorrectStep1 ? "" : "step-content-hinted"
+                  step.showCorrectStep1 ? "step-content-hinted" : ""
                 }`}
                 onDoubleClick={() =>
                   handleStartEditing(currentPath, step.content)
@@ -1072,106 +1340,99 @@ Biggest render Tree ever recored START
               </div>
             )}
 
-            {/* substeps */}
             {step.children && step.children.length > 0 && step.isexpanded && (
               <div className="substeps">
                 {renderTree(step.children, currentPath)}
               </div>
             )}
           </div>
-
-          {/* Collapsible containers for hints */}
-          <div className="hint-container">
-            {step.detailed_hint && step.showDetailedHint1 && (
-              <Collapsible
-                isOpen={step.showDetailedHint2}
-                id={`hint-detailed-${step.id}`}
-                toggleHint={toggleHint}
-                stepId={step.id}
-                what={"detailed"}
-              >
-                {/* Show fade-in if we just unlocked it */}
-                <div
-                  className={
-                    "hint-inner " +
-                    (step.showDetailedHint2 ? "extended " : "fade-out-hint") +
-                    (justUnlockedHintId === `step-${currentPath.join("-")}-2`
-                      ? "fade-in-hint "
-                      : "")
-                  }
-                >
-                  {step.showDetailedHint2 ? (
-                    <>
-                      <strong>Detailed Hint:</strong>
-                      <span className="hint-content">{step.detailed_hint}</span>
-                    </>
-                  ) : (
-                    <div className="not-extented-hint">
-                      <strong>Detailed Hint:</strong>
-                      <span
-                        className="hint-content"
-                        style={{ visibility: "hidden" }}
-                      >
-                        {step.detailed_hint}
-                      </span>
-                    </div>
-                  )}
+        );
+      } else {
+        // For substeps: always render the base view (title and icons) only.
+        view = (
+          <div
+            className={`step-box sub-steps ${
+              step.isDeleting ? "fade-out" : ""
+            } ${step.isexpanded ? "expanded" : ""} ${
+              step.isHyperExpanded ? "hyperExpanded" : ""
+            } ${
+              justExpanding?.toString() === currentPath.toString()
+                ? "isexpanding"
+                : ""
+            }`}
+            id={step.id}
+            style={{
+              backgroundColor: getBackgroundColor(step),
+              border: "1px " + getBorder(step) + " black",
+            }}
+            onClick={handleTitleClick}
+          >
+            <div className="step-title">
+              <div className="step-title-inner">{titleLabel}</div>
+              <div className="icon-container-start-right">
+                <div className="leftSide-Icons">
+                  <div className="trash">
+                    <Trash
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveStep(step.id);
+                      }}
+                      cursor="pointer"
+                      strokeWidth={"1.2"}
+                      className="trash-icon"
+                    />
+                  </div>
                 </div>
-              </Collapsible>
-            )}
-
-            {step.general_hint && step.showGeneralHint1 && (
-              <Collapsible
-                isOpen={step.showGeneralHint2}
-                id={`hint-general-${step.id}`}
-                toggleHint={toggleHint}
-                stepId={step.id}
-                what={"general"}
-              >
-                <div
-                  className={
-                    "hint-inner " +
-                    (step.showGeneralHint2 ? "extended " : "") +
-                    (justUnlockedHintId === `step-${currentPath.join("-")}-3`
-                      ? "fade-in-hint "
-                      : "")
-                  }
-                >
-                  {step.showGeneralHint2 ? (
-                    <>
-                      <strong>General Hint:</strong>
-                      <span className="hint-content">{step.general_hint}</span>
-                    </>
-                  ) : (
-                    <div className="not-extented-hint">
-                      <strong>General Hint</strong>
-                      <span
-                        className="hint-content"
-                        style={{ visibility: "hidden" }}
-                      >
-                        {step.general_hint}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </Collapsible>
-            )}
+              </div>
+            </div>
           </div>
+        );
+      }
 
-          {/* plus between steps */}
-          {parentPath.length === 0 ? (
-            <PlusbetweenSteps
-              key={`plus-top-${index + 1}`}
-              onClick={() => insertTopLevelStepAt(index + 1)}
-            />
-          ) : (
-            <PlusbetweenSteps
-              key={`${parentPath.join("-")}-plus-${index + 1}`}
-              onClick={() => insertSubStepAtPath(parentPath, index + 1)}
-            />
-          )}
+      // Push the view and the plus button after it.
+      elements.push(
+        <Fragment key={`step-${currentPath.join("-")}`}>
+          {view}
+          <Fragment
+            key={
+              parentPath.length === 0
+                ? `plus-top-${index + 1}`
+                : `${parentPath.join("-")}-plus-${index + 1}`
+            }
+          >
+            {parentPath.length === 0 ? (
+              <PlusbetweenSteps
+                onClick={() => insertTopLevelStepAt(index + 1)}
+              />
+            ) : (
+              <PlusbetweenSteps
+                onClick={() =>
+                  insertSubStepAtPath(parentPath, index + 1, false)
+                }
+              />
+            )}
+          </Fragment>
         </Fragment>
       );
+
+      // --- TOP-LEVEL ONLY ---
+      // Immediately after a top-level step, collect its promoted substeps.
+      if (
+        parentPath.length === 0 &&
+        step.children &&
+        step.children.length > 0
+      ) {
+        const promoted = collectPromotedSubsteps(step.children, currentPath);
+        if (promoted.length > 0) {
+          elements.push(...promoted);
+          elements.push(
+            <PlusbetweenSteps
+              key={`external-promoted-plus-after-${currentPath.join("-")}`}
+              onClick={() => insertTopLevelStepAt(currentPath[0] + 1)}
+            />
+          );
+        }
+      }
     });
 
     return elements;

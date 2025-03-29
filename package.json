@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.0.9",
     "@uiw/react-codemirror": "^4.23.10",
     "axios": "^1.8.2",
+    "framer-motion": "^12.6.2",
     "lucide-react": "^0.479.0",
     "pyodide": "^0.27.3",
     "react": "^19.0.0",

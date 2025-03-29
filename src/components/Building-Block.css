@@ -1,3 +1,49 @@
-.container {
+/* Dedicated scroll container for the BB component */
+.bb-scroll-container {
+  height: 100vh; /* Full viewport height */
+  overflow-y: auto; /* Enables vertical scrolling */
+}
+
+/* This wrapper provides the total scroll space for all steps */
+.bb-wrapper {
+  height: 400vh; /* 4 steps × 100vh each; adjust if steps change */
+  background: #f3f4f6;
+  top: 0;
   color: black;
+}
+
+/* Sticky container keeps the card stack pinned during scrolling */
+.bb-sticky-container {
+  position: sticky;
+  top: 0;
+  height: calc(100vh - var(--header-height, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Perspective container for 3D transforms */
+.bb-card-stack {
+  position: relative;
+  width: 400px;
+  height: 300px;
+  perspective: 1000px;
+}
+
+/* Card styling */
+.bb-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The rotation animation is handled inline */
+  transition: transform 0.3s ease;
 }
