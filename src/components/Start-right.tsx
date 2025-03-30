@@ -1308,12 +1308,8 @@ Editing logic START
   ---------------------------------------- */
   // This component renders all substeps (only title and trash icon) in a scrollable, animated container.
   // It applies a folding rotation and stacking effect.
-  const [fadeOutBeforeInsert, setFadeOutBeforeInsert] = useState<null | number>(
-    null
-  );
-  const [justInsertedIndex, setJustInsertedIndex] = useState<null | number>(
-    null
-  );
+  const [, setFadeOutBeforeInsert] = useState<null | number>(null);
+  const [, setJustInsertedIndex] = useState<null | number>(null);
 
   const BlankStep: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
     return (
@@ -1333,6 +1329,7 @@ Editing logic START
   };
 
   const initialIndexRef = useRef(0);
+
   function AnimatedSubsteps({
     substeps,
     parentPath,
@@ -1346,7 +1343,7 @@ Editing logic START
 
     const containerHeight = 300; // px
     const cardHeight = containerHeight * 0.05;
-    const activePos = containerHeight - cardHeight;
+    //const activePos = containerHeight - cardHeight;
 
     // --- Compute visible indices (active plus up to 3 above and 3 below) ---
     const total = substeps.length;
@@ -1356,7 +1353,7 @@ Editing logic START
     for (let i = start; i <= end; i++) {
       visibleIndices.push(i);
     }
-    const activeIndexInVisible = visibleIndices.indexOf(currentIndex);
+    //const activeIndexInVisible = visibleIndices.indexOf(currentIndex);
 
     // --- Scrolling and Interaction ---
     const scrollToIndex = (index: number) => {
@@ -1458,6 +1455,7 @@ Editing logic START
     const animatedElements = visibleIndices.map((i) => {
       const substep = substeps[i];
       const currentPath = [...parentPath, i];
+      const displayPath = currentPath.map((i) => i + 1).join(".");
       const style: React.CSSProperties = {
         transition: "transform 0.4s ease, opacity 0.4s ease",
         transform: `rotateX(${getCardRotation(
@@ -1467,23 +1465,39 @@ Editing logic START
         zIndex: getZIndex(i),
         position: i === currentIndex ? "relative" : "absolute",
         width: "100%",
-        opacity: i === currentIndex ? 1 : 0, // only active is visible
+        opacity: i === currentIndex ? 1 : 0,
       };
       return (
         <div
           key={substep.id}
-          className="step-box substep-card"
+          className={`step-box ${substep.isDeleting ? "fade-out" : ""}`}
           style={style}
           onClick={() => handleTitleClick(substep, currentPath)}
         >
           {i === currentIndex && (
             <div className="step-title" style={{ padding: "5px" }}>
-              <div className="step-title-inner">{`Substep ${i + 1}`}</div>
+              <div className="step-title-inner">{`Substep ${displayPath}`}</div>
               <div className="icon-container-start-right">
                 <Trash
                   onClick={(e) => {
                     e.stopPropagation();
+                    const index = currentPath[currentPath.length - 1];
+
+                    initialIndexRef.current = index;
                     handleRemoveStep(substep.id);
+
+                    setTimeout(() => {
+                      const updatedLength = substeps.length - 1;
+
+                      if (index === currentIndex && updatedLength > 0) {
+                        const nextIndex = Math.min(
+                          currentIndex,
+                          updatedLength - 1
+                        );
+                        setCurrentIndex(nextIndex);
+                        scrollToIndex(nextIndex);
+                      }
+                    }, 300);
                   }}
                   cursor="pointer"
                   strokeWidth={"1.2"}
