@@ -82,8 +82,12 @@
 
 .container-step-tree .substeps .step-box {
   height: auto;
-  padding: 1vw;
+  padding: 1.5vw;
   border: 1px solid black;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .container-step-tree .step-box.hyperExpanded {
@@ -96,6 +100,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 1vw;
 }
 
@@ -263,7 +269,7 @@ Textarea for starting prompt END
   flex-direction: row;
   visibility: visible;
   width: 100%;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex: 1;
 }
 
@@ -627,4 +633,38 @@ Overlay for when the user selects to get the Correct Step
 
 .step-box.sub-steps:hover {
   background-color: lightgray;
+}
+
+/* ----------------------------------------
+Animation for adding title steps
+---------------------------------------- */
+
+@keyframes slide-in-Parent {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-out-Parent {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+.slide-in-Parent {
+  animation: slide-in-Parent 0.4s ease forwards;
+}
+
+.slide-out-Parent {
+  animation: slide-out-Parent 0.4s ease forwards;
 }

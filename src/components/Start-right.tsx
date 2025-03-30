@@ -1286,7 +1286,10 @@ Editing logic START
       const index = safePath[safePath.length - 1] + 1;
 
       promotedElements.push(
-        <div className="promotedPlus">
+        <div
+          key={`final-promoted-div-${parentPath.join("-")}`}
+          className="promotedPlus"
+        >
           <PlusbetweenSteps
             key={`final-promoted-plus-${parentPath.join("-")}`}
             onClick={() => {
@@ -1305,6 +1308,13 @@ Editing logic START
   ---------------------------------------- */
   // This component renders all substeps (only title and trash icon) in a scrollable, animated container.
   // It applies a folding rotation and stacking effect.
+  const [fadeOutBeforeInsert, setFadeOutBeforeInsert] = useState<null | number>(
+    null
+  );
+  const [justInsertedIndex, setJustInsertedIndex] = useState<null | number>(
+    null
+  );
+
   const initialIndexRef = useRef(0);
   function AnimatedSubsteps({
     substeps,
@@ -1360,7 +1370,6 @@ Editing logic START
         container.scrollHeight - container.scrollTop === container.clientHeight;
       const scrollingDown = e.deltaY > 0;
 
-      // ✅ Only prevent page scroll when we're NOT at the edge
       if ((scrollingDown && !atBottom) || (!scrollingDown && !atTop)) {
         e.preventDefault();
       }
@@ -1388,14 +1397,12 @@ Editing logic START
       if (!container) return;
 
       const handleWheelEvent = (e: WheelEvent) => {
-        // Prevent the event from bubbling up or triggering any other listeners
         e.stopImmediatePropagation();
         e.stopPropagation();
         e.preventDefault();
         handleWheel(e);
       };
 
-      // Attach the event listener in the capture phase
       container.addEventListener("wheel", handleWheelEvent, {
         passive: false,
         capture: true,
@@ -1408,36 +1415,81 @@ Editing logic START
       };
     }, [currentIndex, substeps]);
 
+    const triggerInsertAt = (indexToInsert: number) => {
+      setFadeOutBeforeInsert(currentIndex); // trigger fade out
+
+      setTimeout(() => {
+        setFadeOutBeforeInsert(null);
+
+        // ✅ Create the new substep here
+        const newSubStep = createBlankStep(false);
+        newSubStep.content = "New Substep";
+        newSubStep.hasparent = true;
+
+        setSteps((prevSteps) => {
+          const newSteps = JSON.parse(JSON.stringify(prevSteps));
+          let parent = newSteps;
+          for (let i = 0; i < parentPath.length; i++) {
+            parent = parent[parentPath[i]].children;
+          }
+          parent.splice(indexToInsert, 0, newSubStep);
+          return newSteps;
+        });
+
+        setJustInsertedIndex(indexToInsert);
+        setCurrentIndex(indexToInsert);
+        initialIndexRef.current = indexToInsert;
+        scrollToIndex(indexToInsert);
+
+        setTimeout(() => {
+          setJustInsertedIndex(null);
+        }, 600);
+      }, 400);
+    };
+
     return (
       <div
         ref={containerRef}
         className="animated-substeps-container"
         style={{
-          height: "200px",
+          height: "300px",
           overflow: "auto",
           overscrollBehavior: "contain",
           position: "relative",
           display: "flex",
+          flexDirection: "column",
           width: "100%",
           alignItems: "center",
+          overflowY: "hidden",
         }}
       >
+        {/* 🔼 PLUS ABOVE CURRENT STEP */}
+        <PlusbetweenSteps
+          key={`plus-top-${currentIndex}`}
+          onClick={() => triggerInsertAt(currentIndex)}
+        />
+
+        {/* 🔁 SCROLLABLE + ANIMATED STEPS */}
         {substeps.map((substep, j) => {
           const isVisible = j === currentIndex;
+          const currentPath = [...parentPath, j];
 
           return (
             <div
               key={substep.id}
-              className={`step-box ${isVisible ? "rotate-in" : "rotate-out"} ${
-                substep.isDeleting ? "fade-out" : ""
-              } substep-card`}
+              className={`step-box substep-card
+                ${substep.isDeleting ? "fade-out" : ""}
+                ${justInsertedIndex === j ? "slide-in-Parent" : ""}
+                ${fadeOutBeforeInsert === j ? "slide-out-Parent" : ""}
+
+              `}
               style={{
-                transition: "transform 0.4s ease",
-                transform: isVisible ? "rotateX(0deg)" : "rotateX(-90deg)",
-                transformOrigin: "top",
+                transition: "transform 0.4s ease, opacity 0.4s ease",
+                transform: isVisible ? "translateY(0)" : "translateY(30px)",
+                opacity: isVisible ? 1 : 0,
                 position: isVisible ? "relative" : "absolute",
               }}
-              onClick={() => handleTitleClick(substep, [...parentPath, j])}
+              onClick={() => handleTitleClick(substep, currentPath)}
             >
               <div className="step-title">
                 <div className="step-title-inner">{`Substep ${j + 1}`}</div>
@@ -1445,6 +1497,8 @@ Editing logic START
                   <Trash
                     onClick={(e) => {
                       e.stopPropagation();
+                      const index = currentPath[currentPath.length - 1];
+                      initialIndexRef.current = index;
                       handleRemoveStep(substep.id);
                     }}
                     cursor="pointer"
@@ -1456,6 +1510,11 @@ Editing logic START
             </div>
           );
         })}
+
+        <PlusbetweenSteps
+          key={`plus-bottom-${currentIndex}`}
+          onClick={() => triggerInsertAt(currentIndex + 1)}
+        />
       </div>
     );
   }
