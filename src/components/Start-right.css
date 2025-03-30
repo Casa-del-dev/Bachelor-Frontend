@@ -55,8 +55,8 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  height: 35vh;
-  max-height: 35vh;
+  height: 55vh;
+  max-height: 55vh;
 }
 
 .container-step-tree .step-box.promoted {
@@ -72,8 +72,8 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  height: 35vh;
-  max-height: 35vh;
+  height: 55vh;
+  max-height: 55vh;
 }
 
 .promotedPlus {
@@ -377,18 +377,18 @@ HINT HANDLING
 }
 
 .hint-block:nth-child(1) {
-  z-index: 3;
+  z-index: 23;
 }
 .hint-block:nth-child(2) {
-  z-index: 2;
+  z-index: 22;
 }
 .hint-block:nth-child(3) {
-  z-index: 1;
+  z-index: 21;
 }
 
 .hint-block:hover {
   background-color: lightgrey;
-  z-index: 5;
+  z-index: 25;
 }
 
 .hint-inner {
@@ -398,7 +398,7 @@ HINT HANDLING
 }
 
 .hint-block:has(.hint-inner.extended) {
-  z-index: 15;
+  z-index: 35;
 }
 
 .hint-content {
@@ -617,6 +617,7 @@ Overlay for when the user selects to get the Correct Step
   display: flex;
   justify-content: center;
   overscroll-behavior: contain;
+  margin-top: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .plus-button-top,

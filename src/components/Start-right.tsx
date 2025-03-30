@@ -1315,6 +1315,23 @@ Editing logic START
     null
   );
 
+  const BlankStep: React.FC<{ style?: React.CSSProperties }> = ({ style }) => {
+    return (
+      <div
+        className="blank-step"
+        style={{
+          position: "absolute",
+          left: 0,
+          width: "100%",
+          border: "1px solid black",
+          background: "white",
+          boxShadow: "0 -2px 4px rgba(0, 0, 0, 0.5)",
+          ...style,
+        }}
+      />
+    );
+  };
+
   const initialIndexRef = useRef(0);
   function AnimatedSubsteps({
     substeps,
@@ -1325,29 +1342,36 @@ Editing logic START
   }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const isAnimatingRef = useRef(false);
-
     const [currentIndex, setCurrentIndex] = useState(initialIndexRef.current);
 
-    useEffect(() => {
-      setCurrentIndex((prev) => Math.min(prev, substeps.length - 1));
-    }, [substeps.length]);
+    const containerHeight = 300; // px
+    const cardHeight = containerHeight * 0.05;
+    const activePos = containerHeight - cardHeight;
 
+    // --- Compute visible indices (active plus up to 3 above and 3 below) ---
+    const total = substeps.length;
+    const start = Math.max(0, currentIndex - 3);
+    const end = Math.min(total - 1, currentIndex + 3);
+    const visibleIndices: number[] = [];
+    for (let i = start; i <= end; i++) {
+      visibleIndices.push(i);
+    }
+    const activeIndexInVisible = visibleIndices.indexOf(currentIndex);
+
+    // --- Scrolling and Interaction ---
     const scrollToIndex = (index: number) => {
       const container = containerRef.current;
       if (!container) return;
-
       const cards = container.querySelectorAll(".substep-card");
       const card = cards[index] as HTMLElement;
       if (card) {
-        const cardTop = card.offsetTop;
-        container.scrollTo({ top: cardTop, behavior: "smooth" });
+        container.scrollTo({ top: card.offsetTop, behavior: "smooth" });
       }
     };
 
     const handleTitleClick = (step: Step, currentPath: number[]) => {
       const index = currentPath[currentPath.length - 1];
       initialIndexRef.current = index;
-
       if (!step.selected) {
         toggleSelected(currentPath);
         setTimeout(() => {
@@ -1361,27 +1385,23 @@ Editing logic START
       }
     };
 
+    // Handle wheel events to update currentIndex.
     const handleWheel = (e: WheelEvent) => {
       const container = containerRef.current;
       if (!container) return;
-
       const atTop = container.scrollTop === 0;
       const atBottom =
         container.scrollHeight - container.scrollTop === container.clientHeight;
       const scrollingDown = e.deltaY > 0;
-
       if ((scrollingDown && !atBottom) || (!scrollingDown && !atTop)) {
         e.preventDefault();
       }
-
       if (isAnimatingRef.current) return;
-
-      const direction = e.deltaY > 0 ? 1 : -1;
+      const direction = scrollingDown ? 1 : -1;
       const newIndex = Math.max(
         0,
-        Math.min(substeps.length - 1, currentIndex + direction)
+        Math.min(total - 1, currentIndex + direction)
       );
-
       if (newIndex !== currentIndex) {
         isAnimatingRef.current = true;
         setCurrentIndex(newIndex);
@@ -1395,25 +1415,86 @@ Editing logic START
     useEffect(() => {
       const container = containerRef.current;
       if (!container) return;
-
       const handleWheelEvent = (e: WheelEvent) => {
         e.stopImmediatePropagation();
         e.stopPropagation();
         e.preventDefault();
         handleWheel(e);
       };
-
       container.addEventListener("wheel", handleWheelEvent, {
         passive: false,
         capture: true,
       });
-
-      return () => {
+      return () =>
         container.removeEventListener("wheel", handleWheelEvent, {
           capture: true,
         });
-      };
     }, [currentIndex, substeps]);
+
+    // --- Animation Calculations for Active Step ---
+    const getCardRotation = (i: number): number => {
+      if (i < currentIndex) return 85; // folded above (rotated downward)
+      if (i === currentIndex) return 0; // active card (flat)
+      return -85; // folded below (rotated upward)
+    };
+
+    const getTransformOrigin = (i: number): string =>
+      i < currentIndex ? "top" : "bottom";
+
+    // For this example, we use a fixed 10px translation for folded ones;
+    // the active card remains untransformed (0px translation).
+    const getTranslateY = (i: number): number => {
+      return i === currentIndex ? 0 : 10;
+    };
+
+    const getZIndex = (i: number): number => {
+      if (i === currentIndex) return 2;
+      return i < currentIndex ? 1 : 3;
+    };
+
+    // --- Render Animated Elements ---
+    // Render the animated layer for visible indices.
+    // Only the active card is fully visible (opacity 1) and interactive.
+    const animatedElements = visibleIndices.map((i) => {
+      const substep = substeps[i];
+      const currentPath = [...parentPath, i];
+      const style: React.CSSProperties = {
+        transition: "transform 0.4s ease, opacity 0.4s ease",
+        transform: `rotateX(${getCardRotation(
+          i
+        )}deg) translateY(${getTranslateY(i)}px)`,
+        transformOrigin: getTransformOrigin(i),
+        zIndex: getZIndex(i),
+        position: i === currentIndex ? "relative" : "absolute",
+        width: "100%",
+        opacity: i === currentIndex ? 1 : 0, // only active is visible
+      };
+      return (
+        <div
+          key={substep.id}
+          className="step-box substep-card"
+          style={style}
+          onClick={() => handleTitleClick(substep, currentPath)}
+        >
+          {i === currentIndex && (
+            <div className="step-title" style={{ padding: "5px" }}>
+              <div className="step-title-inner">{`Substep ${i + 1}`}</div>
+              <div className="icon-container-start-right">
+                <Trash
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveStep(substep.id);
+                  }}
+                  cursor="pointer"
+                  strokeWidth={"1.2"}
+                  className="trash-icon"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    });
 
     const triggerInsertAt = (indexToInsert: number) => {
       setFadeOutBeforeInsert(currentIndex); // trigger fade out
@@ -1421,7 +1502,6 @@ Editing logic START
       setTimeout(() => {
         setFadeOutBeforeInsert(null);
 
-        // ✅ Create the new substep here
         const newSubStep = createBlankStep(false);
         newSubStep.content = "New Substep";
         newSubStep.hasparent = true;
@@ -1447,70 +1527,58 @@ Editing logic START
       }, 400);
     };
 
+    // --- Render Blank Placeholders for Folded Steps ---
+    // For each visible index that is not the active one, render a blank step.
+    // Position them relative to the active card: if a folded step is above active,
+    // its top is computed relative to activePos; if below, likewise.
+    const blankElements = visibleIndices
+      .filter((i) => i !== currentIndex)
+      .map((i) => {
+        const isAbove = i < currentIndex;
+        const distanceFromActive = Math.abs(i - currentIndex);
+
+        const overlapFactor = 0.4;
+        const offset = distanceFromActive * cardHeight * overlapFactor;
+
+        // Active card is centered at containerHeight / 2 - cardHeight / 2
+        const center = containerHeight;
+        const top = isAbove
+          ? center / 4 - cardHeight * 1.4 - offset
+          : (center / 4) * 3 - cardHeight + offset;
+
+        const style: React.CSSProperties = {
+          top: `${top}px`,
+          height: `${cardHeight}px`,
+          zIndex: 10 + i,
+          boxShadow: isAbove
+            ? "0 2px 4px rgba(0, 0, 0, 0.3)"
+            : "0 -2px 4px rgba(0, 0, 0, 0.3)",
+        };
+
+        return <BlankStep key={`blank-${substeps[i].id}`} style={style} />;
+      });
+
     return (
       <div
         ref={containerRef}
         className="animated-substeps-container"
         style={{
-          height: "300px",
-          overflow: "auto",
+          height: `${containerHeight}px`,
           overscrollBehavior: "contain",
           position: "relative",
-          display: "flex",
-          flexDirection: "column",
           width: "100%",
-          alignItems: "center",
-          overflowY: "hidden",
         }}
       >
-        {/* 🔼 PLUS ABOVE CURRENT STEP */}
+        {/* PLUS button above */}
         <PlusbetweenSteps
           key={`plus-top-${currentIndex}`}
-          onClick={() => triggerInsertAt(currentIndex)}
+          onClick={() => {
+            triggerInsertAt(currentIndex);
+          }}
         />
-
-        {/* 🔁 SCROLLABLE + ANIMATED STEPS */}
-        {substeps.map((substep, j) => {
-          const isVisible = j === currentIndex;
-          const currentPath = [...parentPath, j];
-
-          return (
-            <div
-              key={substep.id}
-              className={`step-box substep-card
-                ${substep.isDeleting ? "fade-out" : ""}
-                ${justInsertedIndex === j ? "slide-in-Parent" : ""}
-                ${fadeOutBeforeInsert === j ? "slide-out-Parent" : ""}
-
-              `}
-              style={{
-                transition: "transform 0.4s ease, opacity 0.4s ease",
-                transform: isVisible ? "translateY(0)" : "translateY(30px)",
-                opacity: isVisible ? 1 : 0,
-                position: isVisible ? "relative" : "absolute",
-              }}
-              onClick={() => handleTitleClick(substep, currentPath)}
-            >
-              <div className="step-title">
-                <div className="step-title-inner">{`Substep ${j + 1}`}</div>
-                <div className="icon-container-start-right">
-                  <Trash
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const index = currentPath[currentPath.length - 1];
-                      initialIndexRef.current = index;
-                      handleRemoveStep(substep.id);
-                    }}
-                    cursor="pointer"
-                    strokeWidth={"1.2"}
-                    className="trash-icon"
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
+        {blankElements}
+        {animatedElements}
+        {/* PLUS button below */}
         <PlusbetweenSteps
           key={`plus-bottom-${currentIndex}`}
           onClick={() => triggerInsertAt(currentIndex + 1)}
