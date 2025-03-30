@@ -1091,9 +1091,18 @@ Editing logic START
               />
             </div>
 
-            {/* Promoted Step */}
             <div
-              className={`step-box promoted
+              className="container-step-hint"
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              {/* Promoted Step */}
+              <div
+                className={`step-box promoted
                 ${step.isDeleting && step.selected ? "fade-out" : ""} 
                 ${step.isexpanded ? "expanded" : ""}
                 ${step.isHyperExpanded ? "hyperExpanded" : ""} 
@@ -1103,154 +1112,161 @@ Editing logic START
                     : ""
                 }
               `}
-              id={`${step.id}-promoted`}
-              style={{
-                backgroundColor: getBackgroundColor(step),
-                border: "1px " + getBorder(step) + " black",
-              }}
-            >
-              <div className="step-title">
-                <div className="step-title-inner">{titleLabel}</div>
-                <div className="icon-container-start-right">
-                  <div className="leftSide-Icons">
-                    <The_muskeltiers
-                      number={getNumberForStep(step)}
-                      fill={getNumberForStep(step) ? "yellow" : "none"}
-                      prompt={step.prompt}
-                      stepNumber={displayPath}
-                      onAddChild={() =>
-                        insertSubStepAtPathFromSelected(currentPath, 0, false)
-                      }
-                      onEditStep={() =>
-                        handleStartEditing(currentPath, step.content)
-                      }
-                      onGiveHint={() =>
-                        handleGiveHint(currentPath, getNumberForStep(step))
-                      }
-                      onSplitStep={HandleOnSplitStep(currentPath)}
-                      onShowImplemented={async () => HandleImplemented()}
-                    />
-                    <div className="trash">
-                      <Trash
-                        onClick={() => handleRemoveStep(step.id)}
-                        cursor="pointer"
-                        strokeWidth={"1.2"}
-                        className="trash-icon"
+                id={`${step.id}-promoted`}
+                style={{
+                  backgroundColor: getBackgroundColor(step),
+                  border: "1px " + getBorder(step) + " black",
+                }}
+              >
+                <div className="step-title">
+                  <div className="step-title-inner">{titleLabel}</div>
+                  <div className="icon-container-start-right">
+                    <div className="leftSide-Icons">
+                      <The_muskeltiers
+                        number={getNumberForStep(step)}
+                        fill={getNumberForStep(step) ? "yellow" : "none"}
+                        prompt={step.prompt}
+                        stepNumber={displayPath}
+                        onAddChild={() =>
+                          insertSubStepAtPathFromSelected(currentPath, 0, false)
+                        }
+                        onEditStep={() =>
+                          handleStartEditing(currentPath, step.content)
+                        }
+                        onGiveHint={() =>
+                          handleGiveHint(currentPath, getNumberForStep(step))
+                        }
+                        onSplitStep={HandleOnSplitStep(currentPath)}
+                        onShowImplemented={async () => HandleImplemented()}
                       />
+                      <div className="trash">
+                        <Trash
+                          onClick={() => handleRemoveStep(step.id)}
+                          cursor="pointer"
+                          strokeWidth={"1.2"}
+                          className="trash-icon"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {editingPath &&
+                editingPath.length === currentPath.length &&
+                editingPath.every((val, i) => val === currentPath[i]) ? (
+                  <textarea
+                    autoFocus
+                    className="inline-edit-textarea-editing"
+                    rows={3}
+                    value={tempContent}
+                    onChange={(e) => setTempContent(e.target.value)}
+                    onBlur={handleBlur}
+                  />
+                ) : (
+                  <div
+                    className={`step-content ${
+                      step.showCorrectStep1 ? "step-content-hinted" : ""
+                    }`}
+                    onDoubleClick={() =>
+                      handleStartEditing(currentPath, step.content)
+                    }
+                  >
+                    {step.isexpanded ? step.content : ""}
+                  </div>
+                )}
+
+                {step.children &&
+                  step.children.length > 0 &&
+                  step.isexpanded && (
+                    <div className="substeps">
+                      {renderTree(step.children, currentPath)}
+                    </div>
+                  )}
               </div>
-
-              {editingPath &&
-              editingPath.length === currentPath.length &&
-              editingPath.every((val, i) => val === currentPath[i]) ? (
-                <textarea
-                  autoFocus
-                  className="inline-edit-textarea-editing"
-                  rows={3}
-                  value={tempContent}
-                  onChange={(e) => setTempContent(e.target.value)}
-                  onBlur={handleBlur}
-                />
-              ) : (
-                <div
-                  className={`step-content ${
-                    step.showCorrectStep1 ? "step-content-hinted" : ""
-                  }`}
-                  onDoubleClick={() =>
-                    handleStartEditing(currentPath, step.content)
-                  }
-                >
-                  {step.isexpanded ? step.content : ""}
-                </div>
-              )}
-
-              {step.children && step.children.length > 0 && step.isexpanded && (
-                <div className="substeps">
-                  {renderTree(step.children, currentPath)}
-                </div>
-              )}
-            </div>
-            <div className="hint-container promoted">
-              {step.detailed_hint && step.showDetailedHint1 && (
-                <Collapsible
-                  isOpen={step.showDetailedHint2}
-                  id={`hint-detailed-${step.id}`}
-                  toggleHint={toggleHint}
-                  stepId={step.id}
-                  what={"detailed"}
-                >
-                  {/* Show fade-in if we just unlocked it */}
-                  <div
-                    className={
-                      "hint-inner " +
-                      (step.showDetailedHint2 ? "extended " : "fade-out-hint") +
-                      (justUnlockedHintId === `step-${currentPath.join("-")}-2`
-                        ? "fade-in-hint "
-                        : "")
-                    }
+              <div className="hint-container promoted">
+                {step.detailed_hint && step.showDetailedHint1 && (
+                  <Collapsible
+                    isOpen={step.showDetailedHint2}
+                    id={`hint-detailed-${step.id}`}
+                    toggleHint={toggleHint}
+                    stepId={step.id}
+                    what={"detailed"}
                   >
-                    {step.showDetailedHint2 ? (
-                      <>
-                        <strong>Detailed Hint:</strong>
-                        <span className="hint-content">
-                          {step.detailed_hint}
-                        </span>
-                      </>
-                    ) : (
-                      <div className="not-extented-hint">
-                        <strong>Detailed Hint:</strong>
-                        <span
-                          className="hint-content"
-                          style={{ visibility: "hidden" }}
-                        >
-                          {step.detailed_hint}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Collapsible>
-              )}
+                    {/* Show fade-in if we just unlocked it */}
+                    <div
+                      className={
+                        "hint-inner " +
+                        (step.showDetailedHint2
+                          ? "extended "
+                          : "fade-out-hint") +
+                        (justUnlockedHintId ===
+                        `step-${currentPath.join("-")}-2`
+                          ? "fade-in-hint "
+                          : "")
+                      }
+                    >
+                      {step.showDetailedHint2 ? (
+                        <>
+                          <strong>Detailed Hint:</strong>
+                          <span className="hint-content">
+                            {step.detailed_hint}
+                          </span>
+                        </>
+                      ) : (
+                        <div className="not-extented-hint">
+                          <strong>Detailed Hint:</strong>
+                          <span
+                            className="hint-content"
+                            style={{ visibility: "hidden" }}
+                          >
+                            {step.detailed_hint}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Collapsible>
+                )}
 
-              {step.general_hint && step.showGeneralHint1 && (
-                <Collapsible
-                  isOpen={step.showGeneralHint2}
-                  id={`hint-general-${step.id}`}
-                  toggleHint={toggleHint}
-                  stepId={step.id}
-                  what={"general"}
-                >
-                  <div
-                    className={
-                      "hint-inner " +
-                      (step.showGeneralHint2 ? "extended " : "") +
-                      (justUnlockedHintId === `step-${currentPath.join("-")}-3`
-                        ? "fade-in-hint "
-                        : "")
-                    }
+                {step.general_hint && step.showGeneralHint1 && (
+                  <Collapsible
+                    isOpen={step.showGeneralHint2}
+                    id={`hint-general-${step.id}`}
+                    toggleHint={toggleHint}
+                    stepId={step.id}
+                    what={"general"}
                   >
-                    {step.showGeneralHint2 ? (
-                      <>
-                        <strong>General Hint:</strong>
-                        <span className="hint-content">
-                          {step.general_hint}
-                        </span>
-                      </>
-                    ) : (
-                      <div className="not-extented-hint">
-                        <strong>General Hint</strong>
-                        <span
-                          className="hint-content"
-                          style={{ visibility: "hidden" }}
-                        >
-                          {step.general_hint}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Collapsible>
-              )}
+                    <div
+                      className={
+                        "hint-inner " +
+                        (step.showGeneralHint2 ? "extended " : "") +
+                        (justUnlockedHintId ===
+                        `step-${currentPath.join("-")}-3`
+                          ? "fade-in-hint "
+                          : "")
+                      }
+                    >
+                      {step.showGeneralHint2 ? (
+                        <>
+                          <strong>General Hint:</strong>
+                          <span className="hint-content">
+                            {step.general_hint}
+                          </span>
+                        </>
+                      ) : (
+                        <div className="not-extented-hint">
+                          <strong>General Hint</strong>
+                          <span
+                            className="hint-content"
+                            style={{ visibility: "hidden" }}
+                          >
+                            {step.general_hint}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </Collapsible>
+                )}
+              </div>
             </div>
           </Fragment>
         );
@@ -1283,6 +1299,170 @@ Editing logic START
 
     return promotedElements;
   }
+
+  /* ----------------------------------------
+  AnimatedSubsteps Component START
+  ---------------------------------------- */
+  // This component renders all substeps (only title and trash icon) in a scrollable, animated container.
+  // It applies a folding rotation and stacking effect.
+  const initialIndexRef = useRef(0);
+  function AnimatedSubsteps({
+    substeps,
+    parentPath,
+  }: {
+    substeps: Step[];
+    parentPath: number[];
+  }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const isAnimatingRef = useRef(false);
+
+    const [currentIndex, setCurrentIndex] = useState(initialIndexRef.current);
+
+    useEffect(() => {
+      setCurrentIndex((prev) => Math.min(prev, substeps.length - 1));
+    }, [substeps.length]);
+
+    const scrollToIndex = (index: number) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const cards = container.querySelectorAll(".substep-card");
+      const card = cards[index] as HTMLElement;
+      if (card) {
+        const cardTop = card.offsetTop;
+        container.scrollTo({ top: cardTop, behavior: "smooth" });
+      }
+    };
+
+    const handleTitleClick = (step: Step, currentPath: number[]) => {
+      const index = currentPath[currentPath.length - 1];
+      initialIndexRef.current = index;
+
+      if (!step.selected) {
+        toggleSelected(currentPath);
+        setTimeout(() => {
+          animatePromotedFadeIn(`${step.id}-promoted`);
+        }, 0);
+      } else {
+        animatePromotedFadeOut(`${step.id}-promoted`);
+        setTimeout(() => {
+          toggleSelected(currentPath);
+        }, 300);
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const atTop = container.scrollTop === 0;
+      const atBottom =
+        container.scrollHeight - container.scrollTop === container.clientHeight;
+      const scrollingDown = e.deltaY > 0;
+
+      // ✅ Only prevent page scroll when we're NOT at the edge
+      if ((scrollingDown && !atBottom) || (!scrollingDown && !atTop)) {
+        e.preventDefault();
+      }
+
+      if (isAnimatingRef.current) return;
+
+      const direction = e.deltaY > 0 ? 1 : -1;
+      const newIndex = Math.max(
+        0,
+        Math.min(substeps.length - 1, currentIndex + direction)
+      );
+
+      if (newIndex !== currentIndex) {
+        isAnimatingRef.current = true;
+        setCurrentIndex(newIndex);
+        scrollToIndex(newIndex);
+        setTimeout(() => {
+          isAnimatingRef.current = false;
+        }, 400);
+      }
+    };
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const handleWheelEvent = (e: WheelEvent) => {
+        // Prevent the event from bubbling up or triggering any other listeners
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+        handleWheel(e);
+      };
+
+      // Attach the event listener in the capture phase
+      container.addEventListener("wheel", handleWheelEvent, {
+        passive: false,
+        capture: true,
+      });
+
+      return () => {
+        container.removeEventListener("wheel", handleWheelEvent, {
+          capture: true,
+        });
+      };
+    }, [currentIndex, substeps]);
+
+    return (
+      <div
+        ref={containerRef}
+        className="animated-substeps-container"
+        style={{
+          height: "200px",
+          overflow: "auto",
+          overscrollBehavior: "contain",
+          position: "relative",
+          display: "flex",
+          width: "100%",
+          alignItems: "center",
+        }}
+      >
+        {substeps.map((substep, j) => {
+          const isVisible = j === currentIndex;
+
+          return (
+            <div
+              key={substep.id}
+              className={`step-box ${isVisible ? "rotate-in" : "rotate-out"} ${
+                substep.isDeleting ? "fade-out" : ""
+              } substep-card`}
+              style={{
+                transition: "transform 0.4s ease",
+                transform: isVisible ? "rotateX(0deg)" : "rotateX(-90deg)",
+                transformOrigin: "top",
+                position: isVisible ? "relative" : "absolute",
+              }}
+              onClick={() => handleTitleClick(substep, [...parentPath, j])}
+            >
+              <div className="step-title">
+                <div className="step-title-inner">{`Substep ${j + 1}`}</div>
+                <div className="icon-container-start-right">
+                  <Trash
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveStep(substep.id);
+                    }}
+                    cursor="pointer"
+                    strokeWidth={"1.2"}
+                    className="trash-icon"
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  /* ----------------------------------------
+  AnimatedSubsteps Component END
+  ---------------------------------------- */
 
   /* ------------------------------------
 Biggest render Tree ever recored START
@@ -1323,13 +1503,6 @@ Biggest render Tree ever recored START
           ? `Substep ${displayPath}:`
           : `Step ${displayPath}:`;
 
-      // For substeps, clicking on the title toggles its selected state.
-      /* const handleTitleClick = () => {
-        if (parentPath.length > 0) {
-          toggleSelected(currentPath);
-        }
-      }; */
-
       const handleTitleClick = () => {
         // If not selected, toggle selection and animate promoted element fade-in.
         if (!step.selected) {
@@ -1347,12 +1520,12 @@ Biggest render Tree ever recored START
 
       // TOP LEVEL: NO PARENTS <-> NOT A SUBSTEP
       let view: JSX.Element;
-      if (parentPath.length === 0) {
-        // Top-level steps always show the full view.
-        view = (
-          <>
-            <div
-              className={`step-box 
+
+      // Top-level steps always show the full view.
+      view = (
+        <>
+          <div
+            className={`step-box 
             ${step.isDeleting ? "fade-out" : ""} 
             ${step.isexpanded ? "expanded" : ""} 
             ${step.isHyperExpanded ? "hyperExpanded" : ""} 
@@ -1362,183 +1535,34 @@ Biggest render Tree ever recored START
                 : ""
             }
           `}
-              id={step.id}
-              style={{
-                backgroundColor: getStepBoxColor(step),
-                border: "1px " + getBorder(step) + " black",
-              }}
-            >
-              <div className="step-title">
-                <div className="step-title-inner">{titleLabel}</div>
-                <div className="icon-container-start-right">
-                  <div className="leftSide-Icons">
-                    <The_muskeltiers
-                      number={hintNumber}
-                      fill={hintNumber ? "yellow" : "none"}
-                      prompt={step.prompt}
-                      stepNumber={displayPath}
-                      onAddChild={() =>
-                        insertSubStepAtPath(currentPath, 0, false)
-                      }
-                      onEditStep={() =>
-                        handleStartEditing(currentPath, step.content)
-                      }
-                      onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
-                      onSplitStep={HandleOnSplitStep(currentPath)}
-                      onShowImplemented={async () => HandleImplemented()}
-                    />
-                    <div className="trash">
-                      <Trash
-                        onClick={() => handleRemoveStep(step.id)}
-                        cursor="pointer"
-                        strokeWidth={"1.2"}
-                        className="trash-icon"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {isCurrentlyEditing ? (
-                <textarea
-                  autoFocus
-                  className="inline-edit-textarea-editing"
-                  rows={3}
-                  value={tempContent}
-                  onChange={(e) => setTempContent(e.target.value)}
-                  onBlur={handleBlur}
-                />
-              ) : (
-                <div
-                  className={`step-content ${
-                    step.showCorrectStep1 ? "step-content-hinted" : ""
-                  }`}
-                  onDoubleClick={() =>
-                    handleStartEditing(currentPath, step.content)
-                  }
-                >
-                  {step.isexpanded ? step.content : ""}
-                </div>
-              )}
-
-              {step.children && step.children.length > 0 && step.isexpanded && (
-                <div className="substeps">
-                  {renderTree(step.children, currentPath)}
-                </div>
-              )}
-            </div>
-            <div className="hint-container">
-              {step.detailed_hint && step.showDetailedHint1 && (
-                <Collapsible
-                  isOpen={step.showDetailedHint2}
-                  id={`hint-detailed-${step.id}`}
-                  toggleHint={toggleHint}
-                  stepId={step.id}
-                  what={"detailed"}
-                >
-                  {/* Show fade-in if we just unlocked it */}
-                  <div
-                    className={
-                      "hint-inner " +
-                      (step.showDetailedHint2 ? "extended " : "fade-out-hint") +
-                      (justUnlockedHintId === `step-${currentPath.join("-")}-2`
-                        ? "fade-in-hint "
-                        : "")
-                    }
-                  >
-                    {step.showDetailedHint2 ? (
-                      <>
-                        <strong>Detailed Hint:</strong>
-                        <span className="hint-content">
-                          {step.detailed_hint}
-                        </span>
-                      </>
-                    ) : (
-                      <div className="not-extented-hint">
-                        <strong>Detailed Hint:</strong>
-                        <span
-                          className="hint-content"
-                          style={{ visibility: "hidden" }}
-                        >
-                          {step.detailed_hint}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Collapsible>
-              )}
-
-              {step.general_hint && step.showGeneralHint1 && (
-                <Collapsible
-                  isOpen={step.showGeneralHint2}
-                  id={`hint-general-${step.id}`}
-                  toggleHint={toggleHint}
-                  stepId={step.id}
-                  what={"general"}
-                >
-                  <div
-                    className={
-                      "hint-inner " +
-                      (step.showGeneralHint2 ? "extended " : "") +
-                      (justUnlockedHintId === `step-${currentPath.join("-")}-3`
-                        ? "fade-in-hint "
-                        : "")
-                    }
-                  >
-                    {step.showGeneralHint2 ? (
-                      <>
-                        <strong>General Hint:</strong>
-                        <span className="hint-content">
-                          {step.general_hint}
-                        </span>
-                      </>
-                    ) : (
-                      <div className="not-extented-hint">
-                        <strong>General Hint</strong>
-                        <span
-                          className="hint-content"
-                          style={{ visibility: "hidden" }}
-                        >
-                          {step.general_hint}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </Collapsible>
-              )}
-            </div>
-          </>
-        );
-      } else {
-        // For substeps: always render the base view (title and icons) only.
-        view = (
-          <div
-            className={`step-box sub-steps ${
-              step.isDeleting ? "fade-out" : ""
-            } ${step.isexpanded ? "expanded" : ""} ${
-              step.isHyperExpanded ? "hyperExpanded" : ""
-            } ${
-              justExpanding?.toString() === currentPath.toString()
-                ? "isexpanding"
-                : ""
-            }`}
             id={step.id}
             style={{
-              backgroundColor: getBackgroundColor(step),
+              backgroundColor: getStepBoxColor(step),
               border: "1px " + getBorder(step) + " black",
             }}
-            onClick={handleTitleClick}
           >
             <div className="step-title">
               <div className="step-title-inner">{titleLabel}</div>
               <div className="icon-container-start-right">
                 <div className="leftSide-Icons">
+                  <The_muskeltiers
+                    number={hintNumber}
+                    fill={hintNumber ? "yellow" : "none"}
+                    prompt={step.prompt}
+                    stepNumber={displayPath}
+                    onAddChild={() =>
+                      insertSubStepAtPath(currentPath, 0, false)
+                    }
+                    onEditStep={() =>
+                      handleStartEditing(currentPath, step.content)
+                    }
+                    onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
+                    onSplitStep={HandleOnSplitStep(currentPath)}
+                    onShowImplemented={async () => HandleImplemented()}
+                  />
                   <div className="trash">
                     <Trash
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveStep(step.id);
-                      }}
+                      onClick={() => handleRemoveStep(step.id)}
                       cursor="pointer"
                       strokeWidth={"1.2"}
                       className="trash-icon"
@@ -1547,9 +1571,121 @@ Biggest render Tree ever recored START
                 </div>
               </div>
             </div>
+
+            {isCurrentlyEditing ? (
+              <textarea
+                autoFocus
+                className="inline-edit-textarea-editing"
+                rows={3}
+                value={tempContent}
+                onChange={(e) => setTempContent(e.target.value)}
+                onBlur={handleBlur}
+              />
+            ) : (
+              <div
+                className={`step-content ${
+                  step.showCorrectStep1 ? "step-content-hinted" : ""
+                }`}
+                onDoubleClick={() =>
+                  handleStartEditing(currentPath, step.content)
+                }
+              >
+                {step.isexpanded ? step.content : ""}
+              </div>
+            )}
+
+            {step.children && step.children.length > 0 && step.isexpanded && (
+              <div
+                className="substeps"
+                onWheel={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                <AnimatedSubsteps
+                  substeps={step.children}
+                  parentPath={currentPath}
+                />
+              </div>
+            )}
           </div>
-        );
-      }
+          <div className="hint-container">
+            {step.detailed_hint && step.showDetailedHint1 && (
+              <Collapsible
+                isOpen={step.showDetailedHint2}
+                id={`hint-detailed-${step.id}`}
+                toggleHint={toggleHint}
+                stepId={step.id}
+                what={"detailed"}
+              >
+                {/* Show fade-in if we just unlocked it */}
+                <div
+                  className={
+                    "hint-inner " +
+                    (step.showDetailedHint2 ? "extended " : "fade-out-hint") +
+                    (justUnlockedHintId === `step-${currentPath.join("-")}-2`
+                      ? "fade-in-hint "
+                      : "")
+                  }
+                >
+                  {step.showDetailedHint2 ? (
+                    <>
+                      <strong>Detailed Hint:</strong>
+                      <span className="hint-content">{step.detailed_hint}</span>
+                    </>
+                  ) : (
+                    <div className="not-extented-hint">
+                      <strong>Detailed Hint:</strong>
+                      <span
+                        className="hint-content"
+                        style={{ visibility: "hidden" }}
+                      >
+                        {step.detailed_hint}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Collapsible>
+            )}
+
+            {step.general_hint && step.showGeneralHint1 && (
+              <Collapsible
+                isOpen={step.showGeneralHint2}
+                id={`hint-general-${step.id}`}
+                toggleHint={toggleHint}
+                stepId={step.id}
+                what={"general"}
+              >
+                <div
+                  className={
+                    "hint-inner " +
+                    (step.showGeneralHint2 ? "extended " : "") +
+                    (justUnlockedHintId === `step-${currentPath.join("-")}-3`
+                      ? "fade-in-hint "
+                      : "")
+                  }
+                >
+                  {step.showGeneralHint2 ? (
+                    <>
+                      <strong>General Hint:</strong>
+                      <span className="hint-content">{step.general_hint}</span>
+                    </>
+                  ) : (
+                    <div className="not-extented-hint">
+                      <strong>General Hint</strong>
+                      <span
+                        className="hint-content"
+                        style={{ visibility: "hidden" }}
+                      >
+                        {step.general_hint}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Collapsible>
+            )}
+          </div>
+        </>
+      );
 
       // Push the view and the plus button after it.
       elements.push(

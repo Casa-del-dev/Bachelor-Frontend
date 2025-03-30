@@ -83,6 +83,7 @@
 .container-step-tree .substeps .step-box {
   height: auto;
   padding: 1vw;
+  border: 1px solid black;
 }
 
 .container-step-tree .step-box.hyperExpanded {
@@ -298,7 +299,7 @@ Textarea for starting prompt END
 }
 
 .fade-in {
-  animation: fadeInScale 0.5s ease forwards;
+  animation: fadeInScale 0.3s ease forwards;
 }
 
 @keyframes fadeOutScale {
@@ -604,3 +605,26 @@ Overlay for when the user selects to get the Correct Step
 /* ---------------------------------------
   Splitting step function END
   --------------------------------------- */
+
+.substeps {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  overscroll-behavior: contain;
+}
+
+.plus-button-top,
+.plus-button-bottom {
+  text-align: center;
+  /* Optionally add some padding */
+}
+
+.step-box.sub-steps {
+  pointer-events: auto;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.step-box.sub-steps:hover {
+  background-color: lightgray;
+}
