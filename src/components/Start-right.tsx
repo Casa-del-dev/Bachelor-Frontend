@@ -1503,21 +1503,6 @@ Biggest render Tree ever recored START
           ? `Substep ${displayPath}:`
           : `Step ${displayPath}:`;
 
-      const handleTitleClick = () => {
-        // If not selected, toggle selection and animate promoted element fade-in.
-        if (!step.selected) {
-          toggleSelected(currentPath);
-          setTimeout(() => {
-            animatePromotedFadeIn(`${step.id}-promoted`);
-          }, 0);
-        } else {
-          animatePromotedFadeOut(`${step.id}-promoted`);
-          setTimeout(() => {
-            toggleSelected(currentPath);
-          }, 300);
-        }
-      };
-
       // TOP LEVEL: NO PARENTS <-> NOT A SUBSTEP
       let view: JSX.Element;
 
