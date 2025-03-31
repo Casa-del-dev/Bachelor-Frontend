@@ -178,7 +178,7 @@ const Start: React.FC = () => {
           ["--step-font-size" as any]: rightFontSize,
         }}
       >
-        <StartRight />
+        <StartRight fontSize={rightFontSize} />
       </div>
     </div>
   );
