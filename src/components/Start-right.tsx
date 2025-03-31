@@ -1356,10 +1356,43 @@ Editing logic START
     const containerRef = useRef<HTMLDivElement>(null);
     const isAnimatingRef = useRef(false);
     const [currentIndex, setCurrentIndex] = useState(initialIndexRef.current);
+    const [deltaMap, setDeltaMap] = useState<{ [key: number]: number }>({});
+    const prevActiveIndexRef = useRef(currentIndex);
 
     const containerHeight = 300; // px
     const cardHeight = containerHeight * 0.05;
-    //const activePos = containerHeight - cardHeight;
+    const vw = window.innerWidth / 100;
+    const getStepHeight = (fontSize: string): number => {
+      let stepFontSize = 1 * vw;
+      if (fontSize.endsWith("px")) {
+        stepFontSize = parseFloat(fontSize);
+      } else if (fontSize.endsWith("vw")) {
+        stepFontSize = parseFloat(fontSize) * vw;
+      }
+      return 2.28 * vw + (stepFontSize * 1.8 + 10) * 1.2;
+    };
+    // Assume fontSize and backgroundColorTitle, isHoveredTitle, and your other helper functions exist.
+    const activeTop = containerHeight * 0.213;
+    const baselineAbove = containerHeight * 0.1;
+    const baselineBelow = containerHeight * 0.313 + getStepHeight(fontSize);
+    const plusOffset = baselineBelow * 0.1; // 2% of containerHeight, adjust as needed
+
+    // Helper that calculates the blank top for any given active index.
+    const getBlankTopFor = (i: number, active: number): number => {
+      const distanceFromActive = Math.abs(i - active);
+      if (i < active) {
+        return baselineAbove - (distanceFromActive + 1) * cardHeight * 0.4;
+      } else if (i > active) {
+        return baselineBelow + 50 + (distanceFromActive - 1) * cardHeight * 0.6;
+      } else {
+        return activeTop;
+      }
+    };
+
+    // Current blank top based on currentIndex.
+    const getBlankTop = (i: number): number => {
+      return getBlankTopFor(i, currentIndex);
+    };
 
     // --- Compute visible indices (active plus up to 3 above and 3 below) ---
     const total = substeps.length;
@@ -1369,7 +1402,6 @@ Editing logic START
     for (let i = start; i <= end; i++) {
       visibleIndices.push(i);
     }
-    //const activeIndexInVisible = visibleIndices.indexOf(currentIndex);
 
     // --- Scrolling and Interaction ---
     const scrollToIndex = (index: number) => {
@@ -1396,6 +1428,37 @@ Editing logic START
           toggleSelected(currentPath);
         }, 300);
       }
+    };
+
+    const triggerInsertAt = (indexToInsert: number) => {
+      setFadeOutBeforeInsert(currentIndex); // trigger fade out
+
+      setTimeout(() => {
+        setFadeOutBeforeInsert(null);
+
+        const newSubStep = createBlankStep(false);
+        newSubStep.content = "New Substep";
+        newSubStep.hasparent = true;
+
+        setSteps((prevSteps) => {
+          const newSteps = JSON.parse(JSON.stringify(prevSteps));
+          let parent = newSteps;
+          for (let i = 0; i < parentPath.length; i++) {
+            parent = parent[parentPath[i]].children;
+          }
+          parent.splice(indexToInsert, 0, newSubStep);
+          return newSteps;
+        });
+
+        setJustInsertedIndex(indexToInsert);
+        setCurrentIndex(indexToInsert);
+        initialIndexRef.current = indexToInsert;
+        scrollToIndex(indexToInsert);
+
+        setTimeout(() => {
+          setJustInsertedIndex(null);
+        }, 600);
+      }, 400);
     };
 
     // Handle wheel events to update currentIndex.
@@ -1433,9 +1496,6 @@ Editing logic START
         e.stopPropagation();
         e.preventDefault();
         handleWheel(e);
-        /* setTimeout(() => {
-          setIsHoveredTitle(false);
-        }, 300); */
       };
       container.addEventListener("wheel", handleWheelEvent, {
         passive: false,
@@ -1447,104 +1507,100 @@ Editing logic START
         });
     }, [currentIndex, substeps]);
 
-    // --- Animation Calculations for Active Step ---
+    // --- FLIP Animation: Compute delta when currentIndex changes ---
+    useEffect(() => {
+      if (prevActiveIndexRef.current !== currentIndex) {
+        const oldActive = prevActiveIndexRef.current;
+        // Get visible indices for the previous active state.
+        const oldIndices: number[] = [];
+        const oldStart = Math.max(0, oldActive - 3);
+        const oldEnd = Math.min(total - 1, oldActive + 3);
+        for (let i = oldStart; i <= oldEnd; i++) {
+          oldIndices.push(i);
+        }
+        // Union of indices visible in the old and current states.
+        const unionIndices = new Set<number>([
+          ...oldIndices,
+          ...visibleIndices,
+        ]);
+        const newDeltaMap: { [key: number]: number } = {};
+        unionIndices.forEach((i) => {
+          const oldTop = getBlankTopFor(i, oldActive);
+          const newTop = getBlankTopFor(i, currentIndex);
+          newDeltaMap[i] = oldTop - newTop;
+        });
+        setDeltaMap(newDeltaMap);
+        // On the next animation frame, clear the delta so CSS transition animates the change.
+        requestAnimationFrame(() => {
+          setDeltaMap({});
+        });
+        prevActiveIndexRef.current = currentIndex;
+      }
+    }, [currentIndex, total, visibleIndices]);
+
+    // --- Animation Calculations for Each Step ---
     const getCardRotation = (i: number): number => {
-      if (i < currentIndex) return 85; // folded above (rotated downward)
-      if (i === currentIndex) return 0; // active card (flat)
-      return -85; // folded below (rotated upward)
+      if (i < currentIndex) return 85; // rotated downward
+      if (i === currentIndex) return 0; // active card
+      return -85; // rotated upward
     };
 
     const getTransformOrigin = (i: number): string =>
       i < currentIndex ? "top" : "bottom";
 
-    // For this example, we use a fixed 10px translation for folded ones;
-    // the active card remains untransformed (0px translation).
+    // Base translateY without the FLIP delta.
     const getTranslateY = (i: number): number => {
-      if (i < currentIndex) return 200; // folded above (rotated downward)
-      if (i === currentIndex) return 0; // active card (flat)
-      return -200; // folded below (rotated upward)
+      if (i < currentIndex) return 200;
+      if (i === currentIndex) return 0;
+      return -200;
     };
 
     const getZIndex = (i: number): number => {
       if (i === currentIndex) return 2;
       return i < currentIndex ? 1 : 3;
     };
-    const vw = window.innerWidth / 100;
-
-    /* const containerHeight = 300; // px
-    const cardHeight = containerHeight * 0.05; */
-    const getStepHeight = (fontSize: string): number => {
-      let stepFontSize = 1 * vw; // fallback
-
-      if (fontSize.endsWith("px")) {
-        stepFontSize = parseFloat(fontSize);
-      } else if (fontSize.endsWith("vw")) {
-        stepFontSize = parseFloat(fontSize) * vw;
-      }
-
-      return 2.28 * vw + (stepFontSize * 1.8 + 10) * 1.2;
-    };
-
-    const activeTop = containerHeight * 0.213; // Active card’s top
-    const baselineAbove = containerHeight * 0.1; // The top position for the card immediately above
-    const baselineBelow = containerHeight * 0.313 + getStepHeight(fontSize);
-
-    const getBlankTop = (i: number): number => {
-      const distanceFromActive = Math.abs(i - currentIndex);
-      if (i < currentIndex) {
-        return baselineAbove - (distanceFromActive + 1) * cardHeight * 0.4;
-      } else if (i > currentIndex) {
-        return baselineBelow + (distanceFromActive - 1) * cardHeight * 0.4;
-      } else {
-        return activeTop;
-      }
-    };
 
     // --- Render Animated Elements ---
-    // Render the animated layer for visible indices.
-    // Only the active card is fully visible (opacity 1) and interactive.
+    // Add this above your mapping if not already present:
+    const fullHeight = getStepHeight(fontSize); // active substep’s full height
+
     const animatedElements = visibleIndices.map((i) => {
       const substep = substeps[i];
       const currentPath = [...parentPath, i];
       const displayPath = currentPath.map((i) => i + 1).join(".");
+      const delta = deltaMap[i] || 0; // still optional if you want a vertical position delta
 
-      // Conditionally set style based on whether this is the active card.
-      let animatedStyle: React.CSSProperties;
-      if (i === currentIndex) {
-        animatedStyle = {
-          transition: "transform 0.3s ease",
-          transform: `rotateX(0deg) translateY(0px)`,
-          transformOrigin: "center",
-          zIndex: getZIndex(i),
-          position: "relative",
-          width: "100%",
-          opacity: 1,
-          top: getBlankTop(i),
-        };
-      } else {
-        animatedStyle = {
-          transition: "transform 5s ease, opacity 0.2s ease",
-          transform: `rotateX(${getCardRotation(
-            i
-          )}deg) translateY(${getTranslateY(i)}px)`, // only rotation now
-          transformOrigin: getTransformOrigin(i),
-          zIndex: getZIndex(i),
-          position: "absolute",
-          top: `${getBlankTop(i)}px`, // position exactly as blank steps
-          width: "100%",
-          opacity: 0, // still hidden or faded
-        };
-      }
+      // Outer container: no rotation now, just position and basic styling.
+      const outerStyle: React.CSSProperties = {
+        transition: "none", // no transition for outer container
+        transform: "none",
+        zIndex: getZIndex(i),
+        position: i === currentIndex ? "relative" : "absolute",
+        top: i === currentIndex ? getBlankTop(i) : `${getBlankTop(i)}px`,
+        padding: i === currentIndex ? `` : `0`,
+
+        width: "100%",
+        backgroundColor: backgroundColorTitle,
+        cursor: isHoveredTitle ? "pointer" : "default",
+      };
+
+      // Inner container: animate the vertical shrink (height) and vertical position (if needed).
+      const innerStyle: React.CSSProperties = {
+        transition: "height 0.3s ease, transform 0.3s ease, opacity 0.3s ease",
+        height: i === currentIndex ? `${fullHeight}px` : `${cardHeight}px`,
+        // Optionally, keep a slight translation adjustment if needed.
+        alignItems: "center",
+        display: "flex",
+        transform: `translateY(${delta}px)`,
+        opacity: i === currentIndex ? 1 : 0,
+        width: "100%",
+      };
 
       return (
         <div
           key={substep.id}
           className={`step-box ${substep.isDeleting ? "fade-out" : ""}`}
-          style={{
-            ...animatedStyle,
-            backgroundColor: backgroundColorTitle,
-            cursor: isHoveredTitle ? "pointer" : "default",
-          }}
+          style={outerStyle}
           onMouseEnter={() => {
             if (i === currentIndex) {
               initialIndexRef.current = currentPath[currentPath.length - 1];
@@ -1559,78 +1615,46 @@ Editing logic START
           }}
           onClick={() => handleTitleClick(substep, currentPath)}
         >
-          {i === currentIndex && (
-            <div className="step-title" style={{ padding: "5px" }}>
-              <div className="step-title-inner">{`Substep ${displayPath}`}</div>
-              <div className="icon-container-start-right">
-                <Trash
-                  onMouseEnter={handleEnterTrash}
-                  onMouseLeave={handleLeaveTrash}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const index = currentPath[currentPath.length - 1];
-                    initialIndexRef.current = index;
-                    handleRemoveStep(substep.id);
-                    handleLeaveTrash();
-                    setTimeout(() => {
-                      const updatedLength = substeps.length - 1;
-                      if (index === currentIndex && updatedLength > 0) {
-                        const nextIndex = Math.min(
-                          currentIndex,
-                          updatedLength - 1
-                        );
-                        setCurrentIndex(nextIndex);
-                        scrollToIndex(nextIndex);
-                      }
-                    }, 400);
-                  }}
-                  cursor="pointer"
-                  strokeWidth={"1.2"}
-                  className="trash-icon"
-                />
+          <div style={innerStyle}>
+            {i === currentIndex && (
+              <div className="step-title" style={{ padding: "5px" }}>
+                <div className="step-title-inner">{`Substep ${displayPath}`}</div>
+                <div className="icon-container-start-right">
+                  <Trash
+                    onMouseEnter={handleEnterTrash}
+                    onMouseLeave={handleLeaveTrash}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const index = currentPath[currentPath.length - 1];
+                      initialIndexRef.current = index;
+                      handleRemoveStep(substep.id);
+                      setTimeout(() => {
+                        const updatedLength = substeps.length - 1;
+                        if (index === currentIndex && updatedLength > 0) {
+                          const nextIndex = Math.min(
+                            currentIndex,
+                            updatedLength - 1
+                          );
+                          setCurrentIndex(nextIndex);
+                          scrollToIndex(nextIndex);
+                        }
+                        handleLeaveTrash();
+                        handleMouseLeaveStep();
+                      }, 400);
+                    }}
+                    cursor="pointer"
+                    strokeWidth={"1.2"}
+                    className="trash-icon"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       );
     });
 
-    const triggerInsertAt = (indexToInsert: number) => {
-      setFadeOutBeforeInsert(currentIndex); // trigger fade out
-
-      setTimeout(() => {
-        setFadeOutBeforeInsert(null);
-
-        const newSubStep = createBlankStep(false);
-        newSubStep.content = "New Substep";
-        newSubStep.hasparent = true;
-
-        setSteps((prevSteps) => {
-          const newSteps = JSON.parse(JSON.stringify(prevSteps));
-          let parent = newSteps;
-          for (let i = 0; i < parentPath.length; i++) {
-            parent = parent[parentPath[i]].children;
-          }
-          parent.splice(indexToInsert, 0, newSubStep);
-          return newSteps;
-        });
-
-        setJustInsertedIndex(indexToInsert);
-        setCurrentIndex(indexToInsert);
-        initialIndexRef.current = indexToInsert;
-        scrollToIndex(indexToInsert);
-
-        setTimeout(() => {
-          setJustInsertedIndex(null);
-        }, 600);
-      }, 400);
-    };
-
     // --- Render Blank Placeholders for Folded Steps ---
-    // For each visible index that is not the active one, render a blank step.
-    // Position them relative to the active card: if a folded step is above active,
-    // its top is computed relative to activePos; if below, likewise.
-
     function getBlankStep(
       i: number,
       currentIndex: number,
@@ -1639,7 +1663,6 @@ Editing logic START
       substeps: { id: string }[]
     ): React.ReactElement {
       const top = getBlankTop(i);
-
       const style: React.CSSProperties = {
         top: `${top}px`,
         height: `${cardHeight}px`,
@@ -1649,7 +1672,6 @@ Editing logic START
             ? "0 2px 4px rgba(0, 0, 0, 0.3)"
             : "0 -2px 4px rgba(0, 0, 0, 0.3)",
       };
-
       return <BlankStep key={`blank-${substeps[i].id}`} style={style} />;
     }
 
@@ -1659,11 +1681,13 @@ Editing logic START
         getBlankStep(i, currentIndex, getBlankTop, cardHeight, substeps)
       );
 
+    // --- Render the Component ---
     return (
       <div
         ref={containerRef}
         className="animated-substeps-container"
         style={{
+          height: "300px",
           overscrollBehavior: "contain",
           position: "relative",
           width: "100%",
@@ -1677,7 +1701,10 @@ Editing logic START
           }}
           style={{
             position: "absolute",
-            top: baselineAbove + 3,
+            top:
+              currentIndex > 0
+                ? getBlankTop(currentIndex - 1) + cardHeight + 3
+                : baselineAbove,
             margin: "0",
             opacity: "1",
           }}
@@ -1691,7 +1718,10 @@ Editing logic START
           onClick={() => triggerInsertAt(currentIndex + 1)}
           style={{
             position: "absolute",
-            top: baselineBelow - getStepHeight(fontSize) * 0.17,
+            top:
+              currentIndex < total - 1
+                ? getBlankTop(currentIndex + 1) - plusOffset
+                : baselineBelow,
             margin: "0",
             opacity: "1",
             border: "0",

@@ -24,7 +24,7 @@ const PlusbetweenSteps: React.FC<PlusBetweenStepsProps> = ({
           height: plus
             ? "calc(var(--step-font-size, 1vw) * 1.6)"
             : "calc(var(--step-font-size, 1vw) * 0.8)",
-          border: plus ? "border: 1px solid black" : "",
+          border: plus ? "1px solid black" : "",
         }}
         className="plusbetweensteps"
         onClick={onClick}
