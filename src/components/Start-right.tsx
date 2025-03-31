@@ -1539,7 +1539,7 @@ Editing logic START
     }, [currentIndex, total, visibleIndices]);
 
     // --- Animation Calculations for Each Step ---
-    const getCardRotation = (i: number): number => {
+    /* const getCardRotation = (i: number): number => {
       if (i < currentIndex) return 85; // rotated downward
       if (i === currentIndex) return 0; // active card
       return -85; // rotated upward
@@ -1553,7 +1553,7 @@ Editing logic START
       if (i < currentIndex) return 200;
       if (i === currentIndex) return 0;
       return -200;
-    };
+    }; */
 
     const getZIndex = (i: number): number => {
       if (i === currentIndex) return 2;
