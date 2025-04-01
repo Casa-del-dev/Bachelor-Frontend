@@ -43,7 +43,7 @@
 
 .container-step-tree .step-box {
   width: 100%;
-  padding: 2vw;
+  padding: var(--step-font-size, 1vw);
   font-size: var(--step-font-size, 1vw);
   border-radius: 4px;
   box-sizing: border-box;
@@ -55,13 +55,13 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  height: 55vh;
-  max-height: 55vh;
+  height: calc(var(--step-font-size, 1vw) * 20);
+  max-height: calc(var(--step-font-size, 1vw) * 20);
 }
 
 .container-step-tree .step-box.promoted {
   width: 80%;
-  padding: 2vw;
+  padding: var(--step-font-size, 1vw);
   font-size: var(--step-font-size, 1vw);
   border-radius: 4px;
   box-sizing: border-box;
@@ -72,8 +72,8 @@
   justify-content: flex-start;
   gap: 1vw;
   transition: max-height 0.4s ease;
-  height: 55vh;
-  max-height: 55vh;
+  height: calc(var(--step-font-size, 1vw) * 20);
+  max-height: calc(var(--step-font-size, 1vw) * 20);
 }
 
 .promotedPlus {
@@ -82,7 +82,7 @@
 
 .container-step-tree .substeps .step-box {
   height: auto;
-  padding: 1.5vw;
+  padding: 0 0.5vw;
   border: 1px solid black;
   overflow: hidden;
   display: flex;
@@ -262,6 +262,7 @@ Textarea for starting prompt END
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .icon-container-start-right {
@@ -269,7 +270,7 @@ Textarea for starting prompt END
   flex-direction: row;
   visibility: visible;
   width: 100%;
-  justify-content: flex-end;
+  justify-content: space-between;
   flex: 1;
 }
 
@@ -329,8 +330,7 @@ Textarea for starting prompt END
   color: black;
   display: inline-block;
   overflow-x: hidden;
-  min-height: 10vh;
-  max-height: 10vh;
+
   border: none;
   flex-grow: 1;
   overflow-y: auto;

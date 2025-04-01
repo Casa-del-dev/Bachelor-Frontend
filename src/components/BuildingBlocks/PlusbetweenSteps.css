@@ -6,7 +6,7 @@
   grid-template-areas: "line1 plus line2";
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
-  margin: calc(var(--step-font-size, 1vw) * 1.5) 0;
+  margin: calc(var(--step-font-size, 1vw) * 0.5) 0;
 }
 
 .container-plus-right-start:hover {
