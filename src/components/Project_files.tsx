@@ -211,8 +211,7 @@ const Project_files = () => {
     }
   };
 
-  // Single click handler uses a timer to differentiate from a double-click.
-  const handleFileClick = (e: React.MouseEvent, item: FileItem) => {
+  const handleFileClick = (_: React.MouseEvent, item: FileItem) => {
     if (editingId !== null) return;
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);

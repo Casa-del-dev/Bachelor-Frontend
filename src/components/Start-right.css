@@ -669,3 +669,29 @@ Animation for adding title steps
 .slide-out-Parent {
   animation: slide-out-Parent 0.4s ease forwards;
 }
+
+/* --------------------------------
+Add a substep when no substeps are present
+-------------------------------- */
+
+.container-filling-emptyness {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.filling-emptyness {
+  color: #b9b9b9;
+  text-shadow: 1px 1px #b8b8b8;
+  opacity: 0.5;
+  font-weight: bold;
+  font-size: calc(var(--step-font-size, 0vw) * 1.5);
+  word-break: normal;
+  text-align: center;
+}
+.filling-emptyness:hover {
+  cursor: pointer;
+  color: #666;
+}

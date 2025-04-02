@@ -1132,14 +1132,11 @@ Editing logic START
                   <div className="icon-container-start-right">
                     <div className="leftSide-Icons">
                       <The_muskeltiers
-                        onAddChild={() =>
-                          insertSubStepAtPathFromSelected(currentPath, 0, false)
-                        }
                         onEditStep={() =>
                           handleStartEditing(currentPath, step.content)
                         }
                         onSplitStep={HandleOnSplitStep(currentPath)}
-                        onShowImplemented={async () => HandleImplemented()}
+                        selected={editingPath}
                       />
                     </div>
                     <div className="trash">
@@ -1152,11 +1149,14 @@ Editing logic START
                       />{" "}
                       <Trash
                         onClick={() => {
-                          if (
-                            initialIndexRef.current >=
-                            getLastLabelNumber(titleLabel)
-                          )
-                            initialIndexRef.current -= 1;
+                          const key = `animatedSubsteps-${parentPath.join(
+                            "-"
+                          )}`;
+                          const currentIndex = getInitialIndex(key);
+                          const lastLabel = getLastLabelNumber(titleLabel);
+
+                          if (currentIndex >= lastLabel)
+                            setInitialIndex(key, currentIndex - 1);
                           handleRemoveStep(step.id);
                         }}
                         cursor="pointer"
@@ -1303,11 +1303,10 @@ Editing logic START
 
       promotedElements.push(
         <div
-          key={`final-promoted-div-${parentPath.join("-")}`}
           className="promotedPlus"
+          key={`final-promoted-plus-${parentPath.join("-")}`}
         >
           <PlusbetweenSteps
-            key={`final-promoted-plus-${parentPath.join("-")}`}
             onClick={() => {
               insertSubStepAtPathFromSelected(parentPath, index, true);
             }}
@@ -1362,7 +1361,36 @@ Editing logic START
   ---------------------------------------- */
   // This component renders all substeps (only title and trash icon) in a scrollable, animated container.
   // It applies a folding rotation and stacking effect.
-  const initialIndexRef = useRef(0);
+
+  // initialIndexStore.ts
+
+  const INITIAL_INDEX_PREFIX =
+    localStorage.getItem("selectedProblem") + "animatedSubstep-" || "null-";
+
+  useEffect(() => {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith(INITIAL_INDEX_PREFIX)) {
+        localStorage.removeItem(key);
+      }
+    });
+  }, []);
+
+  function getInitialIndex(key: string, defaultValue = 0): number {
+    // Make sure our key is namespaced
+    const namespacedKey = INITIAL_INDEX_PREFIX + key;
+    const stored = localStorage.getItem(namespacedKey);
+    if (stored !== null) {
+      return Number(stored);
+    }
+    localStorage.setItem(namespacedKey, defaultValue.toString());
+    return defaultValue;
+  }
+
+  function setInitialIndex(key: string, index: number): void {
+    const namespacedKey = INITIAL_INDEX_PREFIX + key;
+    localStorage.setItem(namespacedKey, index.toString());
+  }
+
   function AnimatedSubsteps({
     substeps,
     parentPath,
@@ -1370,10 +1398,12 @@ Editing logic START
     substeps: Step[];
     parentPath: number[];
   }) {
+    const indexKey = `animatedSubsteps-${parentPath.join("-")}`;
     const [isHoveredTitle, setIsHoveredTitle] = useState(false);
     const [isHoveringTrashTitle, setIsHoveringTrashTitle] = useState(false);
     const handleMouseEnterStep = () => setIsHoveredTitle(true);
     const handleMouseLeaveStep = () => setIsHoveredTitle(false);
+
     const [recentlyActivatedIndex, setRecentlyActivatedIndex] = useState<
       number | null
     >(null);
@@ -1395,7 +1425,9 @@ Editing logic START
     }
     const containerRef = useRef<HTMLDivElement>(null);
     const isAnimatingRef = useRef(false);
-    const [currentIndex, setCurrentIndex] = useState(initialIndexRef.current);
+    const [currentIndex, setCurrentIndex] = useState(() =>
+      getInitialIndex(indexKey)
+    );
 
     const containerHeight = 200; // px
     const cardHeight = containerHeight * 0.05;
@@ -1459,7 +1491,7 @@ Editing logic START
 
     const handleTitleClick = (step: Step, currentPath: number[]) => {
       const index = currentPath[currentPath.length - 1];
-      initialIndexRef.current = index;
+      setInitialIndex(indexKey, index);
       if (!step.selected) {
         toggleSelected(currentPath);
         setTimeout(() => {
@@ -1520,8 +1552,8 @@ Editing logic START
         for (let i = 0; i < parentPath.length; i++) {
           parent = parent[parentPath[i]].children;
         }
-        parent.splice(currentIndex, 0, newSubStep);
-        initialIndexRef.current = currentIndex + 1; // since old active shifts down
+        parent.splice(currentIndex + 1, 0, newSubStep);
+        setInitialIndex(indexKey, currentIndex + 1); // since old active shifts down
         return newSteps;
       });
       setPendingScrollIndex(currentIndex + 1);
@@ -1564,11 +1596,10 @@ Editing logic START
     useEffect(() => {
       const maxIndex = substeps.length - 1;
 
-      if (initialIndexRef.current > maxIndex) {
-        initialIndexRef.current = maxIndex;
+      if (getInitialIndex(indexKey) > maxIndex) {
+        setInitialIndex(indexKey, maxIndex);
         setCurrentIndex(maxIndex); // ensure view updates too
       } else if (substeps.length === 1) {
-        initialIndexRef.current = 0;
         setCurrentIndex(0); // optional depending on use case
       }
     }, [substeps]);
@@ -1672,13 +1703,13 @@ Editing logic START
           style={outerStyle}
           onMouseEnter={() => {
             if (i === currentIndex) {
-              initialIndexRef.current = currentPath[currentPath.length - 1];
+              setInitialIndex(indexKey, currentPath[currentPath.length - 1]);
               handleMouseEnterStep();
             }
           }}
           onMouseLeave={() => {
             if (i === currentIndex) {
-              initialIndexRef.current = currentPath[currentPath.length - 1];
+              setInitialIndex(indexKey, currentPath[currentPath.length - 1]);
               handleMouseLeaveStep();
             }
           }}
@@ -1700,7 +1731,7 @@ Editing logic START
                     onClick={(e) => {
                       e.stopPropagation();
                       const index = currentPath[currentPath.length - 1];
-                      initialIndexRef.current = index;
+                      setInitialIndex(indexKey, index);
                       handleRemoveStep(substep.id);
                       setTimeout(() => {
                         const updatedLength = substeps.length - 1;
@@ -1844,14 +1875,11 @@ Biggest render Tree ever recored START
               <div className="icon-container-start-right">
                 <div className="leftSide-Icons">
                   <The_muskeltiers
-                    onAddChild={() =>
-                      insertSubStepAtPath(currentPath, 0, false)
-                    }
                     onEditStep={() =>
                       handleStartEditing(currentPath, step.content)
                     }
                     onSplitStep={HandleOnSplitStep(currentPath)}
-                    onShowImplemented={async () => HandleImplemented()}
+                    selected={editingPath}
                   />
                 </div>
                 <div className="trash">
@@ -1892,7 +1920,7 @@ Biggest render Tree ever recored START
               </div>
             )}
 
-            {step.children && step.children.length > 0 && step.isexpanded && (
+            {step.children && step.children.length > 0 && step.isexpanded ? (
               <div
                 className="substeps"
                 onWheel={(e) => {
@@ -1900,10 +1928,18 @@ Biggest render Tree ever recored START
                 }}
               >
                 <AnimatedSubsteps
-                  key={`animated-substeps-${parentPath.join("-")}`}
                   substeps={step.children}
                   parentPath={currentPath}
                 />
+              </div>
+            ) : (
+              <div className="container-filling-emptyness">
+                <div
+                  className="filling-emptyness"
+                  onClick={() => insertSubStepAtPath(currentPath, 0, false)}
+                >
+                  Add a Substep <br /> +{" "}
+                </div>
               </div>
             )}
           </div>

@@ -1,19 +1,17 @@
 import React from "react";
 import { Pen, TableRowsSplit } from "lucide-react";
 import "./The_muskeltiers.css";
-import LShapedArrow from "./LShapedArrow";
 
 interface TheMuskeltiersProps {
-  onAddChild?: () => void;
   onEditStep?: () => void;
   onSplitStep: () => void;
-  onShowImplemented: () => void;
+  selected: number[] | null;
 }
 
 const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
-  onAddChild,
   onEditStep,
   onSplitStep,
+  selected,
 }) => {
   return (
     <div className="container-for-triplets">
@@ -25,17 +23,13 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
             onEditStep();
           }
         }}
+        style={{ fill: selected ? "lightgray" : "" }}
       />
       <TableRowsSplit
         className="Filetext-tree"
         strokeWidth="1.2"
         onClick={() => onSplitStep()}
       />
-      {/* Pen icon now calls `onEditStep` instead of opening an edit overlay */}
-      {/* L-shaped arrow to add a substep */}
-      <div className="Lshapedarrow">
-        <LShapedArrow onClick={onAddChild} />
-      </div>
     </div>
   );
 };
