@@ -22,7 +22,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
 
   const [currentFile, setCurrentFile] = useState<number | null>(() => {
     const storedFileId = localStorage.getItem(selectedFileKey);
-    return storedFileId ? parseInt(storedFileId, 10) : 2;
+    return storedFileId ? parseInt(storedFileId, 10) : -1;
   });
 
   const buildCodeKey = (problem: string, fileId: number | null) =>

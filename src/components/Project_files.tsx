@@ -80,6 +80,9 @@ const Project_files = () => {
       updateFileTree(updated);
     }
     // Auto-select the new file.
+    if (currentFile === -1) {
+      localStorage.removeItem(`code_${selectedProblemName}_-1`);
+    }
     setCurrentFile(newFile.id);
     localStorage.setItem(selectedFileKey, newFile.id.toString());
     window.location.reload();
@@ -103,6 +106,16 @@ const Project_files = () => {
     }
   };
 
+  const collectAllDescendantIds = (item: FileItem): number[] => {
+    if (item.type === "folder" && item.children) {
+      return [
+        item.id,
+        ...item.children.flatMap((child) => collectAllDescendantIds(child)),
+      ];
+    }
+    return [item.id];
+  };
+
   const deleteFromTree = (tree: FileItem[], itemId: number): FileItem[] => {
     return tree
       .filter((item) => item.id !== itemId)
@@ -116,14 +129,33 @@ const Project_files = () => {
 
   const deleteItem = (itemId: number) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+    // First, find the item so we can get all children
+    const findItemById = (items: FileItem[]): FileItem | null => {
+      for (const item of items) {
+        if (item.id === itemId) return item;
+        if (item.type === "folder" && item.children) {
+          const found = findItemById(item.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const itemToDelete = findItemById(files);
+    if (!itemToDelete) return;
+
+    const idsToRemove = collectAllDescendantIds(itemToDelete);
+    idsToRemove.forEach((id) => {
+      localStorage.removeItem(`code_${selectedProblemName}_${id}`);
+    });
+
+    // Remove the item from the tree
     const updated = deleteFromTree(files, itemId);
     updateFileTree(updated);
 
-    // Remove the file's code from localStorage.
-    localStorage.removeItem(`code_${selectedProblemName}_${itemId}`);
-
-    // If the deleted file is the currently selected file, clear the selection.
-    if (itemId === currentFile) {
+    // Handle current selection
+    if (idsToRemove.includes(currentFile!)) {
       localStorage.setItem(selectedFileKey, "-1");
       setCurrentFile(null);
       window.location.reload();
@@ -180,7 +212,7 @@ const Project_files = () => {
   };
 
   // Single click handler uses a timer to differentiate from a double-click.
-  const handleFileClick = (item: FileItem) => {
+  const handleFileClick = (e: React.MouseEvent, item: FileItem) => {
     if (editingId !== null) return;
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
@@ -197,13 +229,14 @@ const Project_files = () => {
   };
 
   // Double click cancels the single click timer.
-  const handleDoubleClick = (item: FileItem) => {
+  const handleDoubleClick = (e: React.MouseEvent, item: FileItem) => {
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
       clickTimeout.current = null;
     }
     setEditingId(item.id);
     setEditText(item.name);
+    e.stopPropagation();
   };
 
   const renderTree = (tree: FileItem[]) => {
@@ -213,8 +246,8 @@ const Project_files = () => {
           <li key={item.id}>
             <div
               className="file-item"
-              onClick={() => handleFileClick(item)}
-              onDoubleClick={() => handleDoubleClick(item)}
+              onClick={(e) => handleFileClick(e, item)}
+              onDoubleClick={(e) => handleDoubleClick(e, item)}
             >
               {editingId === item.id ? (
                 <input
