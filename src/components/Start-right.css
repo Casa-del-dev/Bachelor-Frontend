@@ -250,6 +250,7 @@ Textarea for starting prompt END
   padding-right: 1vw;
   justify-content: space-between;
   border-bottom: 1px solid black;
+  z-index: 1000;
 }
 
 /* Default text if no steps are present */
@@ -341,6 +342,7 @@ Textarea for starting prompt END
 
 .step-content {
   display: inline-block;
+  margin-bottom: calc(var(--step-font-size, 1vw) * 1);
 }
 
 .step-content-hinted {
@@ -617,7 +619,7 @@ Overlay for when the user selects to get the Correct Step
   display: flex;
   justify-content: center;
   overscroll-behavior: contain;
-  margin-top: calc(var(--step-font-size, 1vw) * 1);
+  /*margin-top: calc(var(--step-font-size, 1vw) * 1);*/
 }
 
 .plus-button-top,
@@ -695,3 +697,121 @@ Add a substep when no substeps are present
   cursor: pointer;
   color: #666;
 }
+
+/* ---------------------------------------
+Orientation in substeps START
+--------------------------------------- */
+.orientation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: top;
+  gap: 2px;
+}
+
+.orientation-parent {
+  width: 100%;
+}
+
+.orientation-siblings {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+
+.orientation-buttons {
+  height: calc(var(--step-font-size, 0vw) * 1.25);
+  border: 1px solid rgb(0, 191, 255);
+  color: black;
+  font-size: calc(var(--step-font-size, 0vw) * 0.5);
+  padding: 0;
+  width: 100%;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  cursor: default;
+}
+
+.orientation-buttons:focus,
+.orientation-buttons:active {
+  outline: none;
+  border: 1px solid rgb(0, 191, 255); /* Keep your desired border color */
+}
+
+.orientation-buttons.middle {
+  background: radial-gradient(circle, #ffffff 0%, #f3f3f3 100%);
+}
+
+.orientation-buttons.left {
+  background: linear-gradient(to left, #ffffff 0%, #f3f3f3 100%);
+}
+
+.orientation-buttons.right {
+  background: linear-gradient(to right, #ffffff 0%, #f3f3f3 100%);
+}
+
+.orientation-buttons.middle:not(.isEdgeSibling):hover {
+  cursor: pointer;
+  background: radial-gradient(circle, #fafafa 0%, #e6e6e6 100%);
+}
+
+.orientation-buttons.left:not(.isEdgeSibling):hover {
+  cursor: pointer;
+  background: linear-gradient(to left, #fafafa 0%, #e6e6e6 100%);
+}
+
+.orientation-buttons.right:not(.isEdgeSibling):hover {
+  cursor: pointer;
+  background: linear-gradient(to right, #fafafa 0%, #e6e6e6 100%);
+}
+
+.orientation-buttons {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Shine Layer */
+.orientation-buttons:not(.isEdgeSibling):after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Trigger shine on hover */
+.orientation-buttons:hover::after {
+  left: 125%;
+}
+
+.highlighted {
+  box-shadow: 0 0 8px 3px rgba(255, 255, 0, 0.8);
+}
+
+.highlighted-bad {
+  box-shadow: 0 0 8px 3px rgba(255, 0, 98, 0.8);
+}
+
+.orientation-buttons.left.isEdgeSibling {
+  opacity: 0.5;
+}
+
+.orientation-buttons.right.isEdgeSibling {
+  opacity: 0.5;
+}
+
+/* ---------------------------------------
+Orientation in substeps END
+--------------------------------------- */

@@ -7,6 +7,7 @@ import {
   MoveDiagonal,
   Martini, */
   ShieldCheck,
+  Divide,
 } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
@@ -238,14 +239,14 @@ const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
     null
   );
 
-  const [justExpanding] = useState<number[]>([]); // used for hyper expanding
+  const [justExpanding] = useState<number[]>([]);
 
   const [sentPrompt, setSentPrompt] = useState<boolean>(false);
 
   useEffect(() => {
     setSentPrompt(steps.length > 0);
   }, [steps]);
-  // Load from localStorage
+
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("savedCorrectSteps") || "[]");
     setSavedCorrectSteps(saved);
@@ -332,10 +333,10 @@ const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
       showDetailedHint2: false,
 
       isNewlyInserted: false,
-      isexpanded: hasParent ? false : true,
+      isexpanded: true,
       isHyperExpanded: false,
 
-      selected: hasParent ? true : false,
+      selected: /* hasParent ? true : */ false,
     };
   }
 
@@ -625,7 +626,6 @@ Insert Steps Functions START
     if (parentStep?.isexpanded) {
       shouldAnimate = true;
     }
-
     setSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps));
       let parent = newSteps;
@@ -1033,6 +1033,10 @@ Editing logic START
     }, 300);
   } */
 
+  /* ---------------------------------------------
+  Showing substeps when clicked START
+  --------------------------------------------- */
+
   // Toggle function: simply toggles the "selected" flag on the step at currentPath.
   const toggleSelected = (currentPath: number[]) => {
     setSteps((prevSteps: Step[]) => {
@@ -1059,13 +1063,35 @@ Editing logic START
     const parts = label.replace("Substep ", "").split(".");
     return parseInt(parts[parts.length - 1], 10);
   }
+
+  /**
+   * Returns the Step at the given path in the steps tree, or null if invalid.
+   * @param steps The array of top-level Steps
+   * @param path  An array of indices [0, 1, 2], etc.
+   */
+  function getStepAtPath(steps: Step[], path: number[]): Step | null {
+    let currentArray = steps;
+    let step: Step | null = null;
+
+    for (let i = 0; i < path.length; i++) {
+      const index = path[i];
+      if (index < 0 || index >= currentArray.length) {
+        return null; // invalid path
+      }
+      step = currentArray[index];
+      currentArray = step.children; // go deeper
+    }
+    return step;
+  }
+
   // Helper to collect promoted substeps from a (nested) children array.
   // This function returns an array of JSX elements representing the promoted
   // substeps (i.e. those with selected === true) that should be rendered
   // at the top-level domain, immediately after their parent.
   function collectPromotedSubsteps(
     steps: Step[],
-    parentPath: number[]
+    parentPath: number[],
+    all_step: Step[]
   ): JSX.Element[] {
     let promotedElements: JSX.Element[] = [];
     let lastPromotedPath: number[] | null = null;
@@ -1078,6 +1104,15 @@ Editing logic START
 
         const displayPath = currentPath.map((i) => i + 1).join(".");
         const titleLabel = `Substep ${displayPath}:`;
+
+        const currentIndex = currentPath[currentPath.length - 1];
+
+        const isFirstSibling = currentIndex === 0;
+
+        const parentPath = currentPath.slice(0, -1);
+        const parentStep = getStepAtPath(all_step, parentPath);
+        const siblingArray = parentStep ? parentStep.children : all_step;
+        const isLastSibling = currentIndex === siblingArray.length - 1;
 
         promotedElements.push(
           <Fragment key={`promoted-${currentPath.join("-")}`}>
@@ -1192,12 +1227,232 @@ Editing logic START
                 )}
 
                 {step.children &&
-                  step.children.length > 0 &&
-                  step.isexpanded && (
-                    <div className="substeps">
-                      {renderTree(step.children, currentPath)}
+                step.children.length > 0 &&
+                step.isexpanded ? (
+                  <div className="orientation-substeps">
+                    <div className="orientation">
+                      <div className="orientation-parent">
+                        <button
+                          className="orientation-buttons middle"
+                          onClick={() => {
+                            const parentPath = currentPath.slice(0, -1);
+                            const parentStep = getStepAtPath(
+                              all_step,
+                              parentPath
+                            );
+                            if (!parentStep) {
+                              console.warn(
+                                "No parent found at path:",
+                                parentPath
+                              );
+                              return;
+                            }
+                            const parentEl = document.getElementById(
+                              parentStep.id
+                            );
+                            if (parentEl) {
+                              parentEl.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              parentEl.classList.add("highlighted");
+
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        parentEl.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(parentEl);
+                            } else {
+                              console.warn(
+                                "Parent element not found for step.id:",
+                                parentStep.id
+                              );
+                            }
+                          }}
+                        >
+                          Parent
+                        </button>
+                      </div>
+                      <div className="orientation-siblings">
+                        <button
+                          id={step.id + "-promoted-left"}
+                          className={`orientation-buttons left ${
+                            isFirstSibling ? "isEdgeSibling" : ""
+                          }`}
+                          disabled={isFirstSibling}
+                          onClick={() => {
+                            if (isFirstSibling) {
+                              console.warn(
+                                "Already at the first sibling; no previous sibling."
+                              );
+                              return;
+                            }
+                            const siblingPath = [...currentPath];
+                            siblingPath[siblingPath.length - 1] =
+                              currentIndex - 1;
+                            const siblingStep = getStepAtPath(
+                              all_step,
+                              siblingPath
+                            );
+                            if (!siblingStep) {
+                              console.warn(
+                                "No previous sibling found at path:",
+                                siblingPath
+                              );
+                              return;
+                            }
+                            const siblingEl = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+                            if (siblingEl) {
+                              siblingEl.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl.classList.add("highlighted");
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(siblingEl);
+                            } else {
+                              const siblingEl = document.getElementById(
+                                step.id + "-promoted-left"
+                              );
+                              siblingEl?.classList.add("highlighted-bad");
+                              setTimeout(() => {
+                                siblingEl?.classList.remove("highlighted-bad");
+                              }, 1000);
+                              console.warn(
+                                "Previous sibling element not found for step.id:",
+                                siblingStep.id
+                              );
+                            }
+                          }}
+                        >
+                          Previous
+                        </button>
+
+                        <button
+                          id={step.id + "-promoted-right"}
+                          className={`orientation-buttons right ${
+                            isLastSibling ? "isEdgeSibling" : ""
+                          }`}
+                          disabled={isLastSibling}
+                          onClick={() => {
+                            if (isLastSibling) {
+                              console.warn(
+                                "Already at the last sibling; no next sibling available."
+                              );
+                              return;
+                            }
+
+                            const siblingPath = [...currentPath];
+                            const currentIndex =
+                              currentPath[currentPath.length - 1];
+                            siblingPath[siblingPath.length - 1] =
+                              currentIndex + 1;
+
+                            const siblingStep = getStepAtPath(
+                              all_step,
+                              siblingPath
+                            );
+                            if (!siblingStep) {
+                              console.warn(
+                                "No next sibling found at path:",
+                                siblingPath
+                              );
+                              return;
+                            }
+
+                            const siblingEl = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+                            if (siblingEl) {
+                              siblingEl.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl.classList.add("highlighted");
+
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+
+                              observer.observe(siblingEl);
+                            } else {
+                              const selfEl = document.getElementById(
+                                step.id + "-promoted-right"
+                              );
+                              selfEl?.classList.add("highlighted-bad");
+                              setTimeout(() => {
+                                selfEl?.classList.remove("highlighted-bad");
+                              }, 1000);
+                              console.warn(
+                                "Next sibling element not found for step.id:",
+                                siblingStep.id
+                              );
+                            }
+                          }}
+                        >
+                          Next
+                        </button>
+                      </div>
                     </div>
-                  )}
+                    <div className="substeps">
+                      <AnimatedSubsteps
+                        substeps={step.children}
+                        parentPath={currentPath}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="container-filling-emptyness">
+                    {step.children &&
+                      step.children.length > 0 &&
+                      step.isexpanded}
+                    <div
+                      className="filling-emptyness"
+                      onClick={() => insertSubStepAtPath(currentPath, 0, false)}
+                    >
+                      Add a Substep <br /> +
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="hint-container promoted">
                 {step.detailed_hint && step.showDetailedHint1 && (
@@ -1291,7 +1546,7 @@ Editing logic START
       // Recurse
       if (step.children && step.children.length > 0) {
         promotedElements = promotedElements.concat(
-          collectPromotedSubsteps(step.children, currentPath)
+          collectPromotedSubsteps(step.children, currentPath, all_step)
         );
       }
     });
@@ -1317,6 +1572,10 @@ Editing logic START
 
     return promotedElements;
   }
+
+  /* ---------------------------------------------
+  Showing substeps when clicked END
+  --------------------------------------------- */
 
   function blendColors(
     color1: string,
@@ -1768,6 +2027,7 @@ Editing logic START
           maxHeight: `${baselineBelow * 1.5}px`,
           overscrollBehavior: "contain",
           position: "relative",
+          bottom: "0",
           width: "100%",
         }}
       >
@@ -2055,7 +2315,11 @@ Biggest render Tree ever recored START
         step.children &&
         step.children.length > 0
       ) {
-        const promoted = collectPromotedSubsteps(step.children, currentPath);
+        const promoted = collectPromotedSubsteps(
+          step.children,
+          currentPath,
+          steps
+        );
         if (promoted.length > 0) {
           elements.push(...promoted);
           elements.push(
