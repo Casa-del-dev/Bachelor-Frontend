@@ -7,7 +7,7 @@ import {
   MoveDiagonal,
   Martini, */
   ShieldCheck,
-  Divide,
+  /* Divide, */
 } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
