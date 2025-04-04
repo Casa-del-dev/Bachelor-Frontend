@@ -1274,10 +1274,33 @@ Editing logic START
                               );
                               observer.observe(parentEl);
                             } else {
-                              console.warn(
-                                "Parent element not found for step.id:",
-                                parentStep.id
+                              const parentEl2 = document.getElementById(
+                                parentStep.id + "-promoted"
                               );
+                              if (parentEl2) {
+                                parentEl2.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                });
+                                parentEl2.classList.add("highlighted");
+
+                                const observer = new IntersectionObserver(
+                                  (entries, obs) => {
+                                    entries.forEach((entry) => {
+                                      if (entry.intersectionRatio >= 0.9) {
+                                        setTimeout(() => {
+                                          parentEl2.classList.remove(
+                                            "highlighted"
+                                          );
+                                        }, 1000);
+                                        obs.disconnect();
+                                      }
+                                    });
+                                  },
+                                  { threshold: 0.9 }
+                                );
+                                observer.observe(parentEl2);
+                              }
                             }
                           }}
                         >
@@ -1338,17 +1361,45 @@ Editing logic START
                               );
                               observer.observe(siblingEl);
                             } else {
-                              const siblingEl = document.getElementById(
-                                step.id + "-promoted-left"
-                              );
-                              siblingEl?.classList.add("highlighted-bad");
+                              if (!siblingStep.selected) {
+                                toggleSelected(siblingPath);
+                                setTimeout(() => {
+                                  animatePromotedFadeIn(
+                                    `${siblingStep.id}-promoted`
+                                  );
+                                }, 0);
+                              }
+
+                              //same as if entered in if
                               setTimeout(() => {
-                                siblingEl?.classList.remove("highlighted-bad");
-                              }, 1000);
-                              console.warn(
-                                "Previous sibling element not found for step.id:",
-                                siblingStep.id
-                              );
+                                const siblingEl2 = document.getElementById(
+                                  siblingStep.id + "-promoted"
+                                );
+
+                                if (siblingEl2) {
+                                  siblingEl2.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  });
+                                  siblingEl2.classList.add("highlighted");
+                                  const observer = new IntersectionObserver(
+                                    (entries, obs) => {
+                                      entries.forEach((entry) => {
+                                        if (entry.intersectionRatio >= 0.9) {
+                                          setTimeout(() => {
+                                            siblingEl2.classList.remove(
+                                              "highlighted"
+                                            );
+                                          }, 1000);
+                                          obs.disconnect();
+                                        }
+                                      });
+                                    },
+                                    { threshold: 0.9 }
+                                  );
+                                  observer.observe(siblingEl2);
+                                }
+                              }, 1);
                             }
                           }}
                         >
@@ -1415,17 +1466,45 @@ Editing logic START
 
                               observer.observe(siblingEl);
                             } else {
-                              const selfEl = document.getElementById(
-                                step.id + "-promoted-right"
-                              );
-                              selfEl?.classList.add("highlighted-bad");
+                              if (!siblingStep.selected) {
+                                toggleSelected(siblingPath);
+                                setTimeout(() => {
+                                  animatePromotedFadeIn(
+                                    `${siblingStep.id}-promoted`
+                                  );
+                                }, 0);
+                              }
+
+                              //same as if entered in if
                               setTimeout(() => {
-                                selfEl?.classList.remove("highlighted-bad");
-                              }, 1000);
-                              console.warn(
-                                "Next sibling element not found for step.id:",
-                                siblingStep.id
-                              );
+                                const siblingEl2 = document.getElementById(
+                                  siblingStep.id + "-promoted"
+                                );
+
+                                if (siblingEl2) {
+                                  siblingEl2.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  });
+                                  siblingEl2.classList.add("highlighted");
+                                  const observer = new IntersectionObserver(
+                                    (entries, obs) => {
+                                      entries.forEach((entry) => {
+                                        if (entry.intersectionRatio >= 0.9) {
+                                          setTimeout(() => {
+                                            siblingEl2.classList.remove(
+                                              "highlighted"
+                                            );
+                                          }, 1000);
+                                          obs.disconnect();
+                                        }
+                                      });
+                                    },
+                                    { threshold: 0.9 }
+                                  );
+                                  observer.observe(siblingEl2);
+                                }
+                              }, 1);
                             }
                           }}
                         >
@@ -1441,15 +1520,298 @@ Editing logic START
                     </div>
                   </div>
                 ) : (
-                  <div className="container-filling-emptyness">
-                    {step.children &&
-                      step.children.length > 0 &&
-                      step.isexpanded}
-                    <div
-                      className="filling-emptyness"
-                      onClick={() => insertSubStepAtPath(currentPath, 0, false)}
-                    >
-                      Add a Substep <br /> +
+                  <div className="orientation-filling">
+                    <div className="orientation">
+                      <div className="orientation-parent">
+                        <button
+                          className="orientation-buttons middle"
+                          onClick={() => {
+                            const parentPath = currentPath.slice(0, -1);
+                            const parentStep = getStepAtPath(
+                              all_step,
+                              parentPath
+                            );
+                            if (!parentStep) {
+                              console.warn(
+                                "No parent found at path:",
+                                parentPath
+                              );
+                              return;
+                            }
+                            const parentEl = document.getElementById(
+                              parentStep.id
+                            );
+                            if (parentEl) {
+                              parentEl.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              parentEl.classList.add("highlighted");
+
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        parentEl.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(parentEl);
+                            } else {
+                              const parentEl2 = document.getElementById(
+                                parentStep.id + "-promoted"
+                              );
+                              if (parentEl2) {
+                                parentEl2.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                });
+                                parentEl2.classList.add("highlighted");
+
+                                const observer = new IntersectionObserver(
+                                  (entries, obs) => {
+                                    entries.forEach((entry) => {
+                                      if (entry.intersectionRatio >= 0.9) {
+                                        setTimeout(() => {
+                                          parentEl2.classList.remove(
+                                            "highlighted"
+                                          );
+                                        }, 1000);
+                                        obs.disconnect();
+                                      }
+                                    });
+                                  },
+                                  { threshold: 0.9 }
+                                );
+                                observer.observe(parentEl2);
+                              }
+                            }
+                          }}
+                        >
+                          Parent
+                        </button>
+                      </div>
+                      <div className="orientation-siblings">
+                        <button
+                          id={step.id + "-promoted-left"}
+                          className={`orientation-buttons left ${
+                            isFirstSibling ? "isEdgeSibling" : ""
+                          }`}
+                          disabled={isFirstSibling}
+                          onClick={() => {
+                            if (isFirstSibling) {
+                              console.warn(
+                                "Already at the first sibling; no previous sibling."
+                              );
+                              return;
+                            }
+                            const siblingPath = [...currentPath];
+                            siblingPath[siblingPath.length - 1] =
+                              currentIndex - 1;
+                            const siblingStep = getStepAtPath(
+                              all_step,
+                              siblingPath
+                            );
+                            if (!siblingStep) {
+                              console.warn(
+                                "No previous sibling found at path:",
+                                siblingPath
+                              );
+                              return;
+                            }
+                            const siblingEl = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+                            if (siblingEl) {
+                              siblingEl.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl.classList.add("highlighted");
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(siblingEl);
+                            } else {
+                              if (!siblingStep.selected) {
+                                toggleSelected(siblingPath);
+                                setTimeout(() => {
+                                  animatePromotedFadeIn(
+                                    `${siblingStep.id}-promoted`
+                                  );
+                                }, 0);
+                              }
+
+                              //same as if entered in if
+                              setTimeout(() => {
+                                const siblingEl2 = document.getElementById(
+                                  siblingStep.id + "-promoted"
+                                );
+
+                                if (siblingEl2) {
+                                  siblingEl2.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  });
+                                  siblingEl2.classList.add("highlighted");
+                                  const observer = new IntersectionObserver(
+                                    (entries, obs) => {
+                                      entries.forEach((entry) => {
+                                        if (entry.intersectionRatio >= 0.9) {
+                                          setTimeout(() => {
+                                            siblingEl2.classList.remove(
+                                              "highlighted"
+                                            );
+                                          }, 1000);
+                                          obs.disconnect();
+                                        }
+                                      });
+                                    },
+                                    { threshold: 0.9 }
+                                  );
+                                  observer.observe(siblingEl2);
+                                }
+                              }, 1);
+                            }
+                          }}
+                        >
+                          Previous
+                        </button>
+
+                        <button
+                          id={step.id + "-promoted-right"}
+                          className={`orientation-buttons right ${
+                            isLastSibling ? "isEdgeSibling" : ""
+                          }`}
+                          disabled={isLastSibling}
+                          onClick={() => {
+                            if (isLastSibling) {
+                              console.warn(
+                                "Already at the last sibling; no next sibling available."
+                              );
+                              return;
+                            }
+
+                            const siblingPath = [...currentPath];
+                            const currentIndex =
+                              currentPath[currentPath.length - 1];
+                            siblingPath[siblingPath.length - 1] =
+                              currentIndex + 1;
+
+                            const siblingStep = getStepAtPath(
+                              all_step,
+                              siblingPath
+                            );
+                            if (!siblingStep) {
+                              console.warn(
+                                "No next sibling found at path:",
+                                siblingPath
+                              );
+                              return;
+                            }
+
+                            const siblingEl = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+                            if (siblingEl) {
+                              siblingEl.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl.classList.add("highlighted");
+
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+
+                              observer.observe(siblingEl);
+                            } else {
+                              if (!siblingStep.selected) {
+                                toggleSelected(siblingPath);
+                                setTimeout(() => {
+                                  animatePromotedFadeIn(
+                                    `${siblingStep.id}-promoted`
+                                  );
+                                }, 0);
+                              }
+
+                              //same as if entered in if
+                              setTimeout(() => {
+                                const siblingEl2 = document.getElementById(
+                                  siblingStep.id + "-promoted"
+                                );
+
+                                if (siblingEl2) {
+                                  siblingEl2.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "center",
+                                  });
+                                  siblingEl2.classList.add("highlighted");
+                                  const observer = new IntersectionObserver(
+                                    (entries, obs) => {
+                                      entries.forEach((entry) => {
+                                        if (entry.intersectionRatio >= 0.9) {
+                                          setTimeout(() => {
+                                            siblingEl2.classList.remove(
+                                              "highlighted"
+                                            );
+                                          }, 1000);
+                                          obs.disconnect();
+                                        }
+                                      });
+                                    },
+                                    { threshold: 0.9 }
+                                  );
+                                  observer.observe(siblingEl2);
+                                }
+                              }, 1);
+                            }
+                          }}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                    <div className="container-filling-emptyness">
+                      <div
+                        className="filling-emptyness"
+                        onClick={() =>
+                          insertSubStepAtPath(currentPath, 0, false)
+                        }
+                      >
+                        Add a Substep <br /> +
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1748,9 +2110,25 @@ Editing logic START
       }
     };
 
+    const getAllDescendantPaths = (
+      step: Step,
+      basePath: number[]
+    ): { child: Step; path: number[] }[] => {
+      let result: { child: Step; path: number[] }[] = [];
+      if (step.children && step.children.length > 0) {
+        step.children.forEach((child, i) => {
+          const childPath = [...basePath, i];
+          result.push({ child, path: childPath });
+          result = result.concat(getAllDescendantPaths(child, childPath));
+        });
+      }
+      return result;
+    };
+
     const handleTitleClick = (step: Step, currentPath: number[]) => {
       const index = currentPath[currentPath.length - 1];
       setInitialIndex(indexKey, index);
+
       if (!step.selected) {
         toggleSelected(currentPath);
         setTimeout(() => {
@@ -1758,8 +2136,21 @@ Editing logic START
         }, 0);
       } else {
         animatePromotedFadeOut(`${step.id}-promoted`);
+
+        const descendants = getAllDescendantPaths(step, currentPath);
+
+        descendants.forEach(({ child }) => {
+          animatePromotedFadeOut(`${child.id}-promoted`);
+        });
+
         setTimeout(() => {
           toggleSelected(currentPath);
+
+          descendants.forEach(({ child, path }) => {
+            if (child.selected) {
+              toggleSelected(path);
+            }
+          });
         }, 300);
       }
     };
@@ -1789,7 +2180,6 @@ Editing logic START
       InsertAbove();
       setTimeout(() => {
         scrollStep(-1);
-        console.log(containerRef.current);
       }, 10);
     };
 
@@ -2096,6 +2486,13 @@ Biggest render Tree ever recored START
       const currentPath = [...parentPath, index];
       const displayPath = currentPath.map((i) => i + 1).join(".");
       const hintNumber = getNumberForStep(step);
+      const isFirstSibling = currentPath[currentPath.length - 1] === 0;
+
+      const siblingArray = steps;
+
+      const isLastSibling =
+        currentPath[currentPath.length - 1] === siblingArray.length - 1;
+
       const isCurrentlyEditing =
         editingPath &&
         editingPath.length === currentPath.length &&
@@ -2181,24 +2578,428 @@ Biggest render Tree ever recored START
             )}
 
             {step.children && step.children.length > 0 && step.isexpanded ? (
-              <div
-                className="substeps"
-                onWheel={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <AnimatedSubsteps
-                  substeps={step.children}
-                  parentPath={currentPath}
-                />
+              <div className="orientation-substeps">
+                <div className="orientation">
+                  <div className="orientation-parent">
+                    <button className="orientation-buttons middle isEdgeSibling">
+                      Parent
+                    </button>
+                  </div>
+                  <div className="orientation-siblings">
+                    <button
+                      id={step.id + "-promoted-left"}
+                      className={`orientation-buttons left ${
+                        isFirstSibling ? "isEdgeSibling" : ""
+                      }`}
+                      disabled={isFirstSibling}
+                      onClick={() => {
+                        if (isFirstSibling) {
+                          console.warn(
+                            "Already at the first sibling; no previous sibling."
+                          );
+                          return;
+                        }
+                        const siblingPath = [...currentPath];
+                        siblingPath[siblingPath.length - 1] =
+                          currentPath[currentPath.length - 1] - 1;
+                        const siblingStep = getStepAtPath(steps, siblingPath);
+                        if (!siblingStep) {
+                          console.warn(
+                            "No previous sibling found at path:",
+                            siblingPath
+                          );
+                          return;
+                        }
+                        const siblingEl = document.getElementById(
+                          siblingStep.id
+                        );
+                        if (siblingEl) {
+                          siblingEl.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                          siblingEl.classList.add("highlighted");
+                          const observer = new IntersectionObserver(
+                            (entries, obs) => {
+                              entries.forEach((entry) => {
+                                if (entry.intersectionRatio >= 0.9) {
+                                  setTimeout(() => {
+                                    siblingEl.classList.remove("highlighted");
+                                  }, 1000);
+                                  obs.disconnect();
+                                }
+                              });
+                            },
+                            { threshold: 0.9 }
+                          );
+                          observer.observe(siblingEl);
+                        } else {
+                          if (!siblingStep.selected) {
+                            toggleSelected(siblingPath);
+                            setTimeout(() => {
+                              animatePromotedFadeIn(
+                                `${siblingStep.id}-promoted`
+                              );
+                            }, 0);
+                          }
+
+                          //same as if entered in if
+                          setTimeout(() => {
+                            const siblingEl2 = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+
+                            if (siblingEl2) {
+                              siblingEl2.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl2.classList.add("highlighted");
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl2.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(siblingEl2);
+                            }
+                          }, 1);
+                        }
+                      }}
+                    >
+                      Previous
+                    </button>
+
+                    <button
+                      id={step.id + "-promoted-right"}
+                      className={`orientation-buttons right ${
+                        isLastSibling ? "isEdgeSibling" : ""
+                      }`}
+                      disabled={isLastSibling}
+                      onClick={() => {
+                        if (isLastSibling) {
+                          console.warn(
+                            "Already at the last sibling; no next sibling available."
+                          );
+                          return;
+                        }
+
+                        const siblingPath = [...currentPath];
+                        const currentIndex =
+                          currentPath[currentPath.length - 1];
+                        siblingPath[siblingPath.length - 1] = currentIndex + 1;
+
+                        const siblingStep = getStepAtPath(steps, siblingPath);
+                        if (!siblingStep) {
+                          console.warn(
+                            "No next sibling found at path:",
+                            siblingPath
+                          );
+                          return;
+                        }
+
+                        const siblingEl = document.getElementById(
+                          siblingStep.id
+                        );
+                        if (siblingEl) {
+                          siblingEl.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                          siblingEl.classList.add("highlighted");
+
+                          const observer = new IntersectionObserver(
+                            (entries, obs) => {
+                              entries.forEach((entry) => {
+                                if (entry.intersectionRatio >= 0.9) {
+                                  setTimeout(() => {
+                                    siblingEl.classList.remove("highlighted");
+                                  }, 1000);
+                                  obs.disconnect();
+                                }
+                              });
+                            },
+                            { threshold: 0.9 }
+                          );
+
+                          observer.observe(siblingEl);
+                        } else {
+                          if (!siblingStep.selected) {
+                            toggleSelected(siblingPath);
+                            setTimeout(() => {
+                              animatePromotedFadeIn(
+                                `${siblingStep.id}-promoted`
+                              );
+                            }, 0);
+                          }
+
+                          //same as if entered in if
+                          setTimeout(() => {
+                            const siblingEl2 = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+
+                            if (siblingEl2) {
+                              siblingEl2.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl2.classList.add("highlighted");
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl2.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(siblingEl2);
+                            }
+                          }, 1);
+                        }
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className="substeps"
+                  onWheel={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <AnimatedSubsteps
+                    substeps={step.children}
+                    parentPath={currentPath}
+                  />
+                </div>
               </div>
             ) : (
-              <div className="container-filling-emptyness">
-                <div
-                  className="filling-emptyness"
-                  onClick={() => insertSubStepAtPath(currentPath, 0, false)}
-                >
-                  Add a Substep <br /> +{" "}
+              <div className="orientation-filling">
+                <div className="orientation">
+                  <div className="orientation-parent">
+                    <button className="orientation-buttons middle isEdgeSibling">
+                      Parent
+                    </button>
+                  </div>
+                  <div className="orientation-siblings">
+                    <button
+                      id={step.id + "-promoted-left"}
+                      className={`orientation-buttons left ${
+                        isFirstSibling ? "isEdgeSibling" : ""
+                      }`}
+                      disabled={isFirstSibling}
+                      onClick={() => {
+                        if (isFirstSibling) {
+                          console.warn(
+                            "Already at the first sibling; no previous sibling."
+                          );
+                          return;
+                        }
+                        const siblingPath = [...currentPath];
+                        siblingPath[siblingPath.length - 1] =
+                          currentPath[currentPath.length - 1] - 1;
+                        const siblingStep = getStepAtPath(steps, siblingPath);
+                        if (!siblingStep) {
+                          console.warn(
+                            "No previous sibling found at path:",
+                            siblingPath
+                          );
+                          return;
+                        }
+                        const siblingEl = document.getElementById(
+                          siblingStep.id
+                        );
+                        if (siblingEl) {
+                          siblingEl.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                          siblingEl.classList.add("highlighted");
+                          const observer = new IntersectionObserver(
+                            (entries, obs) => {
+                              entries.forEach((entry) => {
+                                if (entry.intersectionRatio >= 0.9) {
+                                  setTimeout(() => {
+                                    siblingEl.classList.remove("highlighted");
+                                  }, 1000);
+                                  obs.disconnect();
+                                }
+                              });
+                            },
+                            { threshold: 0.9 }
+                          );
+                          observer.observe(siblingEl);
+                        } else {
+                          if (!siblingStep.selected) {
+                            toggleSelected(siblingPath);
+                            setTimeout(() => {
+                              animatePromotedFadeIn(
+                                `${siblingStep.id}-promoted`
+                              );
+                            }, 0);
+                          }
+
+                          //same as if entered in if
+                          setTimeout(() => {
+                            const siblingEl2 = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+
+                            if (siblingEl2) {
+                              siblingEl2.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl2.classList.add("highlighted");
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl2.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(siblingEl2);
+                            }
+                          }, 1);
+                        }
+                      }}
+                    >
+                      Previous
+                    </button>
+
+                    <button
+                      id={step.id + "-promoted-right"}
+                      className={`orientation-buttons right ${
+                        isLastSibling ? "isEdgeSibling" : ""
+                      }`}
+                      disabled={isLastSibling}
+                      onClick={() => {
+                        if (isLastSibling) {
+                          console.warn(
+                            "Already at the last sibling; no next sibling available."
+                          );
+                          return;
+                        }
+
+                        const siblingPath = [...currentPath];
+                        const currentIndex =
+                          currentPath[currentPath.length - 1];
+                        siblingPath[siblingPath.length - 1] = currentIndex + 1;
+
+                        const siblingStep = getStepAtPath(steps, siblingPath);
+                        if (!siblingStep) {
+                          console.warn(
+                            "No next sibling found at path:",
+                            siblingPath
+                          );
+                          return;
+                        }
+
+                        const siblingEl = document.getElementById(
+                          siblingStep.id
+                        );
+                        if (siblingEl) {
+                          siblingEl.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                          siblingEl.classList.add("highlighted");
+
+                          const observer = new IntersectionObserver(
+                            (entries, obs) => {
+                              entries.forEach((entry) => {
+                                if (entry.intersectionRatio >= 0.9) {
+                                  setTimeout(() => {
+                                    siblingEl.classList.remove("highlighted");
+                                  }, 1000);
+                                  obs.disconnect();
+                                }
+                              });
+                            },
+                            { threshold: 0.9 }
+                          );
+
+                          observer.observe(siblingEl);
+                        } else {
+                          if (!siblingStep.selected) {
+                            toggleSelected(siblingPath);
+                            setTimeout(() => {
+                              animatePromotedFadeIn(
+                                `${siblingStep.id}-promoted`
+                              );
+                            }, 0);
+                          }
+
+                          //same as if entered in if
+                          setTimeout(() => {
+                            const siblingEl2 = document.getElementById(
+                              siblingStep.id + "-promoted"
+                            );
+
+                            if (siblingEl2) {
+                              siblingEl2.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              siblingEl2.classList.add("highlighted");
+                              const observer = new IntersectionObserver(
+                                (entries, obs) => {
+                                  entries.forEach((entry) => {
+                                    if (entry.intersectionRatio >= 0.9) {
+                                      setTimeout(() => {
+                                        siblingEl2.classList.remove(
+                                          "highlighted"
+                                        );
+                                      }, 1000);
+                                      obs.disconnect();
+                                    }
+                                  });
+                                },
+                                { threshold: 0.9 }
+                              );
+                              observer.observe(siblingEl2);
+                            }
+                          }, 1);
+                        }
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+                <div className="container-filling-emptyness">
+                  <div
+                    className="filling-emptyness"
+                    onClick={() => insertSubStepAtPath(currentPath, 0, false)}
+                  >
+                    Add a Substep <br /> +
+                  </div>
                 </div>
               </div>
             )}
