@@ -353,6 +353,7 @@ const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
     setLoading(true);
 
     try {
+      console.log(JSON.stringify(steps));
       const gptResponse = await apiCallTree(JSON.stringify(steps), code);
       const rawMessage = gptResponse.choices[0].message.content;
       console.log(rawMessage);
@@ -3153,7 +3154,11 @@ Biggest render Tree ever recored END
                 strokeWidth={1}
                 cursor="pointer"
                 className="trash-icon"
-                onClick={async () => HandleImplemented()}
+                onClick={
+                  loading
+                    ? () => console.log("undefined")
+                    : async () => HandleImplemented()
+                }
               />
               <Trash
                 color="black"
