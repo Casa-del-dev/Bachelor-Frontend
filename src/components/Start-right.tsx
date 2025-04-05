@@ -2265,12 +2265,17 @@ Editing logic START
       if ((scrollingDown && !atBottom) || (!scrollingDown && !atTop)) {
         e.preventDefault();
       }
-      if (isAnimatingRef.current) return;
       const direction = scrollingDown ? 1 : -1;
       const newIndex = Math.max(
         0,
         Math.min(total - 1, currentIndex + direction)
       );
+      if (newIndex !== currentIndex) {
+        setCurrentIndex(newIndex);
+        scrollToIndex(newIndex);
+        handleLeaveTrash();
+      }
+
       if (newIndex !== currentIndex) {
         isAnimatingRef.current = true;
         setCurrentIndex(newIndex);
