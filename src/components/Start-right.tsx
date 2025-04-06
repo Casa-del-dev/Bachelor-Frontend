@@ -976,7 +976,7 @@ Editing logic START
           originalEl.addEventListener("animationend", removeOriginalClass);
           clonedEl.addEventListener("animationend", removeClonedClass);
         }
-      }, 100);
+      }, 0);
     };
   }
 
