@@ -895,6 +895,18 @@ Editing logic START
   /* ---------------------------------------
   Splitting step function START
   --------------------------------------- */
+  function newId() {
+    return `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  }
+
+  const resetSelectedFlags = (step: Step): Step => {
+    step.id = newId(); // assign a new unique id for this step
+    if (step.children && step.children.length > 0) {
+      step.children = step.children.map(resetSelectedFlags);
+    }
+    return step;
+  };
+
   function HandleOnSplitStep(path: number[]) {
     return () => {
       let stepToClone!: Step;
@@ -913,33 +925,44 @@ Editing logic START
 
         clonedStep = {
           ...JSON.parse(JSON.stringify(stepToClone)),
-          id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
           isNewlyInserted: true,
           isDeleting: false,
+          selected: stepToClone.selected,
         };
+
+        clonedStep = resetSelectedFlags(clonedStep);
 
         current.splice(idx + 1, 0, clonedStep);
         return newSteps;
       });
 
       setTimeout(() => {
-        const originalEl = document.getElementById(stepToClone.id);
-        const clonedEl = document.getElementById(clonedStep.id);
+        const originalId = `${stepToClone.id}${
+          stepToClone.hasparent ? "-promoted" : ""
+        }`;
+        const clonedId = `${clonedStep.id}${
+          stepToClone.hasparent ? "-promoted" : ""
+        }`;
+
+        const originalEl = document.getElementById(originalId);
+        const clonedEl = document.getElementById(clonedId);
+
+        console.log("ORIGINAL ID:", originalId);
+        console.log("CLONED ID:", clonedId);
+        console.log("originalEl exists?", !!originalEl);
+        console.log("clonedEl exists?", !!clonedEl);
 
         if (originalEl && clonedEl) {
-          // Remove classes in case they're still there from a previous animation
           originalEl.classList.remove("dividing-original");
           clonedEl.classList.remove("dividing-new");
 
-          // Force reflow to reset animation
+          // Forcing reflow to reset animation
           void originalEl.offsetWidth;
           void clonedEl.offsetWidth;
 
-          // Add animation classes again
           originalEl.classList.add("dividing-original");
           clonedEl.classList.add("dividing-new");
 
-          // Use separate cleanup functions to avoid removing both too early
           const removeOriginalClass = () => {
             originalEl.classList.remove("dividing-original");
             originalEl.removeEventListener("animationend", removeOriginalClass);
@@ -953,7 +976,7 @@ Editing logic START
           originalEl.addEventListener("animationend", removeOriginalClass);
           clonedEl.addEventListener("animationend", removeClonedClass);
         }
-      }, 50);
+      }, 100);
     };
   }
 
