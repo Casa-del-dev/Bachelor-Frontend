@@ -936,47 +936,40 @@ Editing logic START
         return newSteps;
       });
 
-      setTimeout(() => {
-        const originalId = `${stepToClone.id}${
-          stepToClone.hasparent ? "-promoted" : ""
-        }`;
-        const clonedId = `${clonedStep.id}${
-          stepToClone.hasparent ? "-promoted" : ""
-        }`;
+      const originalId = `${stepToClone.id}${
+        stepToClone.hasparent ? "-promoted" : ""
+      }`;
+      const clonedId = `${clonedStep.id}${
+        stepToClone.hasparent ? "-promoted" : ""
+      }`;
 
-        const originalEl = document.getElementById(originalId);
-        const clonedEl = document.getElementById(clonedId);
+      const originalEl = document.getElementById(originalId);
+      const clonedEl = document.getElementById(clonedId);
 
-        console.log("ORIGINAL ID:", originalId);
-        console.log("CLONED ID:", clonedId);
-        console.log("originalEl exists?", !!originalEl);
-        console.log("clonedEl exists?", !!clonedEl);
+      if (originalEl && clonedEl) {
+        originalEl.classList.remove("dividing-original");
+        clonedEl.classList.remove("dividing-new");
 
-        if (originalEl && clonedEl) {
+        // Forcing reflow to reset animation
+        void originalEl.offsetWidth;
+        void clonedEl.offsetWidth;
+
+        originalEl.classList.add("dividing-original");
+        clonedEl.classList.add("dividing-new");
+
+        const removeOriginalClass = () => {
           originalEl.classList.remove("dividing-original");
+          originalEl.removeEventListener("animationend", removeOriginalClass);
+        };
+
+        const removeClonedClass = () => {
           clonedEl.classList.remove("dividing-new");
+          clonedEl.removeEventListener("animationend", removeClonedClass);
+        };
 
-          // Forcing reflow to reset animation
-          void originalEl.offsetWidth;
-          void clonedEl.offsetWidth;
-
-          originalEl.classList.add("dividing-original");
-          clonedEl.classList.add("dividing-new");
-
-          const removeOriginalClass = () => {
-            originalEl.classList.remove("dividing-original");
-            originalEl.removeEventListener("animationend", removeOriginalClass);
-          };
-
-          const removeClonedClass = () => {
-            clonedEl.classList.remove("dividing-new");
-            clonedEl.removeEventListener("animationend", removeClonedClass);
-          };
-
-          originalEl.addEventListener("animationend", removeOriginalClass);
-          clonedEl.addEventListener("animationend", removeClonedClass);
-        }
-      }, 0);
+        originalEl.addEventListener("animationend", removeOriginalClass);
+        clonedEl.addEventListener("animationend", removeClonedClass);
+      }
     };
   }
 
