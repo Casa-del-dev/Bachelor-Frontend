@@ -9,6 +9,7 @@ import { problemDetailsMap } from "./Problem_detail";
 import ApiCallEditor from "./AI_Editor.tsx";
 import { setStepsData, setChanged } from "./BuildingBlocks/StepsData.tsx";
 import "./Program-interface.css";
+import step from "./Start-right.tsx";
 
 interface FileItem {
   id: number;
@@ -21,11 +22,15 @@ export default function PythonPlayground() {
   const { code, setCode, currentFile } = useCodeContext();
   const [call, setCall] = useState(false);
   const isAuthenticated = useAuth();
+  const [showModal, setShowModal] = useState(false);
+  const [fadeClass, setFadeClass] = useState("");
 
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "DefaultProblem";
 
   const systemStorageKey = `sysSelectedSystemProblem_${selectedProblemName}`;
+  const StorageKey = "step" + `selectedSystemProblem_${selectedProblemName}`;
+
   const storedTree = localStorage.getItem(systemStorageKey);
   const fileTree = storedTree ? JSON.parse(storedTree) : [];
 
@@ -50,6 +55,40 @@ export default function PythonPlayground() {
   /* --------------
   API Call
   -------------- */
+  const handleGenerateStepTree = () => {
+    const dontAsk = localStorage.getItem("dontAskGenerateStepTree");
+    if (dontAsk === "true") {
+      onGenerateStepTreeFromCode();
+    } else {
+      setShowModal(true);
+      setFadeClass("fade-in");
+    }
+  };
+
+  const handleYes = () => {
+    setTimeout(() => {
+      setShowModal(false);
+    }, 300);
+    setFadeClass("fade-out");
+    onGenerateStepTreeFromCode();
+  };
+
+  const handleNo = () => {
+    setTimeout(() => {
+      setShowModal(false);
+    }, 300);
+    setFadeClass("fade-out");
+  };
+
+  const handleYesDontAskAgain = () => {
+    localStorage.setItem("dontAskGenerateStepTree", "true");
+    setTimeout(() => {
+      setShowModal(false);
+    }, 300);
+    setFadeClass("fade-out");
+    onGenerateStepTreeFromCode();
+  };
+
   const onGenerateStepTreeFromCode = async () => {
     setCall(true);
     if (!isAuthenticated) {
@@ -92,7 +131,7 @@ export default function PythonPlayground() {
             className="Network"
             style={{ padding: "0.5vw", cursor: "pointer" }}
             size={"1.5vw"}
-            onClick={onGenerateStepTreeFromCode}
+            onClick={handleGenerateStepTree}
           />
         ) : (
           <div className="loading-dots">
@@ -116,6 +155,38 @@ export default function PythonPlayground() {
         />
       ) : (
         ""
+      )}
+      {showModal && (
+        <div
+          className="modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setTimeout(() => {
+                setShowModal(false);
+              }, 300);
+              setFadeClass("fade-out");
+            }
+          }}
+        >
+          <div className={`modal-content ${fadeClass}`}>
+            <p>
+              Are you sure you want to create a new step tree from the editor?
+            </p>
+            <div className="modal-buttons">
+              <div className="modal-row">
+                <button className="yes" onClick={handleYes}>
+                  Yes
+                </button>
+                <button className="no" onClick={handleNo}>
+                  No
+                </button>
+              </div>
+              <button className="skip" onClick={handleYesDontAskAgain}>
+                ✔️ Yes and don't ask again
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -355,6 +355,7 @@ const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
     }
 
     setLoading(true);
+    setLoadingCheck(true);
 
     try {
       console.log(JSON.stringify(steps));
@@ -376,6 +377,7 @@ const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
       setLoading(false);
+      setLoadingCheck(false);
     }
   }
 
@@ -410,6 +412,7 @@ Checking Code and Tree END
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
     setLoading(true);
+    setLoadingCheck(true);
 
     try {
       const gptResponse = await apiCall(text, selectedProblemDetails);
@@ -433,10 +436,11 @@ Checking Code and Tree END
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
       setLoading(false);
+      setLoadingCheck(false);
     }
   }
 
-  //This is for editor to steptree
+  //This is: for editor to steptree
   useEffect(() => {
     const fetchStepsData = () => {
       if (getChanged()) {
@@ -448,16 +452,21 @@ Checking Code and Tree END
           localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
           setSteps(stepsArray);
           setText("");
+          setFadeInTree(true);
+          setTimeout(() => setFadeInTree(false), 1000);
+          setLoading(false);
+          setLoadingCheck(false);
         } catch (error) {
           console.error("Error processing steps data:", error);
         } finally {
           setLoading(false);
+          setLoadingCheck(false);
           setChanged(false);
         }
       }
     };
 
-    // Poll every 5 seconds for changes
+    // Poll every 3 seconds for changes
     const interval = setInterval(fetchStepsData, 3000);
     return () => clearInterval(interval);
   }, [StorageKey]);
@@ -496,6 +505,7 @@ Checking Code and Tree END
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
     setLoadingCheck(true);
+    setLoading(true);
 
     try {
       const gptResponse = await apiCallCheck(
@@ -517,6 +527,7 @@ Checking Code and Tree END
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
       setLoadingCheck(false);
+      setLoading(false);
     }
   }
 
