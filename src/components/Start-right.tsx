@@ -7,6 +7,7 @@ import {
   MoveDiagonal,
   Martini, */
   ShieldCheck,
+  ArrowDown,
   /* Divide, */
 } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
@@ -224,8 +225,10 @@ const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
   const [steps, setSteps] = useState<Step[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingCheck, setLoadingCheck] = useState(false);
   const { isAuthenticated } = useAuth();
   const { code } = useCodeContext();
+  const [fadeInTree, setFadeInTree] = useState(false);
 
   // For revealing correct steps
   const [showCorrectStepOverlay, setShowCorrectStepOverlay] = useState<
@@ -419,9 +422,12 @@ Checking Code and Tree END
 
       const stepsArray = transformStepsObject(stepsData);
       localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
+
       setSteps(stepsArray);
+      setFadeInTree(true);
       setText("");
       setSentPrompt(true);
+      setTimeout(() => setFadeInTree(false), 1000);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
@@ -488,7 +494,7 @@ Checking Code and Tree END
       localStorage.getItem("selectedProblem") || "Default Problem";
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
 
-    setLoading(true);
+    setLoadingCheck(true);
 
     try {
       const gptResponse = await apiCallCheck(
@@ -509,7 +515,7 @@ Checking Code and Tree END
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
-      setLoading(false);
+      setLoadingCheck(false);
     }
   }
 
@@ -1054,6 +1060,24 @@ Editing logic START
       setJustExpanding([]);
     }, 300);
   } */
+
+  /* ---------------------------------------------
+  Animating Dots for Checking START
+  --------------------------------------------- */
+
+  const [dotCount, setDotCount] = useState(0);
+
+  useEffect(() => {
+    if (!loadingCheck) return;
+    const interval = setInterval(() => {
+      setDotCount((prev) => (prev + 1) % 4);
+    }, 300);
+    return () => clearInterval(interval);
+  }, [loadingCheck]);
+
+  /* ---------------------------------------------
+  Animating Dots for Checking END
+  --------------------------------------------- */
 
   /* ---------------------------------------------
   Showing substeps when clicked START
@@ -2154,15 +2178,18 @@ Editing logic START
       if (!step.selected) {
         toggleSelected(currentPath);
         setTimeout(() => {
+          animatePromotedFadeIn(`${step.id}-promoted-arrow`);
           animatePromotedFadeIn(`${step.id}-promoted`);
         }, 0);
       } else {
         animatePromotedFadeOut(`${step.id}-promoted`);
+        animatePromotedFadeOut(`${step.id}-promoted-arrow`);
 
         const descendants = getAllDescendantPaths(step, currentPath);
 
         descendants.forEach(({ child }) => {
           animatePromotedFadeOut(`${child.id}-promoted`);
+          animatePromotedFadeOut(`${child.id}-promoted-arrow`);
         });
 
         setTimeout(() => {
@@ -2401,6 +2428,59 @@ Editing logic START
                   className="icon-container-start-right titleonly"
                   style={{ justifyContent: "flex-end" }}
                 >
+                  <ArrowDown
+                    id={substep.id + "-promoted-arrow"}
+                    className={`arrow-down ${
+                      substep.selected ? "" : "visible"
+                    }`}
+                    style={{ strokeWidth: "1.2" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const index = currentPath[currentPath.length - 1];
+                      setInitialIndex(indexKey, index);
+
+                      const element = document.getElementById(
+                        `${substep.id}-promoted`
+                      );
+                      if (element) {
+                        element.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+
+                        const observer = new IntersectionObserver(
+                          (entries, obs) => {
+                            entries.forEach((entry) => {
+                              if (entry.intersectionRatio >= 0.9) {
+                                element.classList.add("highlighted");
+                                setTimeout(() => {
+                                  element.classList.remove("highlighted");
+                                }, 1000);
+                                obs.disconnect();
+                              }
+                            });
+                          },
+                          { threshold: 0.9 }
+                        );
+                        observer.observe(element);
+                      }
+
+                      setTimeout(() => {
+                        const updatedLength = substeps.length - 1;
+                        if (index === currentIndex && updatedLength > 0) {
+                          const nextIndex = Math.min(
+                            currentIndex,
+                            updatedLength - 1
+                          );
+                          setCurrentIndex(nextIndex);
+                          scrollToIndex(nextIndex);
+                        }
+                        handleLeaveTrash();
+                        handleMouseLeaveStep();
+                      }, 400);
+                    }}
+                  />
+
                   <Trash
                     onMouseEnter={handleEnterTrash}
                     onMouseLeave={handleLeaveTrash}
@@ -3200,7 +3280,8 @@ Biggest render Tree ever recored END
         <div className="right-main-main">
           <div
             className={`container-step-tree
-          ${!sentPrompt ? "height100" : ""}`}
+              ${fadeInTree ? "fade-in-tree" : ""} 
+              ${!sentPrompt ? "height100" : ""}`}
           >
             {steps.length > 0 ? (
               <>
@@ -3208,17 +3289,24 @@ Biggest render Tree ever recored END
                   <button
                     className="Check-button"
                     onClick={() => handleGenerateWithChatGPTCheck("Check")}
-                    disabled={loading}
+                    disabled={loadingCheck}
                     style={{
-                      padding: "6px 12px",
-                      cursor: loading ? "not-allowed" : "pointer",
+                      cursor: loadingCheck ? "not-allowed" : "pointer",
                     }}
                   >
-                    <div className="Check">
-                      {loading ? "Checking..." : "Check"}
+                    <div
+                      className="Check"
+                      style={{ display: "flex", alignItems: "center" }}
+                    >
+                      {loadingCheck ? (
+                        <>Checking{".".repeat(dotCount)}</>
+                      ) : (
+                        "Check"
+                      )}
                     </div>
                   </button>
                 </div>
+
                 {renderTree(steps)}
               </>
             ) : (
@@ -3236,10 +3324,17 @@ Biggest render Tree ever recored END
                   )}
                   <button
                     className={`button-inside  ${loading ? "loadingB" : ""}`}
+                    style={{ cursor: loading ? "default" : "pointer" }}
                     onClick={() => handleGenerateWithChatGPT("From Prompt")}
                     disabled={loading}
                   >
-                    {loading ? <span className="spinner">✔</span> : "✔"}
+                    {loading ? (
+                      <span className="spinner" style={{ cursor: "default" }}>
+                        ✔
+                      </span>
+                    ) : (
+                      "✔"
+                    )}
                   </button>
                 </div>
               </div>
