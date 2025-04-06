@@ -936,40 +936,45 @@ Editing logic START
         return newSteps;
       });
 
-      const originalId = `${stepToClone.id}${
-        stepToClone.hasparent ? "-promoted" : ""
-      }`;
-      const clonedId = `${clonedStep.id}${
-        stepToClone.hasparent ? "-promoted" : ""
-      }`;
+      setTimeout(() => {
+        const originalId = `${stepToClone.id}${
+          stepToClone.hasparent ? "-promoted" : ""
+        }`;
+        const clonedId = `${clonedStep.id}${
+          stepToClone.hasparent ? "-promoted" : ""
+        }`;
 
-      const originalEl = document.getElementById(originalId);
-      const clonedEl = document.getElementById(clonedId);
+        const originalEl = document.getElementById(originalId);
+        const clonedEl = document.getElementById(clonedId);
 
-      if (originalEl && clonedEl) {
-        originalEl.classList.remove("dividing-original");
-        clonedEl.classList.remove("dividing-new");
-
-        // Forcing reflow to reset animation
-        void originalEl.offsetWidth;
-        void clonedEl.offsetWidth;
-
-        originalEl.classList.add("dividing-original");
-        clonedEl.classList.add("dividing-new");
-
-        const removeOriginalClass = () => {
+        if (originalEl && clonedEl) {
           originalEl.classList.remove("dividing-original");
-          originalEl.removeEventListener("animationend", removeOriginalClass);
-        };
+          clonedEl.classList.remove("dividing-new", "fade-from-zero");
 
-        const removeClonedClass = () => {
-          clonedEl.classList.remove("dividing-new");
-          clonedEl.removeEventListener("animationend", removeClonedClass);
-        };
+          clonedEl.classList.add("fade-from-zero");
 
-        originalEl.addEventListener("animationend", removeOriginalClass);
-        clonedEl.addEventListener("animationend", removeClonedClass);
-      }
+          // Forcing reflow to reset animation
+          void originalEl.offsetWidth;
+          void clonedEl.offsetWidth;
+
+          originalEl.classList.add("dividing-original");
+          clonedEl.classList.remove("fade-from-zero");
+          clonedEl.classList.add("dividing-new");
+
+          const removeOriginalClass = () => {
+            originalEl.classList.remove("dividing-original");
+            originalEl.removeEventListener("animationend", removeOriginalClass);
+          };
+
+          const removeClonedClass = () => {
+            clonedEl.classList.remove("dividing-new");
+            clonedEl.removeEventListener("animationend", removeClonedClass);
+          };
+
+          originalEl.addEventListener("animationend", removeOriginalClass);
+          clonedEl.addEventListener("animationend", removeClonedClass);
+        }
+      }, 0);
     };
   }
 

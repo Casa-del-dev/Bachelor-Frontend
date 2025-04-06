@@ -572,6 +572,9 @@ Overlay for when the user selects to get the Correct Step
 /* ---------------------------------------
   Splitting step function START
   --------------------------------------- */
+.step-box.fade-from-zero {
+  opacity: 0;
+}
 
 /* The original step briefly contracts */
 @keyframes divideOriginal {
