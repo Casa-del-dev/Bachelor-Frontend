@@ -8,6 +8,7 @@ import {
   Martini, */
   ShieldCheck,
   ArrowDown,
+  X,
   /* Divide, */
 } from "lucide-react";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
@@ -1130,6 +1131,43 @@ Editing logic START
     return step;
   }
 
+  const getAllDescendantPaths = (
+    step: Step,
+    basePath: number[]
+  ): { child: Step; path: number[] }[] => {
+    let result: { child: Step; path: number[] }[] = [];
+    if (step.children && step.children.length > 0) {
+      step.children.forEach((child, i) => {
+        const childPath = [...basePath, i];
+        result.push({ child, path: childPath });
+        result = result.concat(getAllDescendantPaths(child, childPath));
+      });
+    }
+    return result;
+  };
+
+  const handleUnpromote = (step: Step, currentPath: number[]) => {
+    // Animate fade-out for the main promoted element
+    animatePromotedFadeOut(`${step.id}-promoted`);
+
+    // Get all descendant promoted elements and animate fade-out
+    const descendants = getAllDescendantPaths(step, currentPath);
+    descendants.forEach(({ child }) => {
+      animatePromotedFadeOut(`${child.id}-promoted`);
+    });
+
+    // After a short delay (allowing the fade-out to play), toggle the selection state off
+    setTimeout(() => {
+      toggleSelected(currentPath);
+      // Also deselect any descendant steps that might still be selected
+      descendants.forEach(({ child, path }) => {
+        if (child.selected) {
+          toggleSelected(path);
+        }
+      });
+    }, 300);
+  };
+
   // Helper to collect promoted substeps from a (nested) children array.
   // This function returns an array of JSX elements representing the promoted
   // substeps (i.e. those with selected === true) that should be rendered
@@ -1208,6 +1246,12 @@ Editing logic START
                   border: "1px " + getBorder(step) + " black",
                 }}
               >
+                <div className="unpromote">
+                  <X
+                    className="unpromote-icon"
+                    onClick={() => handleUnpromote(step, currentPath)}
+                  />
+                </div>
                 <div className="step-title">
                   <div className="step-title-inner">{titleLabel}</div>
                   <div className="icon-container-start-right">
@@ -2156,21 +2200,6 @@ Editing logic START
       }
     };
 
-    const getAllDescendantPaths = (
-      step: Step,
-      basePath: number[]
-    ): { child: Step; path: number[] }[] => {
-      let result: { child: Step; path: number[] }[] = [];
-      if (step.children && step.children.length > 0) {
-        step.children.forEach((child, i) => {
-          const childPath = [...basePath, i];
-          result.push({ child, path: childPath });
-          result = result.concat(getAllDescendantPaths(child, childPath));
-        });
-      }
-      return result;
-    };
-
     const handleTitleClick = (step: Step, currentPath: number[]) => {
       const index = currentPath[currentPath.length - 1];
       setInitialIndex(indexKey, index);
@@ -2178,16 +2207,22 @@ Editing logic START
       if (!step.selected) {
         toggleSelected(currentPath);
         setTimeout(() => {
+          animatePromotedFadeIn(`hint-general-${step.id}`);
+          animatePromotedFadeIn(`hint-detailed-${step.id}`);
           animatePromotedFadeIn(`${step.id}-promoted-arrow`);
           animatePromotedFadeIn(`${step.id}-promoted`);
         }, 0);
       } else {
+        animatePromotedFadeOut(`hint-general-${step.id}`);
+        animatePromotedFadeOut(`hint-detailed-${step.id}`);
         animatePromotedFadeOut(`${step.id}-promoted`);
         animatePromotedFadeOut(`${step.id}-promoted-arrow`);
 
         const descendants = getAllDescendantPaths(step, currentPath);
 
         descendants.forEach(({ child }) => {
+          animatePromotedFadeOut(`hint-general-${step.id}`);
+          animatePromotedFadeOut(`hint-detailed-${step.id}`);
           animatePromotedFadeOut(`${child.id}-promoted`);
           animatePromotedFadeOut(`${child.id}-promoted-arrow`);
         });
@@ -2428,58 +2463,68 @@ Editing logic START
                   className="icon-container-start-right titleonly"
                   style={{ justifyContent: "flex-end" }}
                 >
-                  <ArrowDown
-                    id={substep.id + "-promoted-arrow"}
-                    className={`arrow-down ${
-                      substep.selected ? "" : "visible"
-                    }`}
-                    style={{ strokeWidth: "1.2" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const index = currentPath[currentPath.length - 1];
-                      setInitialIndex(indexKey, index);
+                  {
+                    <div
+                      id={`${substep.id}-promoted-arrow`}
+                      className="arrow-fade"
+                      style={{
+                        visibility: `${
+                          substep.selected ? "visible" : "hidden"
+                        }`,
+                        pointerEvents: `${substep.selected ? "auto" : "none"}`,
+                      }}
+                    >
+                      <ArrowDown
+                        className="arrow-down"
+                        style={{ strokeWidth: "1.2" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const index = currentPath[currentPath.length - 1];
+                          setInitialIndex(indexKey, index);
 
-                      const element = document.getElementById(
-                        `${substep.id}-promoted`
-                      );
-                      if (element) {
-                        element.scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-
-                        const observer = new IntersectionObserver(
-                          (entries, obs) => {
-                            entries.forEach((entry) => {
-                              if (entry.intersectionRatio >= 0.9) {
-                                element.classList.add("highlighted");
-                                setTimeout(() => {
-                                  element.classList.remove("highlighted");
-                                }, 1000);
-                                obs.disconnect();
-                              }
-                            });
-                          },
-                          { threshold: 0.9 }
-                        );
-                        observer.observe(element);
-                      }
-
-                      setTimeout(() => {
-                        const updatedLength = substeps.length - 1;
-                        if (index === currentIndex && updatedLength > 0) {
-                          const nextIndex = Math.min(
-                            currentIndex,
-                            updatedLength - 1
+                          const element = document.getElementById(
+                            `${substep.id}-promoted`
                           );
-                          setCurrentIndex(nextIndex);
-                          scrollToIndex(nextIndex);
-                        }
-                        handleLeaveTrash();
-                        handleMouseLeaveStep();
-                      }, 400);
-                    }}
-                  />
+                          if (element) {
+                            element.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            });
+
+                            const observer = new IntersectionObserver(
+                              (entries, obs) => {
+                                entries.forEach((entry) => {
+                                  if (entry.intersectionRatio >= 0.9) {
+                                    element.classList.add("highlighted");
+                                    setTimeout(() => {
+                                      element.classList.remove("highlighted");
+                                    }, 1000);
+                                    obs.disconnect();
+                                  }
+                                });
+                              },
+                              { threshold: 0.9 }
+                            );
+                            observer.observe(element);
+                          }
+
+                          setTimeout(() => {
+                            const updatedLength = substeps.length - 1;
+                            if (index === currentIndex && updatedLength > 0) {
+                              const nextIndex = Math.min(
+                                currentIndex,
+                                updatedLength - 1
+                              );
+                              setCurrentIndex(nextIndex);
+                              scrollToIndex(nextIndex);
+                            }
+                            handleLeaveTrash();
+                            handleMouseLeaveStep();
+                          }, 400);
+                        }}
+                      />
+                    </div>
+                  }
 
                   <Trash
                     onMouseEnter={handleEnterTrash}
