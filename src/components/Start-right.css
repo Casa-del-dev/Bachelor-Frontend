@@ -1031,3 +1031,7 @@ Fade In Tree START
 /* ---------------------------------------
 Fade In Tree END
 --------------------------------------- */
+
+.highlighted-step {
+  box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.8) !important;
+}

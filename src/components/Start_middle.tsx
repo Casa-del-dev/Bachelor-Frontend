@@ -8,8 +8,15 @@ import { useAuth } from "../AuthContext";
 import "./Start_middle.css";
 import PythonPlayground from "./Program-interface";
 import { getActionMessage } from "./BuildingBlocks/ActionMessage";
+import { Step } from "./Start";
 
-export default function ResizableSplitView() {
+interface PythonPlaygroundProps {
+  setHoveredStep: (step: Step | null) => void;
+}
+
+export default function ResizableSplitView({
+  setHoveredStep,
+}: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
   });
@@ -153,7 +160,7 @@ export default function ResizableSplitView() {
   return (
     <div className="container">
       <div className="top-section" style={{ height: `${topHeight}%` }}>
-        <PythonPlayground />
+        <PythonPlayground setHoveredStep={setHoveredStep} />
       </div>
 
       <div className="resizer" onMouseDown={handleMouseDown} />

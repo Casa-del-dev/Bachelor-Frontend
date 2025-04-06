@@ -6,6 +6,35 @@ import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
 import { CodeProvider } from "../CodeContext";
 
+export interface Step {
+  id: string; // unique ID for each step
+  code: string;
+  content: string;
+  correctStep: string;
+  prompt: string;
+  status: {
+    correctness: "correct" | "incorrect" | "missing" | "";
+    can_be_further_divided: "can" | "cannot" | "";
+  };
+  general_hint: string;
+  detailed_hint: string;
+  children: Step[];
+  hasparent: boolean;
+  isDeleting: boolean;
+
+  showGeneralHint1: boolean;
+  showDetailedHint1: boolean;
+  showCorrectStep1: boolean;
+  showGeneralHint2: boolean;
+  showDetailedHint2: boolean;
+
+  isNewlyInserted: boolean;
+  isexpanded: boolean;
+  isHyperExpanded: boolean;
+
+  selected: boolean;
+}
+
 interface LayoutState {
   left: number;
   middle: number;
@@ -24,6 +53,8 @@ const Start: React.FC = () => {
 
   const draggingLeftDivider = useRef(false);
   const draggingRightDivider = useRef(false);
+
+  const [hoveredStep, setHoveredStep] = useState<Step | null>(null);
 
   const [layout, setLayout] = useState<LayoutState>(() => {
     const storedLayout = localStorage.getItem("layoutDimensions");
@@ -162,7 +193,7 @@ const Start: React.FC = () => {
       {/* Middle Column */}
       <div className="middle-column" style={{ width: `${layout.middle}%` }}>
         <CodeProvider>
-          <StartMiddle />
+          <StartMiddle setHoveredStep={setHoveredStep} />
         </CodeProvider>
       </div>
 
@@ -178,7 +209,10 @@ const Start: React.FC = () => {
           ["--step-font-size" as any]: rightFontSize,
         }}
       >
-        <StartRight fontSize={rightFontSize} />
+        <StartRight
+          fontSize={rightFontSize}
+          hoveredStepId={hoveredStep ? hoveredStep.id : null}
+        />
       </div>
     </div>
   );

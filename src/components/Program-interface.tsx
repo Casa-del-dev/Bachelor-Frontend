@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCodeContext } from "../CodeContext";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
-import { EditorView } from "@codemirror/view";
+import {
+  ViewPlugin,
+  Decoration,
+  DecorationSet,
+  EditorView,
+  ViewUpdate,
+} from "@codemirror/view";
+import { RangeSetBuilder } from "@codemirror/state";
 import { Network } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { problemDetailsMap } from "./Problem_detail";
 import ApiCallEditor from "./AI_Editor.tsx";
 import { setStepsData, setChanged } from "./BuildingBlocks/StepsData.tsx";
 import "./Program-interface.css";
-import step from "./Start-right.tsx";
+import { Step } from "./Start.tsx";
 
 interface FileItem {
   id: number;
@@ -18,7 +25,13 @@ interface FileItem {
   children?: FileItem[];
 }
 
-export default function PythonPlayground() {
+interface PythonPlaygroundProps {
+  setHoveredStep: (step: Step | null) => void;
+}
+
+export default function PythonPlayground({
+  setHoveredStep,
+}: PythonPlaygroundProps) {
   const { code, setCode, currentFile } = useCodeContext();
   const [call, setCall] = useState(false);
   const isAuthenticated = useAuth();
@@ -29,10 +42,162 @@ export default function PythonPlayground() {
     localStorage.getItem("selectedProblem") || "DefaultProblem";
 
   const systemStorageKey = `sysSelectedSystemProblem_${selectedProblemName}`;
-  const StorageKey = "step" + `selectedSystemProblem_${selectedProblemName}`;
+  const StorageKey = `stepselectedSystemProblem_${selectedProblemName}`;
 
   const storedTree = localStorage.getItem(systemStorageKey);
   const fileTree = storedTree ? JSON.parse(storedTree) : [];
+
+  /*   --------------------------------------
+  Code Mirror Line checking START
+  -------------------------------------- */
+
+  function loadStepsTree(): Step[] {
+    const stored = localStorage.getItem(StorageKey);
+    if (!stored) return [];
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error("Error parsing step tree from local storage:", e);
+      return [];
+    }
+  }
+
+  const editorExtensions = useMemo(
+    () => [
+      python(),
+      EditorView.lineWrapping,
+      createStepHighlightPlugin(setHoveredStep, loadStepsTree),
+    ],
+    [setHoveredStep /*, loadStepsTree if needed */]
+  );
+
+  // Recursively check if the line text is part of any step.code.
+  function findMatchingStepForLine(
+    lineText: string,
+    steps: Step[]
+  ): Step | null {
+    for (const step of steps) {
+      if (
+        lineText.trim() !== "" &&
+        step.code &&
+        step.code.includes(lineText.trim())
+      ) {
+        return step;
+      }
+      if (step.children && step.children.length > 0) {
+        const match = findMatchingStepForLine(lineText, step.children);
+        if (match) return match;
+      }
+    }
+    return null;
+  }
+
+  // Plugin factory: accepts a callback to update hovered step.
+  function createStepHighlightPlugin(
+    onHoverStep: (step: Step | null) => void,
+    loadStepsTree: () => Step[]
+  ) {
+    return ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet = Decoration.none;
+        hoveredLine: number | null = null;
+
+        constructor(public view: EditorView) {
+          this.attachListeners(view);
+        }
+
+        attachListeners(view: EditorView) {
+          view.dom.addEventListener("mousemove", this.handleMouseMove);
+          view.dom.addEventListener("mouseleave", this.handleMouseLeave);
+        }
+
+        handleMouseMove = (e: MouseEvent) => {
+          const pos = this.view.posAtCoords({ x: e.clientX, y: e.clientY });
+          if (pos == null) {
+            // Mouse is outside the editor.
+            if (this.hoveredLine !== null) {
+              this.clearDecoration();
+            }
+            onHoverStep(null);
+            return;
+          }
+
+          const line = this.view.state.doc.lineAt(pos);
+          const steps = loadStepsTree();
+          const match = findMatchingStepForLine(line.text, steps);
+
+          if (!match) {
+            // If no match is found on this line, clear the decoration.
+            if (this.hoveredLine !== null) {
+              this.clearDecoration();
+            }
+            onHoverStep(null);
+            return;
+          }
+
+          // There is a matching step.
+          onHoverStep(match);
+
+          // Update decoration if hovering a different line.
+          if (this.hoveredLine !== line.number) {
+            this.hoveredLine = line.number;
+
+            this.updateDecorations(line);
+          }
+        };
+
+        handleMouseLeave = () => {
+          this.clearDecoration();
+          onHoverStep(null);
+        };
+
+        updateDecorations(line: { from: number; number: number }) {
+          const builder = new RangeSetBuilder<Decoration>();
+          builder.add(
+            line.from,
+            line.from,
+            Decoration.line({ attributes: { class: "cm-hover-step-line" } })
+          );
+          this.decorations = builder.finish();
+          this.view.dispatch({ effects: [] });
+        }
+
+        clearDecoration() {
+          this.hoveredLine = null;
+          this.decorations = Decoration.none;
+          this.view.dispatch({ effects: [] });
+        }
+
+        update(update: ViewUpdate) {
+          if (this.hoveredLine !== null) {
+            const line = update.state.doc.line(this.hoveredLine);
+            const builder = new RangeSetBuilder<Decoration>();
+            builder.add(
+              line.from,
+              line.from,
+              Decoration.line({ attributes: { class: "cm-hover-step-line" } })
+            );
+            this.decorations = builder.finish();
+          }
+        }
+
+        destroy() {
+          this.view.dom.removeEventListener("mousemove", this.handleMouseMove);
+          this.view.dom.removeEventListener(
+            "mouseleave",
+            this.handleMouseLeave
+          );
+        }
+      },
+      {
+        decorations: (plugin) => plugin.decorations,
+      }
+    );
+  }
+
+  /*   --------------------------------------
+  Code Mirror Line checking END
+  -------------------------------------- */
 
   // Recursive function to find a file name by its id.
   const findFileNameById = (tree: FileItem[], id: number): string | null => {
@@ -145,7 +310,7 @@ export default function PythonPlayground() {
         <CodeMirror
           className="ILoveEprogg"
           value={code}
-          extensions={[python(), EditorView.lineWrapping]}
+          extensions={[editorExtensions]}
           onChange={(newCode) => setCode(newCode)}
           theme="light"
           basicSetup={{

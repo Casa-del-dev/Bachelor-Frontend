@@ -11,6 +11,7 @@ import {
   X,
   /* Divide, */
 } from "lucide-react";
+import { Step } from "./Start";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
 import { problemDetailsMap } from "./Problem_detail";
 import { useAuth } from "../AuthContext";
@@ -154,35 +155,6 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
 // STEPS
 // ======================
 
-export interface Step {
-  id: string; // unique ID for each step
-  code: string;
-  content: string;
-  correctStep: string;
-  prompt: string;
-  status: {
-    correctness: "correct" | "incorrect" | "missing" | "";
-    can_be_further_divided: "can" | "cannot" | "";
-  };
-  general_hint: string;
-  detailed_hint: string;
-  children: Step[];
-  hasparent: boolean;
-  isDeleting: boolean;
-
-  showGeneralHint1: boolean;
-  showDetailedHint1: boolean;
-  showCorrectStep1: boolean;
-  showGeneralHint2: boolean;
-  showDetailedHint2: boolean;
-
-  isNewlyInserted: boolean;
-  isexpanded: boolean;
-  isHyperExpanded: boolean;
-
-  selected: boolean;
-}
-
 function createBlankStep(Selected: boolean): Step {
   return {
     id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
@@ -219,9 +191,10 @@ function createBlankStep(Selected: boolean): Step {
 
 interface StartRightProps {
   fontSize: string;
+  hoveredStepId: string | null;
 }
 
-const StartRight: React.FC<StartRightProps> = ({ fontSize }) => {
+const StartRight: React.FC<StartRightProps> = ({ fontSize, hoveredStepId }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -388,9 +361,9 @@ Checking Code and Tree START
   function getStepBoxColor(step: Step): string {
     if (step.code !== "") {
       if (step.code === "Not implemented correctely") {
-        return "darkgrey";
+        return "#A9A9A9";
       }
-      return "green";
+      return "#008000";
     }
 
     return getBackgroundColor(step);
@@ -797,8 +770,10 @@ Editing logic START
 
   // HINT Logic
   function getNumberForStep(step: Step): number | null {
-    if (step.general_hint && !step.showGeneralHint1) return 3;
-    else if (step.detailed_hint && !step.showDetailedHint1) return 2;
+    if (step.general_hint && !step.showGeneralHint1)
+      return step.status.can_be_further_divided === "can" ? 2 : 3;
+    else if (step.detailed_hint && !step.showDetailedHint1)
+      return step.status.can_be_further_divided === "can" ? 1 : 2;
     else if (step.correctStep && !step.showCorrectStep1) return 1;
     return null;
   }
@@ -909,6 +884,57 @@ Editing logic START
   /* ---------------------------------------
   Giving hint step END
   --------------------------------------- */
+
+  useEffect(() => {
+    if (hoveredStepId) {
+      // First, scroll to the element with hoveredStepId (if it exists)
+      const hoveredElement = document.getElementById(hoveredStepId);
+      if (hoveredElement) {
+        hoveredElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      // Try to find the promoted element first.
+      let targetElement = document.getElementById(`${hoveredStepId}-promoted`);
+
+      // If the promoted element isn't found, search the steps tree for the parent.
+      if (!targetElement) {
+        // Helper: recursively find the parent id of the step with targetId.
+        const findParentId = (
+          stepsArray: Step[],
+          targetId: string,
+          parentId: string | null = null
+        ): string | null => {
+          for (const step of stepsArray) {
+            if (step.id === targetId) {
+              return parentId;
+            }
+            if (step.children && step.children.length > 0) {
+              const found = findParentId(step.children, targetId, step.id);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+
+        // Assume steps is available in your component state.
+        const parentId = findParentId(steps, hoveredStepId);
+        if (parentId) {
+          targetElement = document.getElementById(parentId);
+          if (targetElement) {
+            targetElement.classList.add("highlighted-step");
+            setTimeout(() => {
+              targetElement?.classList.remove("highlighted-step");
+            }, 1000);
+          }
+        }
+      }
+
+      // Finally, if a target element was found, scroll it into view.
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [hoveredStepId, steps]);
 
   /* ---------------------------------------
   Splitting step function START
@@ -1243,6 +1269,12 @@ Editing logic START
               <div
                 className={`step-box promoted
                 ${step.isDeleting && step.selected ? "fade-out" : ""} 
+                            ${
+                              step.id === hoveredStepId
+                                ? "highlighted-step"
+                                : ""
+                            }
+
                 ${step.isexpanded ? "expanded" : ""}
                 ${step.isHyperExpanded ? "hyperExpanded" : ""} 
                 ${
@@ -1253,7 +1285,7 @@ Editing logic START
               `}
                 id={`${step.id}-promoted`}
                 style={{
-                  backgroundColor: getBackgroundColor(step),
+                  backgroundColor: getStepBoxColor(step),
                   border: "1px " + getBorder(step) + " black",
                 }}
               >
@@ -2134,7 +2166,7 @@ Editing logic START
     const handleLeaveTrash = () => setIsHoveringTrashTitle(false);
 
     function backgroundColorTitle(substep: Step, condition: boolean): string {
-      const color = getBackgroundColor(substep);
+      const color = getStepBoxColor(substep);
       if (condition) {
         return isHoveredTitle && !isHoveringTrashTitle
           ? blendColors(blendColors(color, "#000", 0.2), "#000", 0.1)
@@ -2676,6 +2708,7 @@ Biggest render Tree ever recored START
           <div
             className={`step-box 
             ${step.isDeleting ? "fade-out" : ""} 
+            ${step.id === hoveredStepId ? "highlighted-step" : ""}
             ${step.isexpanded ? "expanded" : ""} 
             ${step.isHyperExpanded ? "hyperExpanded" : ""} 
             ${
@@ -3305,6 +3338,11 @@ Biggest render Tree ever recored END
 
   return (
     <div className="Right-Side-main">
+      {hoveredStepId && (
+        <div className="hovered-step-indicator">
+          Hovered Step ID: {hoveredStepId}
+        </div>
+      )}
       <div className="right-sidecontent-main">
         <div className="right-header-main">
           Step Tree

@@ -199,3 +199,7 @@ Modal layout START
 /* -------------------------------
 Modal layout END
 ------------------------------- */
+
+.cm-hover-step-line {
+  background-color: rgba(255, 255, 0, 0.8);
+}
