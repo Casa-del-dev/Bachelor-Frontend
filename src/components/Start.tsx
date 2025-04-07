@@ -55,6 +55,8 @@ const Start: React.FC = () => {
   const draggingRightDivider = useRef(false);
 
   const [hoveredStep, setHoveredStep] = useState<Step | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fromEditor, setFromEditor] = useState(false);
 
   const [layout, setLayout] = useState<LayoutState>(() => {
     const storedLayout = localStorage.getItem("layoutDimensions");
@@ -193,7 +195,12 @@ const Start: React.FC = () => {
       {/* Middle Column */}
       <div className="middle-column" style={{ width: `${layout.middle}%` }}>
         <CodeProvider>
-          <StartMiddle setHoveredStep={setHoveredStep} />
+          <StartMiddle
+            setHoveredStep={setHoveredStep}
+            loading={loading}
+            setLoading={setLoading}
+            setFromEditor={setFromEditor}
+          />
         </CodeProvider>
       </div>
 
@@ -212,6 +219,10 @@ const Start: React.FC = () => {
         <StartRight
           fontSize={rightFontSize}
           hoveredStepId={hoveredStep ? hoveredStep.id : null}
+          loading={loading}
+          setLoading={setLoading}
+          fromEditor={fromEditor}
+          setFromEditor={setFromEditor}
         />
       </div>
     </div>

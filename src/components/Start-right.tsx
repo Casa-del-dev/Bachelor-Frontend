@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, JSX, Fragment } from "react";
+import { Dispatch, SetStateAction } from "react";
 import "./Start-right.css";
 import {
   Trash,
@@ -192,13 +193,23 @@ function createBlankStep(Selected: boolean): Step {
 interface StartRightProps {
   fontSize: string;
   hoveredStepId: string | null;
+  loading: boolean;
+  setLoading: Dispatch<SetStateAction<boolean>>;
+  fromEditor: boolean;
+  setFromEditor: Dispatch<SetStateAction<boolean>>;
 }
 
-const StartRight: React.FC<StartRightProps> = ({ fontSize, hoveredStepId }) => {
+const StartRight: React.FC<StartRightProps> = ({
+  fontSize,
+  hoveredStepId,
+  loading,
+  setLoading,
+  fromEditor,
+  setFromEditor,
+}) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [loading, setLoading] = useState(false);
   const [loadingCheck, setLoadingCheck] = useState(false);
   const { isAuthenticated } = useAuth();
   const { code } = useCodeContext();
@@ -360,8 +371,11 @@ Checking Code and Tree START
 
   function getStepBoxColor(step: Step): string {
     if (step.code !== "") {
-      if (step.code === "Not implemented correctely") {
+      if (step.status.correctness === "incorrect") {
         return "#A9A9A9";
+      }
+      if (step.status.can_be_further_divided === "can") {
+        return "#ADD8E6";
       }
       return "#008000";
     }
@@ -415,6 +429,9 @@ Checking Code and Tree END
 
   //This is: for editor to steptree
   useEffect(() => {
+    if (fromEditor) {
+      HandleDeleteTree();
+    }
     const fetchStepsData = () => {
       if (getChanged()) {
         const newStepsData = getStepsData();
@@ -427,13 +444,12 @@ Checking Code and Tree END
           setText("");
           setFadeInTree(true);
           setTimeout(() => setFadeInTree(false), 1000);
-          setLoading(false);
-          setLoadingCheck(false);
         } catch (error) {
           console.error("Error processing steps data:", error);
         } finally {
           setLoading(false);
           setLoadingCheck(false);
+          setFromEditor(false);
           setChanged(false);
         }
       }
@@ -442,7 +458,7 @@ Checking Code and Tree END
     // Poll every 3 seconds for changes
     const interval = setInterval(fetchStepsData, 3000);
     return () => clearInterval(interval);
-  }, [StorageKey]);
+  }, [StorageKey, fromEditor]);
 
   function stepsToString(steps: Step[], prefix: string = ""): string {
     return steps
@@ -887,18 +903,14 @@ Editing logic START
 
   useEffect(() => {
     if (hoveredStepId) {
-      // First, scroll to the element with hoveredStepId (if it exists)
       const hoveredElement = document.getElementById(hoveredStepId);
       if (hoveredElement) {
         hoveredElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
-      // Try to find the promoted element first.
       let targetElement = document.getElementById(`${hoveredStepId}-promoted`);
 
-      // If the promoted element isn't found, search the steps tree for the parent.
       if (!targetElement) {
-        // Helper: recursively find the parent id of the step with targetId.
         const findParentId = (
           stepsArray: Step[],
           targetId: string,
@@ -916,7 +928,6 @@ Editing logic START
           return null;
         };
 
-        // Assume steps is available in your component state.
         const parentId = findParentId(steps, hoveredStepId);
         if (parentId) {
           targetElement = document.getElementById(parentId);
@@ -929,7 +940,6 @@ Editing logic START
         }
       }
 
-      // Finally, if a target element was found, scroll it into view.
       if (targetElement) {
         targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
@@ -2458,7 +2468,7 @@ Editing logic START
               : substep.selected
               ? backgroundColorTitle(substep, true)
               : backgroundColorTitle(substep, false)
-            : "white",
+            : getStepBoxColor(substep),
 
         cursor: isHoveredTitle ? "pointer" : "default",
       };
@@ -3338,11 +3348,7 @@ Biggest render Tree ever recored END
 
   return (
     <div className="Right-Side-main">
-      {hoveredStepId && (
-        <div className="hovered-step-indicator">
-          Hovered Step ID: {hoveredStepId}
-        </div>
-      )}
+      {hoveredStepId && <div className="hovered-step-indicator"></div>}
       <div className="right-sidecontent-main">
         <div className="right-header-main">
           Step Tree

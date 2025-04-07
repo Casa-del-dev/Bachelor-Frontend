@@ -10,6 +10,7 @@ interface CodeContextType {
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
   code: string;
+  test: string;
   setCode: (updatedCode: string) => void;
 }
 
@@ -22,7 +23,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
 
   const [currentFile, setCurrentFile] = useState<number | null>(() => {
     const storedFileId = localStorage.getItem(selectedFileKey);
-    return storedFileId ? parseInt(storedFileId, 10) : -1;
+    return storedFileId ? parseInt(storedFileId, 10) : null;
   });
 
   const buildCodeKey = (problem: string, fileId: number | null) =>
@@ -35,6 +36,8 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     }
     return "";
   });
+
+  const [test, setTest] = useState<string>("");
 
   useEffect(() => {
     if (currentFile !== null) {
@@ -54,9 +57,57 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     }
   }, [code, currentFile, selectedProblemName]);
 
+  useEffect(() => {
+    const structureKey = `sysSelectedSystemProblem_${selectedProblemName}`;
+    const storedStructure = localStorage.getItem(structureKey);
+    if (!storedStructure) {
+      // Nothing is stored under that key, so we can’t load a "last file"
+      setTest("");
+      return;
+    }
+
+    try {
+      // Parse the structure array.
+      // Example: [{"id":1,"name":"src","type":"folder","children":[...]},{"id":4,"name":"Test.py","type":"file"}]
+      const structure = JSON.parse(storedStructure);
+
+      // We'll collect all "file" items here.
+      const allFiles: { id: number; name: string; type: string }[] = [];
+
+      // Helper function to traverse folders recursively.
+      function visit(items: any[]) {
+        items.forEach((item) => {
+          if (item.type === "file") {
+            allFiles.push(item);
+          } else if (item.type === "folder" && Array.isArray(item.children)) {
+            visit(item.children);
+          }
+        });
+      }
+
+      // Start traversal
+      visit(structure);
+
+      // The user wants the *last file*, so let's get the last entry from allFiles.
+      if (allFiles.length > 0) {
+        const lastFile = allFiles[allFiles.length - 1];
+        const lastFileId = lastFile.id;
+        const lastFileKey = buildCodeKey(selectedProblemName, lastFileId);
+        const testCode = localStorage.getItem(lastFileKey) || "";
+        setTest(testCode);
+      } else {
+        // No files in the entire structure
+        setTest("");
+      }
+    } catch (err) {
+      console.error("Failed to parse structure JSON:", err);
+      setTest("");
+    }
+  }, [selectedProblemName]);
+
   return (
     <CodeContext.Provider
-      value={{ currentFile, setCurrentFile, code, setCode }}
+      value={{ currentFile, setCurrentFile, code, setCode, test }}
     >
       {children}
     </CodeContext.Provider>

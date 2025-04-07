@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, Dispatch, SetStateAction, useEffect } from "react";
 import { useCodeContext } from "../CodeContext";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
@@ -10,7 +10,7 @@ import {
   ViewUpdate,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { Network } from "lucide-react";
+import { Network, Paintbrush } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { problemDetailsMap } from "./Problem_detail";
 import ApiCallEditor from "./AI_Editor.tsx";
@@ -27,16 +27,24 @@ interface FileItem {
 
 interface PythonPlaygroundProps {
   setHoveredStep: (step: Step | null) => void;
+  loading: boolean;
+  setLoading: Dispatch<SetStateAction<boolean>>;
+  setFromEditor: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function PythonPlayground({
   setHoveredStep,
+  loading,
+  setLoading,
+  setFromEditor,
 }: PythonPlaygroundProps) {
   const { code, setCode, currentFile } = useCodeContext();
-  const [call, setCall] = useState(false);
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [fadeClass, setFadeClass] = useState("");
+  const [colorMode, setColorMode] = useState(() => {
+    return localStorage.getItem("colorMode") === "true";
+  });
 
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "DefaultProblem";
@@ -62,14 +70,15 @@ export default function PythonPlayground({
     }
   }
 
-  const editorExtensions = useMemo(
-    () => [
-      python(),
-      EditorView.lineWrapping,
-      createStepHighlightPlugin(setHoveredStep, loadStepsTree),
-    ],
-    [setHoveredStep /*, loadStepsTree if needed */]
-  );
+  const editorExtensions = useMemo(() => {
+    const extensions = [python(), EditorView.lineWrapping];
+
+    if (!colorMode) {
+      extensions.push(createStepHighlightPlugin(setHoveredStep, loadStepsTree));
+    }
+
+    return extensions;
+  }, [colorMode, setHoveredStep]);
 
   // Recursively check if the line text is part of any step.code.
   function findMatchingStepForLine(
@@ -255,7 +264,10 @@ export default function PythonPlayground({
   };
 
   const onGenerateStepTreeFromCode = async () => {
-    setCall(true);
+    if (loading) return;
+
+    setLoading(true);
+    setFromEditor(true);
     if (!isAuthenticated) {
       console.log("Login Needed");
       return;
@@ -275,15 +287,37 @@ export default function PythonPlayground({
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
 
+      setCode(parsedResponse.code);
+
       // Extract steps
       const stepsData = parsedResponse.steps || parsedResponse;
       setStepsData(stepsData);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
-      setCall(false);
     }
   };
+
+  /*   -----------------------------
+  PaintBrush functions START
+  ----------------------------- */
+
+  useEffect(() => {
+    const storedColorMode = localStorage.getItem("colorMode");
+    if (storedColorMode === "true") {
+      setColorMode(true);
+    } else {
+      setColorMode(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("colorMode", colorMode.toString());
+  }, [colorMode]);
+
+  /* -----------------------------
+  PaintBrush functions END
+  ----------------------------- */
 
   return (
     <div className="container-programming-bro">
@@ -291,20 +325,32 @@ export default function PythonPlayground({
         <div className="Title-current-edit">
           {selectedProblemName} - {currentFileName}
         </div>
-        {!call ? (
+        <div className="middlepart-title-right">
+          <Paintbrush
+            className="Network"
+            style={{
+              padding: "0.5vw",
+              cursor: "pointer",
+              color: colorMode ? "#999" : "#0077cc",
+            }}
+            size={"1.5vw"}
+            onClick={() => {
+              setColorMode((prev) => {
+                const newValue = !prev;
+                if (newValue) {
+                  setHoveredStep(null);
+                }
+                return newValue;
+              });
+            }}
+          />
           <Network
             className="Network"
             style={{ padding: "0.5vw", cursor: "pointer" }}
             size={"1.5vw"}
             onClick={handleGenerateStepTree}
           />
-        ) : (
-          <div className="loading-dots">
-            <span>.</span>
-            <span>.</span>
-            <span>.</span>
-          </div>
-        )}
+        </div>
       </div>
       {currentFile ? (
         <CodeMirror

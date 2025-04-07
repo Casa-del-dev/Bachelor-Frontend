@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
@@ -12,10 +12,16 @@ import { Step } from "./Start";
 
 interface PythonPlaygroundProps {
   setHoveredStep: (step: Step | null) => void;
+  loading: boolean;
+  setLoading: Dispatch<SetStateAction<boolean>>;
+  setFromEditor: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function ResizableSplitView({
   setHoveredStep,
+  loading,
+  setLoading,
+  setFromEditor,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -26,10 +32,11 @@ export default function ResizableSplitView({
   const term = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
 
-  const { code } = useCodeContext();
+  const { code, test } = useCodeContext();
   const { isAuthenticated } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
   const inputBuffer = useRef("");
+  const waitingForInputRef = useRef(false);
 
   /** Setup xterm.js on mount */
   useEffect(() => {
@@ -64,17 +71,33 @@ export default function ResizableSplitView({
     term.current.onData((key) => {
       if (key === "\r") {
         term.current?.writeln("");
-
+        console.log(
+          "Enter pressed, waitingForInputRef:",
+          waitingForInputRef.current,
+          "inputBuffer:",
+          inputBuffer.current
+        );
         if (socketRef.current?.readyState === WebSocket.OPEN) {
-          socketRef.current.send(JSON.stringify({ code: inputBuffer.current }));
+          if (waitingForInputRef.current) {
+            socketRef.current.send(
+              JSON.stringify({
+                action: "input_response",
+                value: inputBuffer.current,
+              })
+            );
+            waitingForInputRef.current = false;
+          } else {
+            socketRef.current.send(
+              JSON.stringify({
+                action: "run",
+                code: inputBuffer.current,
+              })
+            );
+          }
         }
-
         inputBuffer.current = "";
       } else if (key === "\u007F") {
-        if (inputBuffer.current.length > 0) {
-          inputBuffer.current = inputBuffer.current.slice(0, -1);
-          term.current?.write("\b \b");
-        }
+        // Handle backspace...
       } else {
         inputBuffer.current += key;
         term.current?.write(key);
@@ -100,7 +123,20 @@ export default function ResizableSplitView({
     };
 
     socketRef.current.onmessage = (event) => {
-      term.current?.writeln(event.data);
+      try {
+        const message = JSON.parse(event.data);
+        if (message.action === "input_request") {
+          term.current?.writeln(message.prompt);
+          waitingForInputRef.current = true;
+          return; // Don't print the raw JSON
+        }
+      } catch (err) {
+        // If the message isn't JSON or doesn't match, simply print it.
+      }
+      const lines = event.data.split(/\r?\n/);
+      for (const line of lines) {
+        term.current?.writeln(line);
+      }
     };
 
     socketRef.current.onclose = () => {
@@ -125,7 +161,12 @@ export default function ResizableSplitView({
     const actionMessage = getActionMessage(action);
     term.current?.clear();
     term.current?.writeln(`${actionMessage}...\r\n`);
-    socketRef.current.send(JSON.stringify({ code }));
+
+    if (action === "test") {
+      socketRef.current.send(JSON.stringify({ action, code, tests: test }));
+    } else {
+      socketRef.current.send(JSON.stringify({ action, code }));
+    }
     term.current?.focus();
   };
 
@@ -160,7 +201,12 @@ export default function ResizableSplitView({
   return (
     <div className="container">
       <div className="top-section" style={{ height: `${topHeight}%` }}>
-        <PythonPlayground setHoveredStep={setHoveredStep} />
+        <PythonPlayground
+          setHoveredStep={setHoveredStep}
+          loading={loading}
+          setLoading={setLoading}
+          setFromEditor={setFromEditor}
+        />
       </div>
 
       <div className="resizer" onMouseDown={handleMouseDown} />
@@ -182,7 +228,9 @@ export default function ResizableSplitView({
           <FaHourglassHalf
             className="icons-for-terminal"
             size={"1.5vw"}
-            onClick={() => sendCodeToBackend("test")}
+            onClick={() => {
+              sendCodeToBackend("test");
+            }}
             style={{ cursor: "pointer" }}
           />
         </div>
