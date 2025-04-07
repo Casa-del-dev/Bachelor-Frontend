@@ -372,7 +372,7 @@ Checking Code and Tree START
   function getStepBoxColor(step: Step): string {
     if (step.code !== "") {
       if (step.status.correctness === "incorrect") {
-        return "#A9A9A9";
+        return "#e35b5b";
       }
       if (step.status.can_be_further_divided === "can") {
         return "#ADD8E6";

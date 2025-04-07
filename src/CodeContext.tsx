@@ -32,6 +32,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   const [code, setCode] = useState<string>(() => {
     if (currentFile !== null) {
       const codeKey = buildCodeKey(selectedProblemName, currentFile);
+      console.log(codeKey);
       return localStorage.getItem(codeKey) || "";
     }
     return "";
