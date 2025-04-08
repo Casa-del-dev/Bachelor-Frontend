@@ -511,7 +511,7 @@ Checking Code and Tree END
     try {
       const gptResponse = await apiCallCheck(
         selectedProblemDetails,
-        stepsToString(steps)
+        JSON.stringify(steps)
       );
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
