@@ -472,28 +472,6 @@ Checking Code and Tree END
     return () => clearInterval(interval);
   }, [StorageKey, fromEditor]);
 
-  function stepsToString(steps: Step[], prefix: string = ""): string {
-    return steps
-      .map((step, index) => {
-        const currentPrefix = prefix
-          ? `${prefix}.${index + 1}`
-          : `${index + 1}`;
-        let stepStr = `Step ${currentPrefix}: ${step.content}\n`;
-
-        if (step.code) {
-          stepStr += `  Code: ${step.code}\n`;
-        }
-        if (step.general_hint || step.detailed_hint) {
-          stepStr += `  Hints: ${step.general_hint} ${step.detailed_hint}\n`;
-        }
-        if (step.children && step.children.length > 0) {
-          stepStr += stepsToString(step.children, currentPrefix);
-        }
-        return stepStr;
-      })
-      .join("");
-  }
-
   async function handleGenerateWithChatGPTCheck(Context: string) {
     if (!isAuthenticated) {
       console.log("Login Needed");
