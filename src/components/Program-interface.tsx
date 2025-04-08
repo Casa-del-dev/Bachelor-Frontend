@@ -30,6 +30,8 @@ interface PythonPlaygroundProps {
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
+  code: string;
+  setCode: (code: string) => void;
 }
 
 export default function PythonPlayground({
@@ -37,8 +39,10 @@ export default function PythonPlayground({
   loading,
   setLoading,
   setFromEditor,
+  code,
+  setCode,
 }: PythonPlaygroundProps) {
-  const { code, setCode, currentFile } = useCodeContext();
+  const { currentFile } = useCodeContext();
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [fadeClass, setFadeClass] = useState("");
@@ -297,6 +301,10 @@ export default function PythonPlayground({
     } finally {
     }
   };
+
+  useEffect(() => {
+    setCode(code);
+  }, [code]);
 
   /*   -----------------------------
   PaintBrush functions START

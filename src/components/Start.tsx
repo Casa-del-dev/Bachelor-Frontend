@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
-import { CodeProvider } from "../CodeContext";
+import { CodeProvider, useCodeContext } from "../CodeContext";
 
 export interface Step {
   id: string; // unique ID for each step
@@ -57,6 +57,7 @@ const Start: React.FC = () => {
   const [hoveredStep, setHoveredStep] = useState<Step | null>(null);
   const [loading, setLoading] = useState(false);
   const [fromEditor, setFromEditor] = useState(false);
+  const { code, setCode } = useCodeContext();
 
   const [layout, setLayout] = useState<LayoutState>(() => {
     const storedLayout = localStorage.getItem("layoutDimensions");
@@ -200,6 +201,8 @@ const Start: React.FC = () => {
             loading={loading}
             setLoading={setLoading}
             setFromEditor={setFromEditor}
+            code={code}
+            setCode={setCode}
           />
         </CodeProvider>
       </div>
@@ -223,6 +226,8 @@ const Start: React.FC = () => {
           setLoading={setLoading}
           fromEditor={fromEditor}
           setFromEditor={setFromEditor}
+          code={code}
+          setCode={setCode}
         />
       </div>
     </div>

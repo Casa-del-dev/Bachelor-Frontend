@@ -49,7 +49,7 @@
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
-  word-break: break-all;
+  word-break: normal;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -141,7 +141,7 @@ Check button START
   justify-content: center;
   cursor: pointer;
 
-  background: linear-gradient(145deg, rgb(43, 170, 43), rgb(35, 140, 35));
+  background: linear-gradient(145deg, #008000, rgb(35, 140, 35));
   border: 1px solid rgb(3, 88, 10);
   border-radius: 8px;
 
@@ -199,7 +199,7 @@ Check button START
 }
 
 .dot-animate span {
-  animation: dotFlare 4s steps(4, end) infinite;
+  animation: dotFlare 6s steps(4, end) infinite;
   display: inline-block;
   width: 1em;
   text-align: left;
@@ -412,6 +412,7 @@ Textarea for starting prompt END
 }
 
 .unpromote-icon {
+  margin-left: calc(var(--step-font-size, 1vw) * 0.3);
   size: 2;
   width: calc(var(--step-font-size, 1vw) * 1);
   height: calc(var(--step-font-size, 1vw) * 1);
@@ -459,7 +460,7 @@ Textarea for starting prompt END
   color: black;
   display: inline-block;
   overflow-x: hidden;
-
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   border: none;
   flex-grow: 1;
   overflow-y: auto;

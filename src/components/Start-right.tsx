@@ -9,7 +9,7 @@ import {
   Martini, */
   ShieldCheck,
   ArrowDown,
-  X,
+  Minus,
   /* Divide, */
 } from "lucide-react";
 import { Step } from "./Start";
@@ -26,7 +26,6 @@ import {
   getChanged,
   setChanged,
 } from "./BuildingBlocks/StepsData";
-import { useCodeContext } from "../CodeContext";
 
 function Collapsible({
   isOpen,
@@ -197,6 +196,8 @@ interface StartRightProps {
   setLoading: Dispatch<SetStateAction<boolean>>;
   fromEditor: boolean;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
+  code: string;
+  setCode: (code: string) => void;
 }
 
 const StartRight: React.FC<StartRightProps> = ({
@@ -206,13 +207,14 @@ const StartRight: React.FC<StartRightProps> = ({
   setLoading,
   fromEditor,
   setFromEditor,
+  code,
+  setCode,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loadingCheck, setLoadingCheck] = useState(false);
   const { isAuthenticated } = useAuth();
-  const { code } = useCodeContext();
   const [fadeInTree, setFadeInTree] = useState(false);
 
   // For revealing correct steps
@@ -342,11 +344,12 @@ const StartRight: React.FC<StartRightProps> = ({
     setLoadingCheck(true);
 
     try {
-      console.log(JSON.stringify(steps));
       const gptResponse = await apiCallTree(JSON.stringify(steps), code);
       const rawMessage = gptResponse.choices[0].message.content;
-      console.log(rawMessage);
+
       const parsedResponse = JSON.parse(rawMessage);
+      setCode(parsedResponse.code);
+
       // Extract steps
       const stepsData = parsedResponse.steps
         ? parsedResponse.steps
@@ -357,6 +360,8 @@ const StartRight: React.FC<StartRightProps> = ({
       setSteps(stepsArray);
       setText("");
       setSentPrompt(true);
+      setFadeInTree(true);
+      setTimeout(() => setFadeInTree(false), 2000);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
@@ -370,12 +375,19 @@ Checking Code and Tree START
 ------------------------------------------------------------- */
 
   function getStepBoxColor(step: Step): string {
-    if (step.code !== "") {
-      if (step.status.correctness === "incorrect") {
-        return "#e35b5b";
+    if (
+      step.code !== "" &&
+      step.status.correctness !== "" &&
+      step.status.can_be_further_divided !== ""
+    ) {
+      if (
+        step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+      ) {
+        return "#add8e6";
       }
-      if (step.status.can_be_further_divided === "can") {
-        return "#ADD8E6";
+      if (step.status.correctness === "incorrect") {
+        return "#ff6363";
       }
       return "#008000";
     }
@@ -418,7 +430,7 @@ Checking Code and Tree END
       setFadeInTree(true);
       setText("");
       setSentPrompt(true);
-      setTimeout(() => setFadeInTree(false), 1000);
+      setTimeout(() => setFadeInTree(false), 2000);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
@@ -443,7 +455,7 @@ Checking Code and Tree END
           setSteps(stepsArray);
           setText("");
           setFadeInTree(true);
-          setTimeout(() => setFadeInTree(false), 1000);
+          setTimeout(() => setFadeInTree(false), 2000);
         } catch (error) {
           console.error("Error processing steps data:", error);
         } finally {
@@ -512,6 +524,8 @@ Checking Code and Tree END
       localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
       setSteps(stepsArray);
       setText("");
+      setFadeInTree(true);
+      setTimeout(() => setFadeInTree(false), 2000);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
@@ -529,29 +543,6 @@ Delete Functions START
     setSentPrompt(false);
     localStorage.setItem(StorageKey, "[]");
   };
-
-  // update step content
-  function updateStepContentAtPath(
-    steps: Step[],
-    path: number[],
-    newContent: string
-  ): Step[] {
-    const updatedSteps = steps.map((step) => ({ ...step }));
-    let current = updatedSteps;
-    for (let i = 0; i < path.length; i++) {
-      const idx = path[i];
-      if (i === path.length - 1) {
-        current[idx] = { ...current[idx], content: newContent };
-      } else {
-        current[idx] = {
-          ...current[idx],
-          children: current[idx].children.map((child) => ({ ...child })),
-        };
-        current = current[idx].children;
-      }
-    }
-    return updatedSteps;
-  }
 
   // Removal with fade-out
   const handleRemoveStep = (id: string) => {
@@ -755,6 +746,9 @@ Editing logic START
       editingPath.length === path.length &&
       editingPath.every((val, i) => val === path[i]);
 
+    /*     const editingStep = path ? getStepAtPath(steps, path) : null;
+    console.log("Editing step:", editingStep); */
+
     if (isSamePath) {
       setEditingPath(null);
       setTempContent("");
@@ -776,6 +770,32 @@ Editing logic START
     }, 100);
   }
 
+  // update step content
+  function updateStepContentAtPath(
+    steps: Step[],
+    path: number[],
+    newContent: string
+  ): Step[] {
+    const updatedSteps = steps.map((step) => ({ ...step }));
+    let current = updatedSteps;
+    for (let i = 0; i < path.length; i++) {
+      const idx = path[i];
+      if (i === path.length - 1) {
+        current[idx] = { ...current[idx], content: newContent };
+        current[idx].status.correctness = "";
+        current[idx].status.can_be_further_divided = "";
+        current[idx].code = "";
+      } else {
+        current[idx] = {
+          ...current[idx],
+          children: current[idx].children.map((child) => ({ ...child })),
+        };
+        current = current[idx].children;
+      }
+    }
+    return updatedSteps;
+  }
+
   /* ----------------------------------------------------------
   Editing logic END
   ---------------------------------------------------------- */
@@ -787,9 +807,15 @@ Editing logic START
   // HINT Logic
   function getNumberForStep(step: Step): number | null {
     if (step.general_hint && !step.showGeneralHint1)
-      return step.status.can_be_further_divided === "can" ? 2 : 3;
+      return step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+        ? 2
+        : 3;
     else if (step.detailed_hint && !step.showDetailedHint1)
-      return step.status.can_be_further_divided === "can" ? 1 : 2;
+      return step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+        ? 1
+        : 2;
     else if (step.correctStep && !step.showCorrectStep1) return 1;
     return null;
   }
@@ -862,7 +888,11 @@ Editing logic START
   }
 
   // handleGiveHint
-  function handleGiveHint(path: number[], hintNumber: number | null) {
+  function handleGiveHint(
+    path: number[],
+    hintNumber: number | null,
+    dividableStep: boolean
+  ) {
     if (hintNumber === null) return;
 
     // correct step => show overlay or reveal immediately if saved
@@ -885,8 +915,10 @@ Editing logic START
       }
       const stepIndex = path[path.length - 1];
       const step = current[stepIndex];
-      if (hintNumber === 3) step.showGeneralHint1 = true;
-      else if (hintNumber === 2) step.showDetailedHint1 = true;
+      if (hintNumber === 3 || (dividableStep && hintNumber === 2))
+        step.showGeneralHint1 = true;
+      else if (hintNumber === 2 || (dividableStep && hintNumber === 1))
+        step.showDetailedHint1 = true;
       return newSteps;
     });
 
@@ -902,48 +934,66 @@ Editing logic START
   --------------------------------------- */
 
   useEffect(() => {
-    if (hoveredStepId) {
-      const hoveredElement = document.getElementById(hoveredStepId);
-      if (hoveredElement) {
-        hoveredElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+    // Utility: Try to get an element by its raw ID or with a "-promoted" suffix.
+    const getElement = (id: string | null): HTMLElement | null => {
+      if (!id) return null;
+      return (
+        document.getElementById(id) || document.getElementById(`${id}-promoted`)
+      );
+    };
 
-      let targetElement = document.getElementById(`${hoveredStepId}-promoted`);
-
-      if (!targetElement) {
-        const findParentId = (
-          stepsArray: Step[],
-          targetId: string,
-          parentId: string | null = null
-        ): string | null => {
-          for (const step of stepsArray) {
-            if (step.id === targetId) {
-              return parentId;
-            }
-            if (step.children && step.children.length > 0) {
-              const found = findParentId(step.children, targetId, step.id);
-              if (found) return found;
-            }
+    // Recursive function that, given a starting ID (for the hovered step),
+    // will climb upward using your steps tree until it finds a rendered element.
+    const findClosestHighlightElement = (
+      stepsArray: Step[],
+      currentId: string | null
+    ): HTMLElement | null => {
+      const el = getElement(currentId);
+      if (el) return el;
+      // If not found, try to get the parent ID of the currentId.
+      const findParentId = (
+        steps: Step[],
+        targetId: string,
+        parentId: string | null = null
+      ): string | null => {
+        for (const step of steps) {
+          if (step.id === targetId) {
+            return parentId;
           }
-          return null;
-        };
-
-        const parentId = findParentId(steps, hoveredStepId);
-        if (parentId) {
-          targetElement = document.getElementById(parentId);
-          if (targetElement) {
-            targetElement.classList.add("highlighted-step");
-            setTimeout(() => {
-              targetElement?.classList.remove("highlighted-step");
-            }, 1000);
+          if (step.children && step.children.length > 0) {
+            const found = findParentId(step.children, targetId, step.id);
+            if (found) return found;
           }
         }
-      }
+        return null;
+      };
 
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      const parentId = findParentId(stepsArray, currentId!);
+      if (parentId) {
+        return findClosestHighlightElement(stepsArray, parentId);
       }
+      return null;
+    };
+
+    // Start by trying to get the element directly from the hoveredStepId.
+    let targetElement = getElement(hoveredStepId);
+    // If not found, try climbing up the tree.
+    if (!targetElement && hoveredStepId) {
+      targetElement = findClosestHighlightElement(steps, hoveredStepId);
     }
+
+    // If an element was found, add the highlighted class and scroll into view.
+    if (targetElement) {
+      targetElement.classList.add("highlighted-step");
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    // Cleanup: remove the highlight class when the hoveredStepId or steps change.
+    return () => {
+      if (targetElement) {
+        targetElement.classList.remove("highlighted-step");
+      }
+    };
   }, [hoveredStepId, steps]);
 
   /* ---------------------------------------
@@ -1044,16 +1094,12 @@ Editing logic START
     )
       return "#ffffff";
     if (
-      step.status.correctness === "correct" &&
-      step.status.can_be_further_divided === "cannot"
+      step.status.can_be_further_divided === "can" &&
+      step.status.correctness === "correct"
     )
-      return "#60e660";
-    if (
-      step.status.correctness === "incorrect" &&
-      step.status.can_be_further_divided === "cannot"
-    )
-      return "#ff6363";
-    if (step.status.can_be_further_divided === "can") return "#add8e6";
+      return "#add8e6";
+    if (step.status.correctness === "correct") return "#60e660";
+    if (step.status.correctness === "incorrect") return "#ff6363";
     return "#ffffff";
   }
 
@@ -1300,7 +1346,7 @@ Editing logic START
                 }}
               >
                 <div className="unpromote">
-                  <X
+                  <Minus
                     className="unpromote-icon"
                     onClick={() => handleUnpromote(step, currentPath)}
                   />
@@ -1322,7 +1368,12 @@ Editing logic START
                         number={getNumberForStep(step)}
                         fill={getNumberForStep(step) ? "yellow" : "none"}
                         onGiveHint={() =>
-                          handleGiveHint(currentPath, getNumberForStep(step))
+                          handleGiveHint(
+                            currentPath,
+                            getNumberForStep(step),
+                            step.status.can_be_further_divided === "can" &&
+                              step.status.correctness === "correct"
+                          )
                         }
                       />{" "}
                       <Trash
@@ -1953,7 +2004,7 @@ Editing logic START
                           insertSubStepAtPath(currentPath, 0, false)
                         }
                       >
-                        Add a Substep <br /> +
+                        Create a Substep <br /> +
                       </div>
                     </div>
                   </div>
@@ -2453,7 +2504,7 @@ Editing logic START
       const currentPath = [...parentPath, i];
       const displayPath = currentPath.map((i) => i + 1).join(".");
 
-      const outerStyle: React.CSSProperties = {
+      const outerStyle = (step: Step): React.CSSProperties => ({
         transition: "top 0.5s ease-out",
         transform: "none",
         zIndex: getZIndex(i),
@@ -2471,7 +2522,8 @@ Editing logic START
             : getStepBoxColor(substep),
 
         cursor: isHoveredTitle ? "pointer" : "default",
-      };
+        border: "1px " + getBorder(step) + " black",
+      });
 
       // Inner container: transition only the height (and optionally opacity)
       const innerStyle: React.CSSProperties = {
@@ -2491,7 +2543,7 @@ Editing logic START
           className={`step-box substep-card ${
             substep.isDeleting ? "fade-out" : ""
           }`}
-          style={outerStyle}
+          style={outerStyle(substep)}
           onMouseEnter={() => {
             if (i === currentIndex) {
               setInitialIndex(indexKey, currentPath[currentPath.length - 1]);
@@ -2749,7 +2801,14 @@ Biggest render Tree ever recored START
                   <CustomLightbulb
                     number={hintNumber}
                     fill={hintNumber ? "yellow" : "none"}
-                    onGiveHint={() => handleGiveHint(currentPath, hintNumber)}
+                    onGiveHint={() =>
+                      handleGiveHint(
+                        currentPath,
+                        hintNumber,
+                        step.status.can_be_further_divided === "can" &&
+                          step.status.correctness === "correct"
+                      )
+                    }
                   />{" "}
                   <Trash
                     onClick={() => handleRemoveStep(step.id)}
@@ -3204,7 +3263,7 @@ Biggest render Tree ever recored START
                     className="filling-emptyness"
                     onClick={() => insertSubStepAtPath(currentPath, 0, false)}
                   >
-                    Add a Substep <br /> +
+                    Create a Substep <br /> +
                   </div>
                 </div>
               </div>

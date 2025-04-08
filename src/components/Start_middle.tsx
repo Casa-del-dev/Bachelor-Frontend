@@ -15,6 +15,8 @@ interface PythonPlaygroundProps {
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
+  code: string;
+  setCode: (code: string) => void;
 }
 
 export default function ResizableSplitView({
@@ -22,6 +24,8 @@ export default function ResizableSplitView({
   loading,
   setLoading,
   setFromEditor,
+  code,
+  setCode,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -32,7 +36,7 @@ export default function ResizableSplitView({
   const term = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
 
-  const { code, test } = useCodeContext();
+  const { test } = useCodeContext();
   const { isAuthenticated } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
   const inputBuffer = useRef("");
@@ -206,6 +210,8 @@ export default function ResizableSplitView({
           loading={loading}
           setLoading={setLoading}
           setFromEditor={setFromEditor}
+          code={code}
+          setCode={setCode}
         />
       </div>
 
