@@ -26,7 +26,6 @@ import {
   getChanged,
   setChanged,
 } from "./BuildingBlocks/StepsData";
-import { localCompletionSource } from "@codemirror/lang-python";
 
 function Collapsible({
   isOpen,
