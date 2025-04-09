@@ -26,6 +26,7 @@ import {
   getChanged,
   setChanged,
 } from "./BuildingBlocks/StepsData";
+import { localCompletionSource } from "@codemirror/lang-python";
 
 function Collapsible({
   isOpen,
@@ -528,7 +529,11 @@ Delete Functions START
       prevSteps.map((step) => markStepAndChildrenAsDeleting(step, id))
     );
     setTimeout(() => {
-      setSteps((prevSteps) => removeStepById(prevSteps, id));
+      setSteps((prevSteps) => {
+        const newSteps = removeStepById(prevSteps, id);
+        localStorage.setItem(StorageKey, JSON.stringify(newSteps));
+        return newSteps;
+      });
     }, 300);
   };
 
