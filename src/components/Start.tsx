@@ -57,7 +57,8 @@ const Start: React.FC = () => {
   const [hoveredStep, setHoveredStep] = useState<Step | null>(null);
   const [loading, setLoading] = useState(false);
   const [fromEditor, setFromEditor] = useState(false);
-  const { code, setCode } = useCodeContext();
+  const { currentFile, setCurrentFile, codeMap, setCodeForFile } =
+    useCodeContext();
 
   const [layout, setLayout] = useState<LayoutState>(() => {
     const storedLayout = localStorage.getItem("layoutDimensions");
@@ -187,7 +188,12 @@ const Start: React.FC = () => {
     <div className="container-main">
       {/* Left Column */}
       <div className="left-column" style={{ width: `${layout.left}%` }}>
-        <StartLeft />
+        <StartLeft
+          codeMap={codeMap}
+          setCodeForFile={setCodeForFile}
+          currentFile={currentFile}
+          setCurrentFile={setCurrentFile}
+        />
       </div>
 
       {/* First Divider */}
@@ -201,8 +207,9 @@ const Start: React.FC = () => {
             loading={loading}
             setLoading={setLoading}
             setFromEditor={setFromEditor}
-            code={code}
-            setCode={setCode}
+            codeMap={codeMap}
+            setCodeForFile={setCodeForFile}
+            currentFile={currentFile}
           />
         </CodeProvider>
       </div>
@@ -226,8 +233,9 @@ const Start: React.FC = () => {
           setLoading={setLoading}
           fromEditor={fromEditor}
           setFromEditor={setFromEditor}
-          code={code}
-          setCode={setCode}
+          codeMap={codeMap}
+          setCodeForFile={setCodeForFile}
+          currentFile={currentFile}
         />
       </div>
     </div>

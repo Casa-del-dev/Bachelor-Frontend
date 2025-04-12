@@ -196,8 +196,9 @@ interface StartRightProps {
   setLoading: Dispatch<SetStateAction<boolean>>;
   fromEditor: boolean;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
-  code: string;
-  setCode: (code: string) => void;
+  codeMap: Record<string, string>;
+  setCodeForFile: (fileId: number, code: string) => void;
+  currentFile: number | null;
 }
 
 const StartRight: React.FC<StartRightProps> = ({
@@ -207,8 +208,9 @@ const StartRight: React.FC<StartRightProps> = ({
   setLoading,
   fromEditor,
   setFromEditor,
-  code,
-  setCode,
+  codeMap,
+  setCodeForFile,
+  currentFile,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
@@ -343,12 +345,37 @@ const StartRight: React.FC<StartRightProps> = ({
     setLoading(true);
     setLoadingCheck(true);
 
+    if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
+
     try {
+      const code = codeMap[currentFile]
       const gptResponse = await apiCallTree(JSON.stringify(steps), code);
       const rawMessage = gptResponse.choices[0].message.content;
 
-      const parsedResponse = JSON.parse(rawMessage);
-      setCode(parsedResponse.code);
+      if (!rawMessage) {
+        throw new Error("GPT response missing message content.");
+      }
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(rawMessage);
+      } catch (e) {
+        console.error("Failed to parse GPT response:", rawMessage);
+        throw e;
+      }
+  
+      // ✅ Safely apply code updates per file
+      if (parsedResponse.code && typeof parsedResponse.code === "object") {
+        Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
+          if (typeof codeValue === "string") {
+            setCodeForFile(Number(fileId), codeValue);
+          } else {
+            console.warn(`Invalid code for file ${fileId}:`, codeValue);
+          }
+        });
+      } else {
+        console.warn("GPT response does not contain a valid 'code' object:", parsedResponse);
+      }
 
       // Extract steps
       const stepsData = parsedResponse.steps

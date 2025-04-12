@@ -15,8 +15,9 @@ interface PythonPlaygroundProps {
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
-  code: string;
-  setCode: (code: string) => void;
+  codeMap: Record<string, string>;
+  setCodeForFile: (fileId: number, code: string) => void;
+  currentFile: number | null;
 }
 
 export default function ResizableSplitView({
@@ -24,8 +25,9 @@ export default function ResizableSplitView({
   loading,
   setLoading,
   setFromEditor,
-  code,
-  setCode,
+  codeMap,
+  setCodeForFile,
+  currentFile,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -42,17 +44,23 @@ export default function ResizableSplitView({
   const inputBuffer = useRef("");
   const waitingForInputRef = useRef(false);
 
+  const cursorPos = useRef(0);
+
   /** Setup xterm.js on mount */
   useEffect(() => {
     if (!terminalRef.current || term.current) return;
 
     term.current = new Terminal({
       cursorBlink: true,
+      cursorStyle: "bar",
+      cursorWidth: 10,
       theme: {
         background: "#f1f1f1",
         foreground: "#000",
         cursor: "black",
       },
+      // @ts-ignore: cursorAccentColor is supported in xterm@5.3.0
+      cursorAccentColor: "#f1f1f1",
     });
 
     fitAddon.current = new FitAddon();
@@ -74,37 +82,57 @@ export default function ResizableSplitView({
 
     term.current.onData((key) => {
       if (key === "\r") {
+        // Enter: finish the input, send it via WebSocket, then reset the buffer.
         term.current?.writeln("");
-        console.log(
-          "Enter pressed, waitingForInputRef:",
-          waitingForInputRef.current,
-          "inputBuffer:",
-          inputBuffer.current
-        );
         if (socketRef.current?.readyState === WebSocket.OPEN) {
-          if (waitingForInputRef.current) {
-            socketRef.current.send(
-              JSON.stringify({
-                action: "input_response",
-                value: inputBuffer.current,
-              })
-            );
-            waitingForInputRef.current = false;
-          } else {
-            socketRef.current.send(
-              JSON.stringify({
-                action: "run",
-                code: inputBuffer.current,
-              })
-            );
-          }
+          const payload = waitingForInputRef.current
+            ? { action: "input_response", value: inputBuffer.current }
+            : { action: "run", code: inputBuffer.current };
+          socketRef.current.send(JSON.stringify(payload));
+          waitingForInputRef.current = false;
         }
         inputBuffer.current = "";
+        cursorPos.current = 0;
       } else if (key === "\u007F") {
-        // Handle backspace...
+        // Backspace: delete the character before the cursor if one exists.
+        if (cursorPos.current > 0) {
+          inputBuffer.current =
+            inputBuffer.current.slice(0, cursorPos.current - 1) +
+            inputBuffer.current.slice(cursorPos.current);
+          cursorPos.current--;
+          // Use ANSI codes to move the cursor back, erase the character and reprint the rest
+          term.current?.write("\b \b");
+        } else {
+          // Bell sound if there's nothing to remove
+          term.current?.write("\x07");
+        }
+      } else if (key === "\x1B[D") {
+        // Left arrow: only move left if not at start
+        if (cursorPos.current > 0) {
+          cursorPos.current--;
+          term.current?.write("\x1b[D");
+        } else {
+          term.current?.write("\x07"); // beep if already at left end
+        }
+      } else if (key === "\x1B[C") {
+        // Right arrow: only move right if there is text to the right
+        if (cursorPos.current < inputBuffer.current.length) {
+          cursorPos.current++;
+          term.current?.write("\x1b[C");
+        } else {
+          term.current?.write("\x07"); // beep if already at right end
+        }
+      } else if (key === "\x1B[A" || key === "\x1B[B") {
+        // Up or down arrow: disable by emitting a bell sound.
+        term.current?.write("\x07");
       } else {
-        inputBuffer.current += key;
+        // Normal character input: insert at the current position.
+        inputBuffer.current =
+          inputBuffer.current.slice(0, cursorPos.current) +
+          key +
+          inputBuffer.current.slice(cursorPos.current);
         term.current?.write(key);
+        cursorPos.current++;
       }
     });
 
@@ -166,6 +194,8 @@ export default function ResizableSplitView({
     term.current?.clear();
     term.current?.writeln(`${actionMessage}...\r\n`);
 
+    if (!currentFile) return;
+    const code = codeMap[currentFile];
     if (action === "test") {
       socketRef.current.send(JSON.stringify({ action, code, tests: test }));
     } else {
@@ -210,8 +240,9 @@ export default function ResizableSplitView({
           loading={loading}
           setLoading={setLoading}
           setFromEditor={setFromEditor}
-          code={code}
-          setCode={setCode}
+          codeMap={codeMap}
+          setCodeForFile={setCodeForFile}
+          currentFile={currentFile}
         />
       </div>
 

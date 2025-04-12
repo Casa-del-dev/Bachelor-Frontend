@@ -1,4 +1,4 @@
-import _, {
+import {
   createContext,
   useContext,
   useState,
@@ -9,105 +9,102 @@ import _, {
 interface CodeContextType {
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
-  code: string;
+  codeMap: Record<number, string>;
+  setCodeForFile: (fileId: number, updatedCode: string) => void;
   test: string;
-  setCode: (updatedCode: string) => void;
 }
 
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
 
 export function CodeProvider({ children }: { children: ReactNode }) {
-  const selectedProblemName =
-    localStorage.getItem("selectedProblem") || "DefaultProblem";
-  const selectedFileKey = `selectedFile_${selectedProblemName}`;
+  const problemId = "Problem 1";
 
-  const [currentFile, setCurrentFile] = useState<number | null>(() => {
-    const storedFileId = localStorage.getItem(selectedFileKey);
-    return storedFileId ? parseInt(storedFileId, 10) : null;
-  });
-
-  const buildCodeKey = (problem: string, fileId: number | null) =>
-    fileId !== null ? `code_${problem}_${fileId}` : "";
-
-  const [code, setCode] = useState<string>(() => {
-    if (currentFile !== null) {
-      const codeKey = buildCodeKey(selectedProblemName, currentFile);
-      return localStorage.getItem(codeKey) || "";
-    }
-    return "";
-  });
-
+  const [currentFile, setCurrentFile] = useState<number | null>(null);
+  const [codeMap, setCodeMap] = useState<Record<number, string>>({});
   const [test, setTest] = useState<string>("");
 
+  // Only load data from the backend.
   useEffect(() => {
-    if (currentFile !== null) {
-      const codeKey = buildCodeKey(selectedProblemName, currentFile);
-      const storedCode = localStorage.getItem(codeKey) || "";
-      setCode(storedCode);
-      localStorage.setItem(selectedFileKey, currentFile.toString());
-    } else {
-      localStorage.removeItem(selectedFileKey);
-    }
-  }, [currentFile, selectedProblemName, selectedFileKey]);
-
-  useEffect(() => {
-    if (currentFile !== null) {
-      const codeKey = buildCodeKey(selectedProblemName, currentFile);
-      localStorage.setItem(codeKey, code);
-    }
-  }, [code, currentFile, selectedProblemName]);
-
-  useEffect(() => {
-    const structureKey = `sysSelectedSystemProblem_${selectedProblemName}`;
-    const storedStructure = localStorage.getItem(structureKey);
-    if (!storedStructure) {
-      // Nothing is stored under that key, so we can’t load a "last file"
-      setTest("");
-      return;
-    }
-
-    try {
-      // Parse the structure array.
-      // Example: [{"id":1,"name":"src","type":"folder","children":[...]},{"id":4,"name":"Test.py","type":"file"}]
-      const structure = JSON.parse(storedStructure);
-
-      // We'll collect all "file" items here.
-      const allFiles: { id: number; name: string; type: string }[] = [];
-
-      // Helper function to traverse folders recursively.
-      function visit(items: any[]) {
-        items.forEach((item) => {
-          if (item.type === "file") {
-            allFiles.push(item);
-          } else if (item.type === "folder" && Array.isArray(item.children)) {
-            visit(item.children);
+    async function loadData() {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        console.warn("No token found, cannot load from backend");
+        return;
+      }
+      try {
+        const res = await fetch(
+          `https://bachelor-backend.erenhomburg.workers.dev/problem/v1/load?id=${encodeURIComponent(
+            problemId
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        });
-      }
+        );
+        if (!res.ok) {
+          console.error("Backend load failed:", await res.text());
+          return;
+        }
+        const data = await res.json();
+        const converted: Record<number, string> = {};
+        Object.entries(data.codeMap as Record<string, string>).forEach(
+          ([k, v]) => {
+            converted[parseInt(k, 10)] = v;
+          }
+        );
+        setCodeMap(converted);
 
-      // Start traversal
-      visit(structure);
+        const lastId = Object.keys(converted)
+          .map(Number)
+          .sort((a, b) => a - b)
+          .slice(-1)[0];
+        if (lastId !== undefined && converted[lastId]) {
+          setTest(converted[lastId]);
+        }
 
-      // The user wants the *last file*, so let's get the last entry from allFiles.
-      if (allFiles.length > 0) {
-        const lastFile = allFiles[allFiles.length - 1];
-        const lastFileId = lastFile.id;
-        const lastFileKey = buildCodeKey(selectedProblemName, lastFileId);
-        const testCode = localStorage.getItem(lastFileKey) || "";
-        setTest(testCode);
-      } else {
-        // No files in the entire structure
-        setTest("");
+        if (data.test) {
+          setTest(data.test);
+        }
+        // Only update currentFile if it hasn't been set yet.
+        if (currentFile === null && data.currentFile !== null) {
+          setCurrentFile(data.currentFile);
+        }
+      } catch (err) {
+        console.error("Error loading from backend:", err);
       }
-    } catch (err) {
-      console.error("Failed to parse structure JSON:", err);
-      setTest("");
     }
-  }, [selectedProblemName]);
+    loadData();
+  }, [problemId]);
+
+  // NOTE: The auto-save effect that was writing a dummy tree has been removed.
+  // Let ProjectFiles handle saving the tree.
+
+  const setCodeForFile = (fileId: number, updatedCode: string) => {
+    setCodeMap((prev) => {
+      const updated = {
+        ...prev,
+        [fileId]: updatedCode,
+      };
+
+      // Find the last key based on numeric sort
+      const lastId = Object.keys(updated)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .slice(-1)[0];
+
+      if (lastId !== undefined && updated[lastId]) {
+        setTest(updated[lastId]);
+      }
+
+      return updated;
+    });
+  };
 
   return (
     <CodeContext.Provider
-      value={{ currentFile, setCurrentFile, code, setCode, test }}
+      value={{ currentFile, setCurrentFile, codeMap, setCodeForFile, test }}
     >
       {children}
     </CodeContext.Provider>

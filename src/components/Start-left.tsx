@@ -5,7 +5,19 @@ import Project_files from "./Project_files";
 import { problemDetailsMap } from "./Problem_detail";
 import { HiMenu, HiX } from "react-icons/hi";
 
-const StartLeft = () => {
+interface startleftInput {
+  codeMap: Record<number, string>;
+  setCodeForFile: (fileId: number, code: string) => void;
+  currentFile: number | null;
+  setCurrentFile: (fileId: number | null) => void;
+}
+
+const StartLeft = ({
+  codeMap,
+  setCodeForFile,
+  currentFile,
+  setCurrentFile,
+}: startleftInput) => {
   // Retrieve the last selected section from localStorage (default is "Problem" only on first load)
   const storedSection = localStorage.getItem("selectedSection") as
     | "Project"
@@ -61,7 +73,14 @@ const StartLeft = () => {
   const renderContent = () => {
     switch (selectedSection) {
       case "Project":
-        return <Project_files />;
+        return (
+          <Project_files
+            codeMap={codeMap}
+            setCodeForFile={setCodeForFile}
+            currentFile={currentFile}
+            setCurrentFile={setCurrentFile}
+          />
+        );
       case "Problem":
         return (
           <div className="container-problem-left">

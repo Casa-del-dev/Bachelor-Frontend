@@ -1,7 +1,13 @@
-import _, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, JSX } from "react";
 import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
-import { useCodeContext } from "../CodeContext";
 import "./Project_files.css";
+
+interface InputProps {
+  codeMap: Record<number, string>;
+  setCodeForFile: (fileId: number, code: string) => void;
+  currentFile: number | null;
+  setCurrentFile: (fileId: number | null) => void;
+}
 
 interface FileItem {
   id: number;
@@ -20,42 +26,162 @@ const initialFiles: FileItem[] = [
   { id: 4, name: "Tests.py", type: "file" },
 ];
 
-const Project_files = () => {
-  const selectedProblemName =
-    localStorage.getItem("selectedProblem") || "Default Problem";
-  const selectedFileKey = `selectedFile_${selectedProblemName}`;
-  const systemStorageKey = `sysSelectedSystemProblem_${selectedProblemName}`;
-
-  const [files, setFiles] = useState<FileItem[]>(() => {
-    const storedTree = localStorage.getItem(systemStorageKey);
-    if (storedTree) {
-      return JSON.parse(storedTree);
-    } else {
-      localStorage.setItem(systemStorageKey, JSON.stringify(initialFiles));
-      return initialFiles;
-    }
-  });
-
+const ProjectFiles = ({
+  codeMap,
+  setCodeForFile,
+  currentFile,
+  setCurrentFile,
+}: InputProps) => {
+  const problemId = "Problem 1";
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
-  const { currentFile, setCurrentFile } = useCodeContext();
-
-  // useRef for managing the click timer.
+  const [dirty, setDirty] = useState(false);
   const clickTimeout = useRef<number | null>(null);
 
-  const updateFileTree = (newTree: FileItem[]) => {
-    setFiles(newTree);
-    localStorage.setItem(systemStorageKey, JSON.stringify(newTree));
-  };
+  // Debounced save effect – waits for 1000ms after changes settle
+  useEffect(() => {
+    if (dirty && currentFile !== null) {
+      const timeout = setTimeout(() => {
+        saveToBackend(problemId, files, codeMap, currentFile);
+        setDirty(false);
+      }, 500);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [dirty, files, codeMap, currentFile, problemId]);
+
+  // Load files from the backend only once on mount.
+  useEffect(() => {
+    let mounted = true;
+    async function init() {
+      const data = await loadFromBackend(problemId);
+      if (!mounted) return;
+
+      if (data && data.tree && data.tree.rootNode) {
+        const loadedFiles: FileItem[] = data.tree.rootNode.children || [];
+        if (loadedFiles.length === 0) {
+          setFiles(initialFiles);
+          saveToBackend(problemId, initialFiles, codeMap, currentFile);
+        } else {
+          setFiles(loadedFiles);
+        }
+        if (data.codeMap) {
+          const converted: Record<number, string> = {};
+          for (const [key, val] of Object.entries(data.codeMap)) {
+            converted[Number(key)] = val;
+          }
+          Object.entries(converted).forEach(([fileId, codeValue]) => {
+            setCodeForFile(Number(fileId), codeValue);
+          });
+          if (currentFile === null && data.currentFile !== null) {
+            setCurrentFile(data.currentFile);
+          }
+        }
+      } else {
+        setFiles(initialFiles);
+        saveToBackend(problemId, initialFiles, {}, null);
+      }
+    }
+    init();
+    return () => {
+      mounted = false;
+    };
+  }, [problemId]); // run only on mount
+
+  async function loadFromBackend(pId: string): Promise<{
+    tree: any;
+    codeMap: Record<string, string>;
+    currentFile: number | null;
+  } | null> {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return null;
+      const res = await fetch(
+        `https://bachelor-backend.erenhomburg.workers.dev/problem/v1/load?id=${encodeURIComponent(
+          pId
+        )}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (err) {
+      console.error("Load failed:", err);
+      return null;
+    }
+  }
+
+  async function saveToBackend(
+    pId: string,
+    fileItems: FileItem[],
+    codeMap: Record<number, string>,
+    currentFileId: number | null
+  ) {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        console.warn("No token found; not saving.");
+        return;
+      }
+      const pseudoTree = {
+        rootNode: {
+          id: "root",
+          name: "root",
+          type: "folder" as const,
+          children: fileItems,
+        },
+      };
+      await fetch(
+        "https://bachelor-backend.erenhomburg.workers.dev/problem/v1/save",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            problemId: pId,
+            tree: pseudoTree,
+            codeMap,
+            currentFile: currentFileId,
+          }),
+        }
+      );
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+  }
+
+  function handleSelectFile(file: FileItem) {
+    if (file.type === "file") {
+      setCurrentFile(file.id);
+      if (!codeMap[file.id]) {
+        setCodeForFile(file.id, "");
+      }
+      saveToBackend(problemId, files, codeMap, file.id);
+    }
+  }
+
+  function handleUpdateFiles(newFiles: FileItem[]) {
+    setFiles(newFiles);
+    saveToBackend(problemId, newFiles, codeMap, currentFile);
+  }
 
   const addItemToFolder = (
     tree: FileItem[],
     parentId: number,
     newItem: FileItem
   ): FileItem[] => {
-    return tree.map((item: FileItem) => {
+    return tree.map((item) => {
       if (item.id === parentId && item.type === "folder") {
-        return { ...item, children: [...(item.children || []), newItem] };
+        const children = item.children
+          ? [...item.children, newItem]
+          : [newItem];
+        return { ...item, children };
       }
       if (item.type === "folder" && item.children) {
         return {
@@ -67,28 +193,22 @@ const Project_files = () => {
     });
   };
 
-  const addNewFile = (parentId: number | null = null) => {
+  function addNewFile(parentId: number | null = null) {
     const fileName = prompt("Enter new file name (e.g., NewFile.js):");
     if (!fileName) return;
-    const newFile: FileItem = { id: Date.now(), name: fileName, type: "file" };
+    const newFile: FileItem = {
+      id: Date.now(),
+      name: fileName,
+      type: "file",
+    };
+    const updatedFiles =
+      parentId === null
+        ? [...files, newFile]
+        : addItemToFolder(files, parentId, newFile);
+    handleUpdateFiles(updatedFiles);
+  }
 
-    if (parentId === null) {
-      const updatedFiles = [...files, newFile];
-      updateFileTree(updatedFiles);
-    } else {
-      const updated = addItemToFolder(files, parentId, newFile);
-      updateFileTree(updated);
-    }
-    // Auto-select the new file.
-    if (currentFile === -1) {
-      localStorage.removeItem(`code_${selectedProblemName}_-1`);
-    }
-    setCurrentFile(newFile.id);
-    localStorage.setItem(selectedFileKey, newFile.id.toString());
-    window.location.reload();
-  };
-
-  const addNewFolder = (parentId: number | null = null) => {
+  function addNewFolder(parentId: number | null = null) {
     const folderName = prompt("Enter new folder name:");
     if (!folderName) return;
     const newFolder: FileItem = {
@@ -97,24 +217,19 @@ const Project_files = () => {
       type: "folder",
       children: [],
     };
+    const updatedFiles =
+      parentId === null
+        ? [...files, newFolder]
+        : addItemToFolder(files, parentId, newFolder);
+    handleUpdateFiles(updatedFiles);
+  }
 
-    if (parentId === null) {
-      updateFileTree([...files, newFolder]);
-    } else {
-      const updated = addItemToFolder(files, parentId, newFolder);
-      updateFileTree(updated);
-    }
-  };
-
-  const collectAllDescendantIds = (item: FileItem): number[] => {
+  function collectAllDescendantIds(item: FileItem): number[] {
     if (item.type === "folder" && item.children) {
-      return [
-        item.id,
-        ...item.children.flatMap((child) => collectAllDescendantIds(child)),
-      ];
+      return [item.id, ...item.children.flatMap(collectAllDescendantIds)];
     }
     return [item.id];
-  };
+  }
 
   const deleteFromTree = (tree: FileItem[], itemId: number): FileItem[] => {
     return tree
@@ -127,43 +242,31 @@ const Project_files = () => {
       });
   };
 
-  const deleteItem = (itemId: number) => {
+  function deleteItem(itemId: number) {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
-
-    // First, find the item so we can get all children
-    const findItemById = (items: FileItem[]): FileItem | null => {
-      for (const item of items) {
-        if (item.id === itemId) return item;
-        if (item.type === "folder" && item.children) {
-          const found = findItemById(item.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    const itemToDelete = findItemById(files);
+    const itemToDelete = findItemById(files, itemId);
     if (!itemToDelete) return;
-
     const idsToRemove = collectAllDescendantIds(itemToDelete);
-    idsToRemove.forEach((id) => {
-      localStorage.removeItem(`code_${selectedProblemName}_${id}`);
-    });
-
-    // Remove the item from the tree
-    const updated = deleteFromTree(files, itemId);
-    updateFileTree(updated);
-
-    // Handle current selection
-    if (idsToRemove.includes(currentFile!)) {
-      localStorage.setItem(selectedFileKey, "-1");
+    const updatedFiles = deleteFromTree(files, itemId);
+    if (currentFile !== null && idsToRemove.includes(currentFile)) {
       setCurrentFile(null);
-      window.location.reload();
+      setCodeForFile(currentFile, "");
     }
-  };
+    handleUpdateFiles(updatedFiles);
+  }
 
-  // Helper function to find the parent folder of a given file id.
-  const findParent = (tree: FileItem[], targetId: number): FileItem | null => {
+  function findItemById(tree: FileItem[], targetId: number): FileItem | null {
+    for (const item of tree) {
+      if (item.id === targetId) return item;
+      if (item.type === "folder" && item.children) {
+        const found = findItemById(item.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function findParent(tree: FileItem[], targetId: number): FileItem | null {
     for (let item of tree) {
       if (
         item.children &&
@@ -171,29 +274,28 @@ const Project_files = () => {
       ) {
         return item;
       }
-      if (item.children) {
+      if (item.type === "folder" && item.children) {
         const parent = findParent(item.children, targetId);
         if (parent) return parent;
       }
     }
     return null;
-  };
+  }
 
-  const handleRename = (itemId: number) => {
-    if (!editText.trim()) return;
-
-    // Determine the siblings (files in the same folder)
+  function handleRename(itemId: number) {
+    if (!editText.trim()) {
+      setEditingId(null);
+      return;
+    }
     const parent = findParent(files, itemId);
     const siblings = parent ? parent.children! : files;
-    // If a sibling (other than the file being renamed) already has the new name, cancel the rename.
-    if (siblings.some((item) => item.id !== itemId && item.name === editText)) {
+    if (siblings.some((i) => i.id !== itemId && i.name === editText)) {
       alert("File name already exists in the folder. Keeping the old name.");
       setEditingId(null);
       return;
     }
-
-    const renameInTree = (tree: FileItem[]): FileItem[] => {
-      return tree.map((item) => {
+    const renameInTree = (tree: FileItem[]): FileItem[] =>
+      tree.map((item) => {
         if (item.id === itemId) {
           return { ...item, name: editText };
         }
@@ -202,33 +304,25 @@ const Project_files = () => {
         }
         return item;
       });
-    };
-    updateFileTree(renameInTree(files));
+    const updatedFiles = renameInTree(files);
+    handleUpdateFiles(updatedFiles);
     setEditingId(null);
-    // If the renamed file is currently selected, force a page reload to update the display.
-    if (itemId === currentFile) {
-      window.location.reload();
-    }
-  };
+  }
 
-  const handleFileClick = (_: React.MouseEvent, item: FileItem) => {
+  function handleFileClick(item: FileItem) {
     if (editingId !== null) return;
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
     }
-    // Delay single-click action by 250ms.
     clickTimeout.current = window.setTimeout(() => {
       if (item.type === "file") {
-        setCurrentFile(item.id);
-        localStorage.setItem(selectedFileKey, item.id.toString());
-        window.location.reload();
+        handleSelectFile(item);
       }
       clickTimeout.current = null;
     }, 250);
-  };
+  }
 
-  // Double click cancels the single click timer.
-  const handleDoubleClick = (e: React.MouseEvent, item: FileItem) => {
+  function handleDoubleClick(e: React.MouseEvent, item: FileItem) {
     if (clickTimeout.current) {
       clearTimeout(clickTimeout.current);
       clickTimeout.current = null;
@@ -236,16 +330,16 @@ const Project_files = () => {
     setEditingId(item.id);
     setEditText(item.name);
     e.stopPropagation();
-  };
+  }
 
-  const renderTree = (tree: FileItem[]) => {
+  function renderTree(tree: FileItem[]): JSX.Element {
     return (
       <ul>
         {tree.map((item) => (
           <li key={item.id}>
             <div
               className="file-item"
-              onClick={(e) => handleFileClick(e, item)}
+              onClick={() => handleFileClick(item)}
               onDoubleClick={(e) => handleDoubleClick(e, item)}
             >
               {editingId === item.id ? (
@@ -298,14 +392,7 @@ const Project_files = () => {
         ))}
       </ul>
     );
-  };
-
-  useEffect(() => {
-    const storedTree = localStorage.getItem(systemStorageKey);
-    if (storedTree) {
-      setFiles(JSON.parse(storedTree));
-    }
-  }, [systemStorageKey]);
+  }
 
   return (
     <div className="project-files">
@@ -333,4 +420,4 @@ const Project_files = () => {
   );
 };
 
-export default Project_files;
+export default ProjectFiles;

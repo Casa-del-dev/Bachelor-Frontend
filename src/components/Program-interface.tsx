@@ -1,5 +1,4 @@
 import { useState, useMemo, Dispatch, SetStateAction, useEffect } from "react";
-import { useCodeContext } from "../CodeContext";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import {
@@ -30,8 +29,9 @@ interface PythonPlaygroundProps {
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
-  code: string;
-  setCode: (code: string) => void;
+  codeMap: Record<string, string>;
+  setCodeForFile: (fileId: number, code: string) => void;
+  currentFile: number | null;
 }
 
 export default function PythonPlayground({
@@ -39,10 +39,10 @@ export default function PythonPlayground({
   loading,
   setLoading,
   setFromEditor,
-  code,
-  setCode,
+  codeMap,
+  setCodeForFile,
+  currentFile,
 }: PythonPlaygroundProps) {
-  const { currentFile } = useCodeContext();
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [fadeClass, setFadeClass] = useState("");
@@ -58,10 +58,6 @@ export default function PythonPlayground({
 
   const storedTree = localStorage.getItem(systemStorageKey);
   const fileTree = storedTree ? JSON.parse(storedTree) : [];
-
-  /*   --------------------------------------
-  Code Mirror Line checking START
-  -------------------------------------- */
 
   function loadStepsTree(): Step[] {
     const stored = localStorage.getItem(StorageKey);
@@ -84,7 +80,6 @@ export default function PythonPlayground({
     return extensions;
   }, [colorMode, setHoveredStep]);
 
-  // Recursively check if the line text is part of any step.code.
   function findMatchingStepForLine(
     lineText: string,
     steps: Step[]
@@ -105,7 +100,6 @@ export default function PythonPlayground({
     return null;
   }
 
-  // Plugin factory: accepts a callback to update hovered step.
   function createStepHighlightPlugin(
     onHoverStep: (step: Step | null) => void,
     loadStepsTree: () => Step[]
@@ -127,7 +121,6 @@ export default function PythonPlayground({
         handleMouseMove = (e: MouseEvent) => {
           const pos = this.view.posAtCoords({ x: e.clientX, y: e.clientY });
           if (pos == null) {
-            // Mouse is outside the editor.
             if (this.hoveredLine !== null) {
               this.clearDecoration();
             }
@@ -140,7 +133,6 @@ export default function PythonPlayground({
           const match = findMatchingStepForLine(line.text, steps);
 
           if (!match) {
-            // If no match is found on this line, clear the decoration.
             if (this.hoveredLine !== null) {
               this.clearDecoration();
             }
@@ -148,13 +140,10 @@ export default function PythonPlayground({
             return;
           }
 
-          // There is a matching step.
           onHoverStep(match);
 
-          // Update decoration if hovering a different line.
           if (this.hoveredLine !== line.number) {
             this.hoveredLine = line.number;
-
             this.updateDecorations(line);
           }
         };
@@ -208,11 +197,6 @@ export default function PythonPlayground({
     );
   }
 
-  /*   --------------------------------------
-  Code Mirror Line checking END
-  -------------------------------------- */
-
-  // Recursive function to find a file name by its id.
   const findFileNameById = (tree: FileItem[], id: number): string | null => {
     for (let item of tree) {
       if (item.id === id) {
@@ -230,9 +214,6 @@ export default function PythonPlayground({
     ? findFileNameById(fileTree, currentFile)
     : "No File Selected";
 
-  /* --------------
-  API Call
-  -------------- */
   const handleGenerateStepTree = () => {
     const dontAsk = localStorage.getItem("dontAskGenerateStepTree");
     if (dontAsk === "true") {
@@ -277,55 +258,113 @@ export default function PythonPlayground({
       return;
     }
 
-    if (code.trim() === "") return;
+    if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
 
-    const selectedProblem =
-      localStorage.getItem("selectedProblem") || "Default Problem";
-
-    if (selectedProblem === "Default Problem") return;
+    const selectedProblem = "Problem 1";
 
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
     try {
+      const code = codeMap[currentFile];
       const gptResponse = await ApiCallEditor(selectedProblemDetails, code);
+
       setChanged(true);
-      const rawMessage = gptResponse.choices[0].message.content;
-      const parsedResponse = JSON.parse(rawMessage);
 
-      setCode(parsedResponse.code);
+      const rawMessage = gptResponse.choices?.[0]?.message?.content;
+      if (!rawMessage) {
+        throw new Error("GPT response missing content");
+      }
 
-      // Extract steps
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(rawMessage);
+      } catch (e) {
+        console.error("Failed to parse GPT response:", rawMessage);
+        throw e;
+      }
+
+      // Only update code if there's a valid parsed `code` object
+      if (parsedResponse.code) {
+        if (typeof parsedResponse.code === "object") {
+          Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
+            if (typeof codeValue === "string") {
+              setCodeForFile(Number(fileId), codeValue);
+            } else {
+              console.warn(`Invalid code for fileId ${fileId}:`, codeValue);
+            }
+          });
+        } else if (typeof parsedResponse.code === "string") {
+          // Apply to the currently active file
+          if (currentFile !== null) {
+            setCodeForFile(currentFile, parsedResponse.code);
+          } else {
+            console.warn(
+              "Received single code string, but no current file is selected."
+            );
+          }
+        } else {
+          console.warn(
+            "Unexpected type for 'code':",
+            typeof parsedResponse.code
+          );
+        }
+      } else {
+        console.warn(
+          "No 'code' field found in parsed response:",
+          parsedResponse
+        );
+      }
+
       const stepsData = parsedResponse.steps || parsedResponse;
       setStepsData(stepsData);
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
-    } finally {
     }
   };
 
   useEffect(() => {
-    setCode(code);
-  }, [code]);
-
-  /*   -----------------------------
-  PaintBrush functions START
-  ----------------------------- */
+    // Just to demonstrate dependency
+  }, [codeMap]);
 
   useEffect(() => {
     const storedColorMode = localStorage.getItem("colorMode");
-    if (storedColorMode === "true") {
-      setColorMode(true);
-    } else {
-      setColorMode(false);
-    }
+    setColorMode(storedColorMode === "true");
   }, []);
 
   useEffect(() => {
     localStorage.setItem("colorMode", colorMode.toString());
   }, [colorMode]);
 
-  /* -----------------------------
-  PaintBrush functions END
-  ----------------------------- */
+  function saveCodeToBackend(updatedCode: string) {
+    const token = localStorage.getItem("authToken");
+    if (!token || currentFile == null) return;
+
+    const structure = localStorage.getItem(systemStorageKey);
+    const fileTree = structure ? JSON.parse(structure) : [];
+
+    const tree = {
+      rootNode: {
+        id: "root",
+        name: "root",
+        type: "folder",
+        children: fileTree,
+      },
+    };
+
+    const codeMap = { [currentFile]: updatedCode };
+
+    fetch("https://bachelor-backend.erenhomburg.workers.dev/problem/v1/save", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        problemId: selectedProblemName,
+        tree,
+        codeMap,
+      }),
+    }).catch((err) => console.error("Failed to save from playground:", err));
+  }
 
   return (
     <div className="container-programming-bro">
@@ -360,20 +399,21 @@ export default function PythonPlayground({
           />
         </div>
       </div>
-      {currentFile ? (
+      {currentFile !== null && (
         <CodeMirror
           className="ILoveEprogg"
-          value={code}
+          value={codeMap[currentFile] || ""}
           extensions={[editorExtensions]}
-          onChange={(newCode) => setCode(newCode)}
+          onChange={(newCode) => {
+            setCodeForFile(currentFile, newCode);
+            saveCodeToBackend(newCode);
+          }}
           theme="light"
           basicSetup={{
             lineNumbers: true,
             foldGutter: true,
           }}
         />
-      ) : (
-        ""
       )}
       {showModal && (
         <div
