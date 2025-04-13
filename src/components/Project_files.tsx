@@ -28,9 +28,6 @@ const ProjectFiles = ({
   setFileTree,
   problemId,
 }: InputProps) => {
-  // We no longer need a local "files" state: we rely on fileTree from context.
-  // Remove the useEffect that loads the tree from the backend here.
-
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const clickTimeout = useRef<number | null>(null);

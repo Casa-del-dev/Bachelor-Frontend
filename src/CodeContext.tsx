@@ -178,16 +178,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     };
   }, [problemId]);
 
-  useEffect(() => {
-    console.log("Updated fileTree:", fileTree);
-    console.log(
-      "Current file id:",
-      currentFile,
-      "->",
-      currentFile ? findFileNameById(fileTree, currentFile) : "null"
-    );
-  }, [fileTree, currentFile]);
-
   // Helper to update the code map.
   const setCodeForFileHandler = (fileId: number, updatedCode: string) => {
     setCodeMap((prev) => {
