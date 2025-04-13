@@ -18,6 +18,7 @@ interface PythonPlaygroundProps {
   codeMap: Record<string, string>;
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
+  currentFileName: string | null;
 }
 
 export default function ResizableSplitView({
@@ -28,6 +29,7 @@ export default function ResizableSplitView({
   codeMap,
   setCodeForFile,
   currentFile,
+  currentFileName,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -243,6 +245,7 @@ export default function ResizableSplitView({
           codeMap={codeMap}
           setCodeForFile={setCodeForFile}
           currentFile={currentFile}
+          currentFileName={currentFileName}
         />
       </div>
 

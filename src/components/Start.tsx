@@ -57,8 +57,16 @@ const Start: React.FC = () => {
   const [hoveredStep, setHoveredStep] = useState<Step | null>(null);
   const [loading, setLoading] = useState(false);
   const [fromEditor, setFromEditor] = useState(false);
-  const { currentFile, setCurrentFile, codeMap, setCodeForFile } =
-    useCodeContext();
+  const {
+    currentFile,
+    setCurrentFile,
+    codeMap,
+    setCodeForFile,
+    fileTree,
+    setFileTree,
+    problemId,
+    currentFileName,
+  } = useCodeContext();
 
   const [layout, setLayout] = useState<LayoutState>(() => {
     const storedLayout = localStorage.getItem("layoutDimensions");
@@ -193,6 +201,9 @@ const Start: React.FC = () => {
           setCodeForFile={setCodeForFile}
           currentFile={currentFile}
           setCurrentFile={setCurrentFile}
+          fileTree={fileTree}
+          setFileTree={setFileTree}
+          problemId={problemId}
         />
       </div>
 
@@ -210,6 +221,7 @@ const Start: React.FC = () => {
             codeMap={codeMap}
             setCodeForFile={setCodeForFile}
             currentFile={currentFile}
+            currentFileName={currentFileName}
           />
         </CodeProvider>
       </div>

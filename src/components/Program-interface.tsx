@@ -16,6 +16,7 @@ import ApiCallEditor from "./AI_Editor.tsx";
 import { setStepsData, setChanged } from "./BuildingBlocks/StepsData.tsx";
 import "./Program-interface.css";
 import { Step } from "./Start.tsx";
+import { useCodeContext } from "../CodeContext.tsx";
 
 interface FileItem {
   id: number;
@@ -24,14 +25,26 @@ interface FileItem {
   children?: FileItem[];
 }
 
+export interface Tree {
+  rootNode: TreeNode;
+}
+
+export interface TreeNode {
+  id: string;
+  name: string;
+  type: "folder" | "file";
+  children?: TreeNode[];
+}
+
 interface PythonPlaygroundProps {
   setHoveredStep: (step: Step | null) => void;
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
-  codeMap: Record<string, string>;
+  codeMap: Record<number, string>;
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
+  currentFileName: string | null;
 }
 
 export default function PythonPlayground({
@@ -42,6 +55,7 @@ export default function PythonPlayground({
   codeMap,
   setCodeForFile,
   currentFile,
+  currentFileName,
 }: PythonPlaygroundProps) {
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -53,11 +67,9 @@ export default function PythonPlayground({
   const selectedProblemName =
     localStorage.getItem("selectedProblem") || "DefaultProblem";
 
-  const systemStorageKey = `sysSelectedSystemProblem_${selectedProblemName}`;
   const StorageKey = `stepselectedSystemProblem_${selectedProblemName}`;
 
-  const storedTree = localStorage.getItem(systemStorageKey);
-  const fileTree = storedTree ? JSON.parse(storedTree) : [];
+  const { fileTree } = useCodeContext();
 
   function loadStepsTree(): Step[] {
     const stored = localStorage.getItem(StorageKey);
@@ -197,23 +209,6 @@ export default function PythonPlayground({
     );
   }
 
-  const findFileNameById = (tree: FileItem[], id: number): string | null => {
-    for (let item of tree) {
-      if (item.id === id) {
-        return item.name;
-      }
-      if (item.children) {
-        const found = findFileNameById(item.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-
-  const currentFileName = currentFile
-    ? findFileNameById(fileTree, currentFile)
-    : "No File Selected";
-
   const handleGenerateStepTree = () => {
     const dontAsk = localStorage.getItem("dontAskGenerateStepTree");
     if (dontAsk === "true") {
@@ -334,24 +329,35 @@ export default function PythonPlayground({
     localStorage.setItem("colorMode", colorMode.toString());
   }, [colorMode]);
 
+  function convertFileItemToTreeNode(item: FileItem): TreeNode {
+    return {
+      id: item.id.toString(), // Convert number id to string
+      name: item.name,
+      type: item.type,
+      children: item.children
+        ? item.children.map(convertFileItemToTreeNode)
+        : [],
+    };
+  }
+
   function saveCodeToBackend(updatedCode: string) {
     const token = localStorage.getItem("authToken");
     if (!token || currentFile == null) return;
 
-    const structure = localStorage.getItem(systemStorageKey);
-    const fileTree = structure ? JSON.parse(structure) : [];
-
-    const tree = {
+    // Convert fileTree (FileItem[]) to the expected tree structure for the backend
+    const treeToSubmit: Tree = {
       rootNode: {
         id: "root",
         name: "root",
         type: "folder",
-        children: fileTree,
+        children: fileTree.map(convertFileItemToTreeNode),
       },
     };
 
-    const codeMap = { [currentFile]: updatedCode };
+    // Create a codeMap object for the currently active file.
+    const updatedCodeMap = { [currentFile]: updatedCode };
 
+    // IMPORTANT: Note the property key here is "tree", which the backend expects.
     fetch("https://bachelor-backend.erenhomburg.workers.dev/problem/v1/save", {
       method: "POST",
       headers: {
@@ -360,8 +366,8 @@ export default function PythonPlayground({
       },
       body: JSON.stringify({
         problemId: selectedProblemName,
-        tree,
-        codeMap,
+        tree: treeToSubmit,
+        codeMap: updatedCodeMap,
       }),
     }).catch((err) => console.error("Failed to save from playground:", err));
   }
@@ -399,7 +405,7 @@ export default function PythonPlayground({
           />
         </div>
       </div>
-      {currentFile !== null && (
+      {currentFile !== null && currentFile !== undefined && (
         <CodeMirror
           className="ILoveEprogg"
           value={codeMap[currentFile] || ""}

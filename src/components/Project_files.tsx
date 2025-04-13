@@ -1,120 +1,43 @@
-import React, { useState, useEffect, useRef, JSX } from "react";
+import React, { useState, useRef, JSX } from "react";
 import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
 import "./Project_files.css";
 
-interface InputProps {
-  codeMap: Record<number, string>;
-  setCodeForFile: (fileId: number, code: string) => void;
-  currentFile: number | null;
-  setCurrentFile: (fileId: number | null) => void;
-}
-
-interface FileItem {
+export interface FileItem {
   id: number;
   name: string;
   type: "file" | "folder";
   children?: FileItem[];
 }
 
-const initialFiles: FileItem[] = [
-  {
-    id: 1,
-    name: "src",
-    type: "folder",
-    children: [{ id: 2, name: "Solution.py", type: "file" }],
-  },
-  { id: 4, name: "Tests.py", type: "file" },
-];
+interface InputProps {
+  codeMap: Record<number, string>;
+  setCodeForFile: (fileId: number, code: string) => void;
+  currentFile: number | null;
+  setCurrentFile: (fileId: number | null) => void;
+  fileTree: FileItem[]; // now passed from context
+  setFileTree: (files: FileItem[]) => void;
+  problemId: string;
+}
 
 const ProjectFiles = ({
   codeMap,
   setCodeForFile,
   currentFile,
   setCurrentFile,
+  fileTree,
+  setFileTree,
+  problemId,
 }: InputProps) => {
-  const problemId = "Problem 1";
-  const [files, setFiles] = useState<FileItem[]>([]);
+  // We no longer need a local "files" state: we rely on fileTree from context.
+  // Remove the useEffect that loads the tree from the backend here.
+
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
-  const [dirty, setDirty] = useState(false);
   const clickTimeout = useRef<number | null>(null);
 
-  // Debounced save effect – waits for 1000ms after changes settle
-  useEffect(() => {
-    if (dirty && currentFile !== null) {
-      const timeout = setTimeout(() => {
-        saveToBackend(problemId, files, codeMap, currentFile);
-        setDirty(false);
-      }, 500);
-      return () => {
-        clearTimeout(timeout);
-      };
-    }
-  }, [dirty, files, codeMap, currentFile, problemId]);
+  // Inside your ProjectFiles component:
 
-  // Load files from the backend only once on mount.
-  useEffect(() => {
-    let mounted = true;
-    async function init() {
-      const data = await loadFromBackend(problemId);
-      if (!mounted) return;
-
-      if (data && data.tree && data.tree.rootNode) {
-        const loadedFiles: FileItem[] = data.tree.rootNode.children || [];
-        if (loadedFiles.length === 0) {
-          setFiles(initialFiles);
-          saveToBackend(problemId, initialFiles, codeMap, currentFile);
-        } else {
-          setFiles(loadedFiles);
-        }
-        if (data.codeMap) {
-          const converted: Record<number, string> = {};
-          for (const [key, val] of Object.entries(data.codeMap)) {
-            converted[Number(key)] = val;
-          }
-          Object.entries(converted).forEach(([fileId, codeValue]) => {
-            setCodeForFile(Number(fileId), codeValue);
-          });
-          if (currentFile === null && data.currentFile !== null) {
-            setCurrentFile(data.currentFile);
-          }
-        }
-      } else {
-        setFiles(initialFiles);
-        saveToBackend(problemId, initialFiles, {}, null);
-      }
-    }
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, [problemId]); // run only on mount
-
-  async function loadFromBackend(pId: string): Promise<{
-    tree: any;
-    codeMap: Record<string, string>;
-    currentFile: number | null;
-  } | null> {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) return null;
-      const res = await fetch(
-        `https://bachelor-backend.erenhomburg.workers.dev/problem/v1/load?id=${encodeURIComponent(
-          pId
-        )}`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!res.ok) return null;
-      return await res.json();
-    } catch (err) {
-      console.error("Load failed:", err);
-      return null;
-    }
-  }
-
+  // Function to save updated file tree to the backend.
   async function saveToBackend(
     pId: string,
     fileItems: FileItem[],
@@ -156,26 +79,56 @@ const ProjectFiles = ({
     }
   }
 
+  // Updated handleUpdateFiles that persists changes:
+  function handleUpdateFiles(newFiles: FileItem[]) {
+    setFileTree(newFiles);
+    saveToBackend(problemId, newFiles, codeMap, currentFile);
+  }
+
+  // Inside your rename function, you call handleUpdateFiles(updatedFiles)
+  // so after renaming, the new tree is sent to the backend.
+  function handleRename(itemId: number) {
+    if (!editText.trim()) {
+      setEditingId(null);
+      return;
+    }
+    const parent = findParent(fileTree, itemId);
+    const siblings = parent ? parent.children! : fileTree;
+    if (siblings.some((i) => i.id !== itemId && i.name === editText)) {
+      alert("File name already exists in the folder. Keeping the old name.");
+      setEditingId(null);
+      return;
+    }
+    const renameInTree = (tree: FileItem[]): FileItem[] =>
+      tree.map((item) => {
+        if (item.id === itemId) {
+          return { ...item, name: editText };
+        }
+        if (item.type === "folder" && item.children) {
+          return { ...item, children: renameInTree(item.children) };
+        }
+        return item;
+      });
+    const updatedFiles = renameInTree(fileTree);
+    handleUpdateFiles(updatedFiles);
+    setEditingId(null);
+  }
+
   function handleSelectFile(file: FileItem) {
     if (file.type === "file") {
       setCurrentFile(file.id);
       if (!codeMap[file.id]) {
         setCodeForFile(file.id, "");
       }
-      saveToBackend(problemId, files, codeMap, file.id);
     }
   }
 
-  function handleUpdateFiles(newFiles: FileItem[]) {
-    setFiles(newFiles);
-    saveToBackend(problemId, newFiles, codeMap, currentFile);
-  }
-
-  const addItemToFolder = (
+  // Utility to add an item to a folder in the tree.
+  function addItemToFolder(
     tree: FileItem[],
     parentId: number,
     newItem: FileItem
-  ): FileItem[] => {
+  ): FileItem[] {
     return tree.map((item) => {
       if (item.id === parentId && item.type === "folder") {
         const children = item.children
@@ -191,7 +144,7 @@ const ProjectFiles = ({
       }
       return item;
     });
-  };
+  }
 
   function addNewFile(parentId: number | null = null) {
     const fileName = prompt("Enter new file name (e.g., NewFile.js):");
@@ -203,8 +156,8 @@ const ProjectFiles = ({
     };
     const updatedFiles =
       parentId === null
-        ? [...files, newFile]
-        : addItemToFolder(files, parentId, newFile);
+        ? [...fileTree, newFile]
+        : addItemToFolder(fileTree, parentId, newFile);
     handleUpdateFiles(updatedFiles);
   }
 
@@ -219,11 +172,12 @@ const ProjectFiles = ({
     };
     const updatedFiles =
       parentId === null
-        ? [...files, newFolder]
-        : addItemToFolder(files, parentId, newFolder);
+        ? [...fileTree, newFolder]
+        : addItemToFolder(fileTree, parentId, newFolder);
     handleUpdateFiles(updatedFiles);
   }
 
+  // Example delete helper functions:
   function collectAllDescendantIds(item: FileItem): number[] {
     if (item.type === "folder" && item.children) {
       return [item.id, ...item.children.flatMap(collectAllDescendantIds)];
@@ -231,7 +185,7 @@ const ProjectFiles = ({
     return [item.id];
   }
 
-  const deleteFromTree = (tree: FileItem[], itemId: number): FileItem[] => {
+  function deleteFromTree(tree: FileItem[], itemId: number): FileItem[] {
     return tree
       .filter((item) => item.id !== itemId)
       .map((item) => {
@@ -240,19 +194,6 @@ const ProjectFiles = ({
         }
         return item;
       });
-  };
-
-  function deleteItem(itemId: number) {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
-    const itemToDelete = findItemById(files, itemId);
-    if (!itemToDelete) return;
-    const idsToRemove = collectAllDescendantIds(itemToDelete);
-    const updatedFiles = deleteFromTree(files, itemId);
-    if (currentFile !== null && idsToRemove.includes(currentFile)) {
-      setCurrentFile(null);
-      setCodeForFile(currentFile, "");
-    }
-    handleUpdateFiles(updatedFiles);
   }
 
   function findItemById(tree: FileItem[], targetId: number): FileItem | null {
@@ -264,6 +205,20 @@ const ProjectFiles = ({
       }
     }
     return null;
+  }
+
+  function deleteItem(itemId: number) {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    const itemToDelete = findItemById(fileTree, itemId);
+    if (!itemToDelete) return;
+    const idsToRemove = collectAllDescendantIds(itemToDelete);
+    const updatedFiles = deleteFromTree(fileTree, itemId);
+
+    if (currentFile !== null && idsToRemove.includes(currentFile)) {
+      setCurrentFile(null);
+      setCodeForFile(currentFile, "");
+    }
+    handleUpdateFiles(updatedFiles);
   }
 
   function findParent(tree: FileItem[], targetId: number): FileItem | null {
@@ -280,33 +235,6 @@ const ProjectFiles = ({
       }
     }
     return null;
-  }
-
-  function handleRename(itemId: number) {
-    if (!editText.trim()) {
-      setEditingId(null);
-      return;
-    }
-    const parent = findParent(files, itemId);
-    const siblings = parent ? parent.children! : files;
-    if (siblings.some((i) => i.id !== itemId && i.name === editText)) {
-      alert("File name already exists in the folder. Keeping the old name.");
-      setEditingId(null);
-      return;
-    }
-    const renameInTree = (tree: FileItem[]): FileItem[] =>
-      tree.map((item) => {
-        if (item.id === itemId) {
-          return { ...item, name: editText };
-        }
-        if (item.type === "folder" && item.children) {
-          return { ...item, children: renameInTree(item.children) };
-        }
-        return item;
-      });
-    const updatedFiles = renameInTree(files);
-    handleUpdateFiles(updatedFiles);
-    setEditingId(null);
   }
 
   function handleFileClick(item: FileItem) {
@@ -415,7 +343,7 @@ const ProjectFiles = ({
           </span>
         </div>
       </div>
-      <div className="file-tree">{renderTree(files)}</div>
+      <div className="file-tree">{renderTree(fileTree)}</div>
     </div>
   );
 };
