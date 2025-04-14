@@ -63,8 +63,6 @@ const Start: React.FC = () => {
     codeMap,
     setCodeForFile,
     fileTree,
-    setFileTree,
-    problemId,
     currentFileName,
   } = useCodeContext();
 
