@@ -1,7 +1,8 @@
-import React, { useState, useRef, JSX } from "react";
+import React, { useState, useRef, JSX, useEffect, useMemo } from "react";
 import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
 import "./Project_files.css";
 import { useCodeContext } from "../CodeContext";
+import { Folder } from "lucide-react";
 
 export interface FileItem {
   id: number;
@@ -31,12 +32,12 @@ const ProjectFiles = ({
 
   const { saveTreeToBackend } = useCodeContext();
 
-  function handleUpdateFiles(newFiles: FileItem[]) {
-    saveTreeToBackend(newFiles);
+  // Always call saveTreeToBackend with the actual fileTree (without pseudo-root)
+  async function handleUpdateFiles(newFiles: FileItem[]) {
+    await saveTreeToBackend(newFiles);
   }
 
-  // Inside your rename function, you call handleUpdateFiles(updatedFiles)
-  // so after renaming, the new tree is sent to the backend.
+  // Rename functionality
   function handleRename(itemId: number) {
     if (!editText.trim()) {
       setEditingId(null);
@@ -73,7 +74,7 @@ const ProjectFiles = ({
     }
   }
 
-  // Utility to add an item to a folder in the tree.
+  // Utility: add an item into a folder (or at root if parentId is null)
   function addItemToFolder(
     tree: FileItem[],
     parentId: number,
@@ -96,11 +97,13 @@ const ProjectFiles = ({
     });
   }
 
-  function addNewFile(parentId: number | null = null) {
+  async function addNewFile(parentId: number | null = null) {
     const fileName = prompt("Enter new file name (e.g., NewFile.js):");
     if (!fileName) return;
 
-    // Generate a unique ID (you can consider using a UUID library for better uniqueness)
+    // If parent is our pseudo-root (id === -1), treat as root (null)
+    if (parentId === -1) parentId = null;
+
     const newId = Date.now();
     const newFile: FileItem = {
       id: newId,
@@ -108,30 +111,30 @@ const ProjectFiles = ({
       type: "file",
     };
 
-    // Compute the new tree with the new file added.
     const updatedFiles =
       parentId === null
         ? [...fileTree, newFile]
         : addItemToFolder(fileTree, parentId, newFile);
 
-    // **Important**: Immediately update codeMap for the new file.
     setCodeForFile(newId, "");
-
-    // Delay the save to the backend so React has time to update codeMap.
-    setTimeout(() => {
-      handleUpdateFiles(updatedFiles);
-    }, 0);
+    await handleUpdateFiles(updatedFiles);
+    setCurrentFile(newId);
   }
 
   function addNewFolder(parentId: number | null = null) {
     const folderName = prompt("Enter new folder name:");
     if (!folderName) return;
+
+    // If parent is our pseudo-root, treat as root.
+    if (parentId === -1) parentId = null;
+
     const newFolder: FileItem = {
       id: Date.now(),
       name: folderName,
       type: "folder",
       children: [],
     };
+
     const updatedFiles =
       parentId === null
         ? [...fileTree, newFolder]
@@ -139,7 +142,7 @@ const ProjectFiles = ({
     handleUpdateFiles(updatedFiles);
   }
 
-  // Example delete helper functions:
+  // Delete helper functions
   function collectAllDescendantIds(item: FileItem): number[] {
     if (item.type === "folder" && item.children) {
       return [item.id, ...item.children.flatMap(collectAllDescendantIds)];
@@ -222,61 +225,180 @@ const ProjectFiles = ({
     e.stopPropagation();
   }
 
+  function getVisualWeight(item: FileItem): number {
+    if (item.type === "file") return 1;
+    if (!item.children || item.children.length === 0) return 1;
+
+    return (
+      1 + item.children.reduce((sum, child) => sum + getVisualWeight(child), 0)
+    );
+  }
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function autoResizeInput() {
+    if (inputRef.current) {
+      inputRef.current.style.width = "1ch"; // reset before measuring
+      inputRef.current.style.width = inputRef.current.scrollWidth + "px"; // grow to content
+    }
+  }
+
+  function getTextWidth(text: string, font: string): number {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return 0;
+    ctx.font = font;
+    return ctx.measureText(text).width;
+  }
+
+  // Run resize on mount + when editText changes
+  useEffect(() => {
+    autoResizeInput();
+  }, [editText]);
+
+  useEffect(() => {
+    if (editingId !== null) {
+      const item = findItemById(fileTree, editingId);
+      if (item) setEditText(item.name);
+
+      requestAnimationFrame(() => {
+        autoResizeInput();
+      });
+    }
+  }, [editingId]);
+
+  // Memoized font string and width calculation
+  const fontSize = getComputedStyle(document.documentElement)
+    .getPropertyValue("--step-font-size")
+    .trim();
+
+  const font = `${parseFloat(fontSize) * 1.2}px Inter, sans-serif`;
+
+  const initialWidth = useMemo(() => {
+    const rawWidth = getTextWidth(editText || " ", font);
+    const buffer = 20;
+    return rawWidth + buffer;
+  }, [editText, font]);
+
+  // Render the tree recursively.
+  // If the node is our pseudo-root (id -1), render a custom header without controls.
   function renderTree(tree: FileItem[]): JSX.Element {
     return (
-      <ul>
+      <ul className="tree">
         {tree.map((item) => (
-          <li key={item.id}>
-            <div
-              className="file-item"
-              onClick={() => handleFileClick(item)}
-              onDoubleClick={(e) => handleDoubleClick(e, item)}
-            >
-              {editingId === item.id ? (
-                <input
-                  className="editing-stepTree"
-                  type="text"
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  onBlur={() => handleRename(item.id)}
-                  onKeyDown={(e) => e.key === "Enter" && handleRename(item.id)}
-                  autoFocus
-                />
-              ) : (
-                <span className={item.type === "file" ? "file" : "folder"}>
+          <li
+            key={item.id}
+            className={
+              item.id === -1
+                ? "pseudo-root-li"
+                : item.type === "file"
+                ? "file-item"
+                : "folder-item"
+            }
+            style={
+              {
+                "--connector-top":
+                  item.type === "file"
+                    ? "50%"
+                    : `${100 / (getVisualWeight(item) * 2)}%`,
+              } as React.CSSProperties
+            }
+          >
+            {item.id === -1 ? (
+              <div className="pseudo-root-header">
+                <Folder className="left folder-icon" />
+                <span className="title-fileTree" style={{ fontWeight: "bold" }}>
                   {item.name}
                 </span>
-              )}
-              <div className="controls">
-                <span
-                  className="icon"
-                  title="Delete"
-                  onClick={() => {
-                    deleteItem(item.id);
-                  }}
-                >
-                  <FaTrash />
-                </span>
-                {item.type === "folder" && (
-                  <>
+              </div>
+            ) : (
+              <div className="file-item">
+                {editingId === item.id ? (
+                  <span
+                    className={
+                      item.type === "file" ? "file edit" : "folder edit"
+                    }
+                    onClick={() => handleFileClick(item)}
+                    onDoubleClick={(e) => handleDoubleClick(e, item)}
+                  >
+                    <div className="icon-and-title-left">
+                      {item.type === "folder" && (
+                        <Folder className="left folder-icon" />
+                      )}
+                      <input
+                        ref={inputRef}
+                        className="title-file-fileTree edit"
+                        type="text"
+                        value={editText}
+                        style={{ width: `${initialWidth}px` }}
+                        onChange={(e) => {
+                          setEditText(e.target.value);
+                          autoResizeInput();
+                        }}
+                        onFocus={autoResizeInput}
+                        onInput={autoResizeInput}
+                        onBlur={() => handleRename(item.id)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleRename(item.id)
+                        }
+                        autoFocus
+                      />
+                    </div>
+                  </span>
+                ) : (
+                  <span
+                    className={item.type === "file" ? "file" : "folder"}
+                    onClick={() => handleFileClick(item)}
+                    onDoubleClick={(e) => handleDoubleClick(e, item)}
+                  >
+                    <div className="icon-and-title-left">
+                      {item.type === "folder" && (
+                        <Folder className="left folder-icon" />
+                      )}
+                      <div className="title-file-fileTree">{item.name}</div>
+                    </div>
+                  </span>
+                )}
+                {item.id !== -1 && (
+                  <div className="controls">
                     <span
                       className="icon"
-                      title="New File"
-                      onClick={() => addNewFile(item.id)}
+                      title="Delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteItem(item.id);
+                      }}
                     >
-                      <FaFileAlt />
+                      <FaTrash />
                     </span>
-                    <span
-                      className="icon"
-                      title="New Folder"
-                      onClick={() => addNewFolder(item.id)}
-                    >
-                      <FaFolderPlus />
-                    </span>
-                  </>
+                    {item.type === "folder" && (
+                      <>
+                        <span
+                          className="icon"
+                          title="New File"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addNewFile(item.id);
+                          }}
+                        >
+                          <FaFileAlt />
+                        </span>
+                        <span
+                          className="icon"
+                          title="New Folder"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addNewFolder(item.id);
+                          }}
+                        >
+                          <FaFolderPlus />
+                        </span>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
+            )}
             {item.type === "folder" &&
               item.children &&
               renderTree(item.children)}
@@ -288,26 +410,14 @@ const ProjectFiles = ({
 
   return (
     <div className="project-files">
-      <div className="head-projectsys-left-start">
-        <div className="Title-text">Project Files</div>
-        <div className="controls">
-          <span
-            className="icon"
-            title="New File (root)"
-            onClick={() => addNewFile(null)}
-          >
-            <FaFileAlt />
-          </span>
-          <span
-            className="icon"
-            title="New Folder (root)"
-            onClick={() => addNewFolder(null)}
-          >
-            <FaFolderPlus />
-          </span>
-        </div>
+      <div className="file-tree">
+        {/* Wrap the fileTree with a pseudo-root node before rendering.
+            This pseudo-root is only used for display; any actions using parentId = -1 are treated as root (null)
+            and it is removed before saving to the backend. */}
+        {renderTree([
+          { id: -1, name: "Project Files", type: "folder", children: fileTree },
+        ])}
       </div>
-      <div className="file-tree">{renderTree(fileTree)}</div>
     </div>
   );
 };

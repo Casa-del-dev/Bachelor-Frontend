@@ -12,13 +12,6 @@
   height: 3vw;
 }
 
-.Title-text {
-  font-weight: bold;
-  font-size: 1.5vw;
-  display: flex;
-  align-items: center;
-}
-
 .controls {
   flex-direction: row;
   display: flex;
@@ -33,12 +26,15 @@
 
 .file-tree {
   padding-top: 2vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .file-tree ul {
-  padding-left: 2vw; /*padding of 2 because the list dots are not in ul*/
-  overflow: auto;
+  padding: 0 2vw;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .file-item {
@@ -46,23 +42,42 @@
   flex-direction: row;
   align-items: center;
   text-align: end;
-  gap: 1vw;
-  height: 2vw;
-  cursor: pointer;
-}
-
-.file-item:hover {
-  background-color: lightgrey;
+  gap: 5vh;
+  cursor: default;
 }
 
 .file {
-  cursor: text;
-  max-width: 5vw;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 calc(var(--step-font-size) * 0.4);
+  border-radius: 8px;
+}
+
+.file:not(.edit):hover {
+  background-color: lightblue;
 }
 
 .folder {
-  cursor: text;
+  display: flex;
+  align-items: center;
+  padding: 0 calc(var(--step-font-size) * 0.4);
+  border-radius: 8px;
+}
+
+.folder:not(.edit):hover {
+  background-color: lightblue;
+}
+
+.icon-and-title-left {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--step-font-size) * 0.2);
+  font-size: calc(var(--step-font-size) * 0.6);
+}
+
+.left.folder-icon {
+  height: calc(var(--step-font-size) * 1.4);
 }
 
 .editing-stepTree {
@@ -79,3 +94,129 @@
   align-items: center;
   justify-content: space-between;
 }
+
+/* ---------------------------------------
+Tree Styling START
+--------------------------------------- */
+
+/***********************************************
+ * Base styling / reset
+ ***********************************************/
+.tree,
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.tree ul {
+  margin-left: 0.75rem;
+  box-sizing: border-box;
+}
+
+.pseudo-root-header {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--step-font-size) * 0.2);
+}
+
+.tree li {
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+}
+
+/***********************************************
+  * Draw vertical lines for the entire nested UL,
+  * but "clip" them for the last child so they
+  * don’t extend and cause crossing lines.
+  ***********************************************/
+.tree ul::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px solid black;
+  z-index: 1;
+}
+
+.tree > ul::before {
+  left: 0;
+}
+
+.tree ul ul::before {
+  left: calc(var(--step-font-size) * 0.35);
+}
+
+/***********************************************
+  * Each LI has a horizontal line that connects 
+  * the parent's vertical line to the item text/icon.
+  ***********************************************/
+.tree li:not(.pseudo-root-li) {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.tree li li li:not(.pseudo-root-li) {
+  left: calc(var(--step-font-size) * 0.35);
+}
+
+/* The horizontal connector line */
+.tree li:not(.pseudo-root-li)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: var(--connector-top, 50%);
+  width: 1rem;
+  border-top: 1px solid black;
+}
+/***********************************************
+  * Stop the vertical line from continuing past
+  * the last <li> in a list:
+  ***********************************************/
+
+.tree ul > li:last-child::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 52%;
+  bottom: 0;
+  width: 1px;
+  background: white; /* Or your actual background color */
+  border: none;
+  z-index: 1;
+}
+
+.tree > li.pseudo-root-li::after {
+  content: none;
+}
+
+.title-fileTree {
+  font-size: calc(var(--step-font-size) * 1.2);
+}
+
+.title-file-fileTree {
+  font-size: calc(var(--step-font-size) * 1.2);
+}
+
+.title-file-fileTree.edit {
+  font-size: calc(var(--step-font-size) * 1.2);
+  background-color: transparent;
+  color: black;
+  outline: none;
+  padding: 0 5px;
+
+  border: 1px solid #999;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.title-file-fileTree.edit:focus {
+  border-color: dodgerblue;
+}
+
+/* ---------------------------------------
+Tree Styling END
+--------------------------------------- */

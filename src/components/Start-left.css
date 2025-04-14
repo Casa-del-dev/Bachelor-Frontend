@@ -7,71 +7,51 @@
 
 .left-content-main {
   display: grid;
-  grid-template-rows: 3vw auto;
+  grid-template-rows: calc(var(--step-font-size) * 3.5) auto;
   grid-template-areas: "header" "main";
   width: 100%;
+  overflow: auto;
 }
 
-.class-created-for-seperator {
+.button-group {
   display: flex;
-  flex-direction: column;
+  overflow: hidden;
+  justify-content: space-evenly;
+  gap: calc((25%) / 5);
+  margin: 0 calc(var(--step-font-size) * 0.8);
+  margin-top: calc(var(--step-font-size) * 0.8);
+  box-sizing: border-box;
 }
 
-.header-left-main {
-  grid-area: header;
-  height: 100%;
-  display: grid;
-  grid-template-areas: "Left Sep1 Middle Sep2 Right";
-  grid-template-columns: 1fr 1px 1fr 1px 1fr;
-}
-
-.custom-separator-for-start-purpose {
-  grid-area: Sep1, Sep2;
-  height: 100%;
-  width: 1px;
-  background-color: black;
-}
-
-.Project-system-files {
-  grid-area: Left;
-  font-size: 0.8vw;
-  height: 100%;
-  display: flex;
+.segmented-button {
+  border: 1px solid #ccc;
+  width: 25%;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  border-right: 1px solid #ccc;
+  border-radius: 8px;
+  user-select: none;
+  text-align: center;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
   align-items: center;
   justify-content: center;
+  display: flex;
+  font-size: calc(var(--step-font-size) * 0.6);
+  height: calc(var(--step-font-size) * 1);
 }
 
-.Problem-description-main {
-  grid-area: Middle;
-  font-size: 0.8vw;
-  height: 100%;
-
-  border-right: 1px solid black;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.segmented-button:hover {
+  background-color: #eee;
 }
 
-.Building-blocks {
-  grid-area: Right;
-  font-size: 0.8vw;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.custom-line-horizontal {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  height: 1px;
-  background-color: black;
-  align-self: center;
+.segmented-button.active {
+  background-color: #ddd;
+  font-weight: 600;
 }
 
 .all-type-of-content {
-  grid-area: main;
   display: flex;
   font-size: 0.8vw;
 }
@@ -93,6 +73,7 @@
   padding: 0;
   margin: 0;
   transition: background-color 0.2s;
+  text-align: center;
 }
 .invisible-button:hover {
   background-color: rgba(0, 0, 0, 0.1); /* Light grey highlight on hover */

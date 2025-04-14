@@ -49,7 +49,10 @@ const Start: React.FC = () => {
   const [_, setSelectedProblem] = useState<string>("");
 
   const rightRef = useRef<HTMLDivElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+
   const [rightFontSize, setRightFontSize] = useState("1vw");
+  const [leftFontSize, setLeftFontSize] = useState("1vw");
 
   const draggingLeftDivider = useRef(false);
   const draggingRightDivider = useRef(false);
@@ -149,13 +152,23 @@ const Start: React.FC = () => {
     if (rightRef.current) {
       const widthPx = rightRef.current.offsetWidth;
       const fontSizeValue = Math.min(Math.max(widthPx * 0.04, 15), 30);
-      const computedFontSize = `${fontSizeValue}px`;
-      if (computedFontSize !== rightFontSize) {
-        setRightFontSize(computedFontSize);
-        localStorage.setItem("rightFontSize", computedFontSize);
+      const computedRight = `${fontSizeValue}px`;
+      if (computedRight !== rightFontSize) {
+        setRightFontSize(computedRight);
+        localStorage.setItem("rightFontSize", computedRight);
       }
     }
-  }, [rightFontSize]);
+
+    if (leftRef.current) {
+      const widthPx = leftRef.current.offsetWidth;
+      const fontSizeValue = Math.min(Math.max(widthPx * 0.045, 15), 26); // slightly smaller max
+      const computedLeft = `${fontSizeValue}px`;
+      if (computedLeft !== leftFontSize) {
+        setLeftFontSize(computedLeft);
+        localStorage.setItem("leftFontSize", computedLeft);
+      }
+    }
+  }, [rightFontSize, leftFontSize]);
 
   // Update font size when layout changes (e.g. during dragging)
   useEffect(() => {
@@ -172,10 +185,13 @@ const Start: React.FC = () => {
 
   // On mount, try to load font size from local storage or compute it
   useEffect(() => {
-    const storedFontSize = localStorage.getItem("rightFontSize");
-    if (storedFontSize) {
-      setRightFontSize(storedFontSize);
-    } else {
+    const storedRight = localStorage.getItem("rightFontSize");
+    if (storedRight) setRightFontSize(storedRight);
+
+    const storedLeft = localStorage.getItem("leftFontSize");
+    if (storedLeft) setLeftFontSize(storedLeft);
+
+    if (!storedLeft || !storedRight) {
       updateFontSize();
     }
   }, [updateFontSize]);
@@ -193,7 +209,14 @@ const Start: React.FC = () => {
   return (
     <div className="container-main">
       {/* Left Column */}
-      <div className="left-column" style={{ width: `${layout.left}%` }}>
+      <div
+        className="left-column"
+        ref={leftRef}
+        style={{
+          width: `${layout.left}%`,
+          ["--step-font-size" as any]: leftFontSize,
+        }}
+      >
         <StartLeft
           codeMap={codeMap}
           setCodeForFile={setCodeForFile}

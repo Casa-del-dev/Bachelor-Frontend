@@ -26,7 +26,7 @@ export interface CodeContextType {
   fileTree: FileItem[];
   setFileTree: (files: FileItem[]) => void;
   problemId: string;
-  saveTreeToBackend: (newTree: FileItem[]) => void;
+  saveTreeToBackend: (tree: FileItem[]) => Promise<void>;
 }
 
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
@@ -210,7 +210,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     return ids;
   }
 
-  async function saveTreeToBackend(newTree: FileItem[]) {
+  async function saveTreeToBackend(newTree: FileItem[]): Promise<void> {
     const token = localStorage.getItem("authToken");
     if (!token) return;
 
@@ -227,8 +227,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
         mergedCodeMap[id] = "";
       }
     });
-
-    console.log("deletedIds: ", deletedIds);
 
     // Build the tree object (pseudoTree) that the backend expects.
     const treeToSubmit = {

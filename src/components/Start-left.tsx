@@ -33,6 +33,8 @@ const StartLeft = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [selected, setSelected] = useState<string>("Project");
+
   // Retrieve the last selected problem from localStorage
   const storedProblem = localStorage.getItem("selectedProblem");
   const details = storedProblem
@@ -133,33 +135,41 @@ const StartLeft = ({
   return (
     <div className="left-main">
       <div className="left-content-main">
-        <div className="class-created-for-seperator">
-          <div className="header-left-main">
-            {/* Three "buttons" */}
-            <div
-              className="Project-system-files invisible-button"
-              onClick={() => selectSection("Project")}
-            >
-              Project <br /> system files
-            </div>
-            <div className="custom-separator-for-start-purpose"></div>
-            <div
-              className="Problem-description-main invisible-button"
-              onClick={() => selectSection("Problem")}
-            >
-              Problem
-            </div>
-            <div className="custom-separator-for-start-purpose"></div>
-            <div
-              className="Building-blocks invisible-button"
-              onClick={() => selectSection("Blocks")}
-            >
-              Building <br /> Blocks
-            </div>
+        <div className="button-group">
+          <div
+            className={`segmented-button ${
+              selected === "Project" ? "active" : ""
+            }`}
+            onClick={() => {
+              selectSection("Project");
+              setSelected("Project");
+            }}
+          >
+            Project <br /> system files
           </div>
-          <div className="custom-line-horizontal"></div>
+          <div
+            className={`segmented-button ${
+              selected === "Problem" ? "active" : ""
+            }`}
+            onClick={() => {
+              selectSection("Problem");
+              setSelected("Problem");
+            }}
+          >
+            Problem
+          </div>
+          <div
+            className={`segmented-button ${
+              selected === "Blocks" ? "active" : ""
+            }`}
+            onClick={() => {
+              selectSection("Blocks");
+              setSelected("Blocks");
+            }}
+          >
+            Building <br /> Blocks
+          </div>
         </div>
-
         {/* Dynamic section - will show whichever is selected */}
         <div className="all-type-of-content">{renderContent()}</div>
       </div>
