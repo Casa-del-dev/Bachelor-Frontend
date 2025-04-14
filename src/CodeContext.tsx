@@ -26,6 +26,7 @@ export interface CodeContextType {
   fileTree: FileItem[];
   setFileTree: (files: FileItem[]) => void;
   problemId: string;
+  saveTreeToBackend: (newTree: FileItem[]) => void;
 }
 
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
@@ -198,6 +199,76 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  function collectAllFileIds(tree: FileItem[]): string[] {
+    const ids: string[] = [];
+    for (const item of tree) {
+      ids.push(item.id.toString());
+      if (item.children) {
+        ids.push(...collectAllFileIds(item.children));
+      }
+    }
+    return ids;
+  }
+
+  async function saveTreeToBackend(newTree: FileItem[]) {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    // Collect file IDs from existing tree and new tree.
+    const currentIds = collectAllFileIds(fileTree);
+    const newIds = collectAllFileIds(newTree);
+    const deletedIds = currentIds.filter((id) => !newIds.includes(id));
+
+    // Merge codeMap: For every file in newTree that’s not in codeMap, add an empty string.
+    const mergedCodeMap: Record<number, string> = { ...codeMap };
+    newIds.forEach((idStr) => {
+      const id = Number(idStr);
+      if (!(id in mergedCodeMap)) {
+        mergedCodeMap[id] = "";
+      }
+    });
+
+    console.log("deletedIds: ", deletedIds);
+
+    // Build the tree object (pseudoTree) that the backend expects.
+    const treeToSubmit = {
+      rootNode: {
+        id: "root",
+        name: "root",
+        type: "folder" as const,
+        children: newTree,
+      },
+    };
+
+    // Send the save request along with deleted files, if any.
+    try {
+      await fetch(
+        "https://bachelor-backend.erenhomburg.workers.dev/problem/v1/save",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            problemId,
+            tree: treeToSubmit,
+            codeMap: Object.fromEntries(
+              Object.entries(mergedCodeMap).map(([key, value]) => [key, value])
+            ),
+            deletedFiles: deletedIds, // expect an array of string IDs
+            currentFile,
+          }),
+        }
+      );
+      // Update the context state after successful save
+      setFileTree(newTree);
+      // (Optionally) update codeMap state here if you want to force it.
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
+  }
+
   return (
     <CodeContext.Provider
       value={{
@@ -210,6 +281,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
         fileTree,
         setFileTree,
         problemId,
+        saveTreeToBackend,
       }}
     >
       {children}

@@ -11,8 +11,6 @@ interface startleftInput {
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
   fileTree: any;
-  setFileTree: any;
-  problemId: string;
 }
 
 const StartLeft = ({
@@ -21,8 +19,6 @@ const StartLeft = ({
   currentFile,
   setCurrentFile,
   fileTree,
-  setFileTree,
-  problemId,
 }: startleftInput) => {
   // Retrieve the last selected section from localStorage (default is "Problem" only on first load)
   const storedSection = localStorage.getItem("selectedSection") as
@@ -86,8 +82,6 @@ const StartLeft = ({
             currentFile={currentFile}
             setCurrentFile={setCurrentFile}
             fileTree={fileTree}
-            setFileTree={setFileTree}
-            problemId={problemId}
           />
         );
       case "Problem":

@@ -202,8 +202,6 @@ const Start: React.FC = () => {
           currentFile={currentFile}
           setCurrentFile={setCurrentFile}
           fileTree={fileTree}
-          setFileTree={setFileTree}
-          problemId={problemId}
         />
       </div>
 
@@ -222,6 +220,7 @@ const Start: React.FC = () => {
             setCodeForFile={setCodeForFile}
             currentFile={currentFile}
             currentFileName={currentFileName}
+            fileTree={fileTree}
           />
         </CodeProvider>
       </div>

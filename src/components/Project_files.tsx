@@ -1,6 +1,7 @@
 import React, { useState, useRef, JSX } from "react";
 import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
 import "./Project_files.css";
+import { useCodeContext } from "../CodeContext";
 
 export interface FileItem {
   id: number;
@@ -14,9 +15,7 @@ interface InputProps {
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
-  fileTree: FileItem[]; // now passed from context
-  setFileTree: (files: FileItem[]) => void;
-  problemId: string;
+  fileTree: FileItem[];
 }
 
 const ProjectFiles = ({
@@ -25,61 +24,15 @@ const ProjectFiles = ({
   currentFile,
   setCurrentFile,
   fileTree,
-  setFileTree,
-  problemId,
 }: InputProps) => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const clickTimeout = useRef<number | null>(null);
 
-  // Inside your ProjectFiles component:
+  const { saveTreeToBackend } = useCodeContext();
 
-  // Function to save updated file tree to the backend.
-  async function saveToBackend(
-    pId: string,
-    fileItems: FileItem[],
-    codeMap: Record<number, string>,
-    currentFileId: number | null
-  ) {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.warn("No token found; not saving.");
-        return;
-      }
-      const pseudoTree = {
-        rootNode: {
-          id: "root",
-          name: "root",
-          type: "folder" as const,
-          children: fileItems,
-        },
-      };
-      await fetch(
-        "https://bachelor-backend.erenhomburg.workers.dev/problem/v1/save",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            problemId: pId,
-            tree: pseudoTree,
-            codeMap,
-            currentFile: currentFileId,
-          }),
-        }
-      );
-    } catch (err) {
-      console.error("Save failed:", err);
-    }
-  }
-
-  // Updated handleUpdateFiles that persists changes:
   function handleUpdateFiles(newFiles: FileItem[]) {
-    setFileTree(newFiles);
-    saveToBackend(problemId, newFiles, codeMap, currentFile);
+    saveTreeToBackend(newFiles);
   }
 
   // Inside your rename function, you call handleUpdateFiles(updatedFiles)
@@ -146,16 +99,28 @@ const ProjectFiles = ({
   function addNewFile(parentId: number | null = null) {
     const fileName = prompt("Enter new file name (e.g., NewFile.js):");
     if (!fileName) return;
+
+    // Generate a unique ID (you can consider using a UUID library for better uniqueness)
+    const newId = Date.now();
     const newFile: FileItem = {
-      id: Date.now(),
+      id: newId,
       name: fileName,
       type: "file",
     };
+
+    // Compute the new tree with the new file added.
     const updatedFiles =
       parentId === null
         ? [...fileTree, newFile]
         : addItemToFolder(fileTree, parentId, newFile);
-    handleUpdateFiles(updatedFiles);
+
+    // **Important**: Immediately update codeMap for the new file.
+    setCodeForFile(newId, "");
+
+    // Delay the save to the backend so React has time to update codeMap.
+    setTimeout(() => {
+      handleUpdateFiles(updatedFiles);
+    }, 0);
   }
 
   function addNewFolder(parentId: number | null = null) {
@@ -286,7 +251,9 @@ const ProjectFiles = ({
                 <span
                   className="icon"
                   title="Delete"
-                  onClick={() => deleteItem(item.id)}
+                  onClick={() => {
+                    deleteItem(item.id);
+                  }}
                 >
                   <FaTrash />
                 </span>

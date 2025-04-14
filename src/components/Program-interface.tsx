@@ -16,7 +16,6 @@ import ApiCallEditor from "./AI_Editor.tsx";
 import { setStepsData, setChanged } from "./BuildingBlocks/StepsData.tsx";
 import "./Program-interface.css";
 import { Step } from "./Start.tsx";
-import { useCodeContext } from "../CodeContext.tsx";
 
 interface FileItem {
   id: number;
@@ -45,6 +44,7 @@ interface PythonPlaygroundProps {
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
   currentFileName: string | null;
+  fileTree: FileItem[];
 }
 
 export default function PythonPlayground({
@@ -56,6 +56,7 @@ export default function PythonPlayground({
   setCodeForFile,
   currentFile,
   currentFileName,
+  fileTree,
 }: PythonPlaygroundProps) {
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -68,8 +69,6 @@ export default function PythonPlayground({
     localStorage.getItem("selectedProblem") || "DefaultProblem";
 
   const StorageKey = `stepselectedSystemProblem_${selectedProblemName}`;
-
-  const { fileTree } = useCodeContext();
 
   function loadStepsTree(): Step[] {
     const stored = localStorage.getItem(StorageKey);
@@ -255,7 +254,8 @@ export default function PythonPlayground({
 
     if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
 
-    const selectedProblem = "Problem 1";
+    const selectedProblem =
+      localStorage.getItem("selectedProblem") || "MyProblem";
 
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
     try {
