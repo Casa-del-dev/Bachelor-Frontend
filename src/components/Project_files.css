@@ -18,12 +18,6 @@
   gap: 0.25vw;
 }
 
-.icon {
-  font-size: 0.8vw;
-  display: flex;
-  align-items: center;
-}
-
 .file-tree {
   padding-top: 2vw;
   display: flex;
@@ -55,9 +49,11 @@
 }
 
 .pseudo-root-header {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: calc(var(--step-font-size) * 0.2);
+  grid-template-areas: "left right";
+  grid-template-columns: 1fr auto;
+  justify-content: space-between;
   cursor: default;
 }
 
@@ -369,11 +365,26 @@ Hiding icons START
   opacity: 1;
 }
 
+.all-icons-left {
+  height: calc(var(--step-font-size) * 1.4);
+}
+
 .all-icons-left:hover {
   color: grey;
   cursor: pointer;
 }
 
+.icon {
+  font-size: calc(var(--step-font-size) * 0.7);
+  display: flex;
+  align-items: center;
+}
+
 /* ---------------------------------------
 Hiding icons END
 --------------------------------------- */
+.drop-indicator {
+  height: 0;
+  border-top: 2px solid black;
+  margin: 2px 0; /* adjust vertical spacing as needed */
+}

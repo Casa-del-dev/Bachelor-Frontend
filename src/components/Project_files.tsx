@@ -449,15 +449,13 @@ const ProjectFiles = ({
           }
 
           return (
-            <li
-              key={item.id}
-              className={liClass}
-              style={styleObj}
-              onMouseEnter={() => setHoveredItemId(item.id)}
-              onMouseLeave={() => setHoveredItemId(null)}
-            >
+            <li key={item.id} className={liClass} style={styleObj}>
               {item.id === -1 ? (
-                <div className="pseudo-root-header">
+                <div
+                  className="pseudo-root-header"
+                  onMouseEnter={() => setHoveredItemId(item.id)}
+                  onMouseLeave={() => setHoveredItemId(null)}
+                >
                   <div className="icon-and-title-left">
                     {item.type === "folder" &&
                       (openFolders[item.id] ? (
@@ -607,17 +605,6 @@ const ProjectFiles = ({
                       transition: "opacity 0.3s ease-in-out",
                     }}
                   >
-                    <span
-                      className="icon"
-                      title="Delete"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteItem(item.id, false);
-                      }}
-                    >
-                      <Trash className="all-icons-left" />
-                    </span>
-
                     {item.type === "folder" && (
                       <>
                         <span
@@ -642,6 +629,16 @@ const ProjectFiles = ({
                         </span>
                       </>
                     )}
+                    <span
+                      className="icon"
+                      title="Delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteItem(item.id, false);
+                      }}
+                    >
+                      <Trash className="all-icons-left" />
+                    </span>
                   </div>
                 </div>
               )}
