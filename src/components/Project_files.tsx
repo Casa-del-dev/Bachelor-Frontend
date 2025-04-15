@@ -1,8 +1,8 @@
 import React, { useState, useRef, JSX, useEffect, useMemo } from "react";
-import { FaTrash, FaFileAlt, FaFolderPlus } from "react-icons/fa";
 import "./Project_files.css";
 import { useCodeContext } from "../CodeContext";
-import { Folder } from "lucide-react";
+// Import both FolderOpen (open) and Folder (closed) icons from lucide-react.
+import { FolderOpen, Folder, Trash, File, FolderPlus } from "lucide-react";
 
 export interface FileItem {
   id: number;
@@ -12,11 +12,13 @@ export interface FileItem {
 }
 
 interface InputProps {
-  codeMap: Record<number, string>;
-  setCodeForFile: (fileId: number, code: string) => void;
+  codeMap: Record<number, string | null>;
+  setCodeForFile: (fileId: number, code: string | null) => void;
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
   fileTree: FileItem[];
+  openFolders: Record<number, boolean>;
+  setOpenFolders: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
 }
 
 const ProjectFiles = ({
@@ -25,12 +27,55 @@ const ProjectFiles = ({
   currentFile,
   setCurrentFile,
   fileTree,
+  openFolders,
+  setOpenFolders,
 }: InputProps) => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const clickTimeout = useRef<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
 
   const { saveTreeToBackend } = useCodeContext();
+
+  useEffect(() => {
+    setOpenFolders((prev) => {
+      // Clone the previous state to preserve open/closed settings.
+      const updated: Record<number, boolean> = { ...prev };
+
+      // Always ensure the pseudo-root (id === -1) is open.
+      updated[-1] = true;
+
+      // Traverse the fileTree and for any folder that does not yet have an entry,
+      // add it with a default value of true (open).
+      const traverseFolders = (tree: FileItem[]) => {
+        tree.forEach((item) => {
+          if (item.type === "folder") {
+            // Only add if this folder doesn't already have a state.
+            if (updated[item.id] === undefined) {
+              updated[item.id] = true;
+            }
+            if (item.children) {
+              traverseFolders(item.children);
+            }
+          }
+        });
+      };
+      traverseFolders(fileTree);
+
+      return updated;
+    });
+  }, [fileTree]);
+
+  // Toggle the open/closed state of a folder.
+  function handleFolderClick(item: FileItem) {
+    // For pseudo-root (id === -1) you can decide whether to allow collapsing;
+    // here we simply toggle it as well.
+    setOpenFolders((prev) => ({
+      ...prev,
+      [item.id]: !prev[item.id],
+    }));
+  }
 
   // Always call saveTreeToBackend with the actual fileTree (without pseudo-root)
   async function handleUpdateFiles(newFiles: FileItem[]) {
@@ -39,38 +84,64 @@ const ProjectFiles = ({
 
   // Rename functionality
   function handleRename(itemId: number) {
-    if (!editText.trim()) {
-      setEditingId(null);
-      return;
-    }
     const parent = findParent(fileTree, itemId);
     const siblings = parent ? parent.children! : fileTree;
-    if (siblings.some((i) => i.id !== itemId && i.name === editText)) {
-      alert("File name already exists in the folder. Keeping the old name.");
-      setEditingId(null);
-      return;
+    const targetItem = findItemById(fileTree, itemId);
+
+    if (!targetItem) return;
+
+    let newName = editText.trim();
+
+    // If name is empty
+    if (!newName) {
+      if (targetItem.name) {
+        setEditText(targetItem.name);
+        setEditingId(null);
+        return;
+      } else {
+        deleteItem(itemId, true);
+        return;
+      }
     }
+
+    // Check if name is taken
+    const isNameTaken = (name: string) =>
+      siblings.some((i) => i.id !== itemId && i.name === name);
+
+    if (isNameTaken(newName)) {
+      let counter = 1;
+      let baseName = newName;
+      while (isNameTaken(`${baseName} (${counter})`)) {
+        counter++;
+      }
+      newName = `${baseName} (${counter})`;
+    }
+
+    // Apply rename
     const renameInTree = (tree: FileItem[]): FileItem[] =>
       tree.map((item) => {
         if (item.id === itemId) {
-          return { ...item, name: editText };
+          return { ...item, name: newName };
         }
         if (item.type === "folder" && item.children) {
           return { ...item, children: renameInTree(item.children) };
         }
         return item;
       });
+
     const updatedFiles = renameInTree(fileTree);
     handleUpdateFiles(updatedFiles);
     setEditingId(null);
   }
 
   function handleSelectFile(file: FileItem) {
+    setCurrentFile(file.id);
     if (file.type === "file") {
-      setCurrentFile(file.id);
       if (!codeMap[file.id]) {
         setCodeForFile(file.id, "");
       }
+    } else {
+      setCodeForFile(file.id, null);
     }
   }
 
@@ -98,16 +169,10 @@ const ProjectFiles = ({
   }
 
   async function addNewFile(parentId: number | null = null) {
-    const fileName = prompt("Enter new file name (e.g., NewFile.js):");
-    if (!fileName) return;
-
-    // If parent is our pseudo-root (id === -1), treat as root (null)
-    if (parentId === -1) parentId = null;
-
-    const newId = Date.now();
+    const newId = Date.now(); // temporary unique ID
     const newFile: FileItem = {
       id: newId,
-      name: fileName,
+      name: "",
       type: "file",
     };
 
@@ -116,21 +181,23 @@ const ProjectFiles = ({
         ? [...fileTree, newFile]
         : addItemToFolder(fileTree, parentId, newFile);
 
+    // Optimistically update the tree (don't wait for backend yet)
+    handleUpdateFiles(updatedFiles);
+
+    // Begin editing immediately
+    setEditingId(newId);
+    setEditText("");
     setCodeForFile(newId, "");
-    await handleUpdateFiles(updatedFiles);
     setCurrentFile(newId);
   }
 
   function addNewFolder(parentId: number | null = null) {
-    const folderName = prompt("Enter new folder name:");
-    if (!folderName) return;
-
-    // If parent is our pseudo-root, treat as root.
     if (parentId === -1) parentId = null;
 
+    const newId = Date.now();
     const newFolder: FileItem = {
-      id: Date.now(),
-      name: folderName,
+      id: newId,
+      name: "",
       type: "folder",
       children: [],
     };
@@ -139,7 +206,10 @@ const ProjectFiles = ({
       parentId === null
         ? [...fileTree, newFolder]
         : addItemToFolder(fileTree, parentId, newFolder);
+
     handleUpdateFiles(updatedFiles);
+    setEditingId(newId);
+    setEditText("");
   }
 
   // Delete helper functions
@@ -172,10 +242,10 @@ const ProjectFiles = ({
     return null;
   }
 
-  function deleteItem(itemId: number) {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+  function performDelete(itemId: number) {
     const itemToDelete = findItemById(fileTree, itemId);
     if (!itemToDelete) return;
+
     const idsToRemove = collectAllDescendantIds(itemToDelete);
     const updatedFiles = deleteFromTree(fileTree, itemId);
 
@@ -183,7 +253,30 @@ const ProjectFiles = ({
       setCurrentFile(null);
       setCodeForFile(currentFile, "");
     }
+
     handleUpdateFiles(updatedFiles);
+    setPendingDeleteId(null);
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setPendingDeleteId(null);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  function deleteItem(itemId: number, handleRename: boolean) {
+    if (!handleRename) {
+      setPendingDeleteId(itemId);
+      return;
+    }
+    performDelete(itemId);
   }
 
   function findParent(tree: FileItem[], targetId: number): FileItem | null {
@@ -208,12 +301,14 @@ const ProjectFiles = ({
       clearTimeout(clickTimeout.current);
     }
     clickTimeout.current = window.setTimeout(() => {
-      if (item.type === "file") {
-        handleSelectFile(item);
-      }
+      handleSelectFile(item);
       clickTimeout.current = null;
     }, 250);
   }
+
+  // Updated: handleFolderClick now simply toggles the folder’s open state.
+  // (It’s been defined above; this is just used in JSX handlers.)
+  // function handleFolderClick(item: FileItem) { ... }  // already defined above
 
   function handleDoubleClick(e: React.MouseEvent, item: FileItem) {
     if (clickTimeout.current) {
@@ -228,7 +323,6 @@ const ProjectFiles = ({
   function getVisualWeight(item: FileItem): number {
     if (item.type === "file") return 1;
     if (!item.children || item.children.length === 0) return 1;
-
     return (
       1 + item.children.reduce((sum, child) => sum + getVisualWeight(child), 0)
     );
@@ -251,7 +345,6 @@ const ProjectFiles = ({
     return ctx.measureText(text).width;
   }
 
-  // Run resize on mount + when editText changes
   useEffect(() => {
     autoResizeInput();
   }, [editText]);
@@ -260,7 +353,6 @@ const ProjectFiles = ({
     if (editingId !== null) {
       const item = findItemById(fileTree, editingId);
       if (item) setEditText(item.name);
-
       requestAnimationFrame(() => {
         autoResizeInput();
       });
@@ -271,106 +363,261 @@ const ProjectFiles = ({
   const fontSize = getComputedStyle(document.documentElement)
     .getPropertyValue("--step-font-size")
     .trim();
-
   const font = `${parseFloat(fontSize) * 1.2}px Inter, sans-serif`;
-
   const initialWidth = useMemo(() => {
-    const rawWidth = getTextWidth(editText || " ", font);
+    const rawWidth = getTextWidth(
+      editText || "                                             ",
+      font
+    );
     const buffer = 20;
     return rawWidth + buffer;
   }, [editText, font]);
 
-  // Render the tree recursively.
-  // If the node is our pseudo-root (id -1), render a custom header without controls.
+  // Helper: Count all descendant items for a folder (recursively)
+  function getTotalDescendantCount(item: FileItem): number {
+    if (
+      item.type === "file" ||
+      !item.children ||
+      item.children.length === 0 ||
+      !openFolders[item.id]
+    ) {
+      return 0;
+    }
+    return (
+      item.children.length +
+      item.children.reduce(
+        (sum, child) => sum + getTotalDescendantCount(child),
+        0
+      )
+    );
+  }
+
+  function computeConnectorTop(item: FileItem): string {
+    if (
+      item.type !== "folder" ||
+      !item.children ||
+      item.children.length === 0 ||
+      !openFolders[item.id]
+    ) {
+      return "50%";
+    }
+    const totalCount = getTotalDescendantCount(item);
+    if (totalCount <= 0) {
+      return "50%";
+    }
+    const value = Math.ceil((52 / (48 + 185 * totalCount)) * 100);
+    return `${value.toFixed(2)}%`;
+  }
+
   function renderTree(tree: FileItem[]): JSX.Element {
     return (
       <ul className="tree">
-        {tree.map((item) => (
-          <li
-            key={item.id}
-            className={
-              item.id === -1
-                ? "pseudo-root-li"
-                : item.type === "file"
-                ? "file-item"
-                : "folder-item"
-            }
-            style={
-              {
-                "--connector-top":
-                  item.type === "file"
-                    ? "50%"
-                    : `${100 / (getVisualWeight(item) * 2)}%`,
-              } as React.CSSProperties
-            }
-          >
-            {item.id === -1 ? (
-              <div className="pseudo-root-header">
-                <Folder className="left folder-icon" />
-                <span className="title-fileTree" style={{ fontWeight: "bold" }}>
-                  {item.name}
-                </span>
-              </div>
-            ) : (
-              <div className="file-item">
-                {editingId === item.id ? (
-                  <span
-                    className={
-                      item.type === "file" ? "file edit" : "folder edit"
-                    }
-                    onClick={() => handleFileClick(item)}
-                    onDoubleClick={(e) => handleDoubleClick(e, item)}
-                  >
-                    <div className="icon-and-title-left">
-                      {item.type === "folder" && (
-                        <Folder className="left folder-icon" />
-                      )}
-                      <input
-                        ref={inputRef}
-                        className="title-file-fileTree edit"
-                        type="text"
-                        value={editText}
-                        style={{ width: `${initialWidth}px` }}
-                        onChange={(e) => {
-                          setEditText(e.target.value);
-                          autoResizeInput();
-                        }}
-                        onFocus={autoResizeInput}
-                        onInput={autoResizeInput}
-                        onBlur={() => handleRename(item.id)}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && handleRename(item.id)
-                        }
-                        autoFocus
-                      />
+        {tree.map((item, index) => {
+          // Determine if this item is the last child of the current level.
+          const isLastChild = index === tree.length - 1;
+
+          // Compute the connector top.
+          // If this is the last child, is a folder and has children, use our formula.
+          // Otherwise, if it is a file (or the folder is folded), use "50%".
+          // Else, use your previous connector top calculation.
+          let connectorTop: string;
+          if (
+            isLastChild &&
+            item.type === "folder" &&
+            item.children &&
+            item.children.length > 0
+          ) {
+            connectorTop = computeConnectorTop(item);
+          } else if (item.type === "file" || openFolders[item.id] === false) {
+            connectorTop = "50%";
+          } else {
+            connectorTop = `${100 / (getVisualWeight(item) * 2)}%`;
+          }
+
+          const styleObj: React.CSSProperties = {
+            "--connector-top": connectorTop,
+          } as React.CSSProperties;
+
+          // Determine CSS class (as in your original code).
+          let liClass = "";
+          if (item.id === -1) {
+            liClass = "pseudo-root-li";
+          } else if (item.type === "file") {
+            liClass = "file-item";
+          } else if (item.type === "folder") {
+            liClass = "folder-item";
+          }
+
+          return (
+            <li
+              key={item.id}
+              className={liClass}
+              style={styleObj}
+              onMouseEnter={() => setHoveredItemId(item.id)}
+              onMouseLeave={() => setHoveredItemId(null)}
+            >
+              {item.id === -1 ? (
+                <div className="pseudo-root-header">
+                  <div className="icon-and-title-left">
+                    {item.type === "folder" &&
+                      (openFolders[item.id] ? (
+                        <FolderOpen
+                          className="left folder-icon"
+                          onClick={() => handleFolderClick(item)}
+                        />
+                      ) : (
+                        <Folder
+                          className="left folder-icon"
+                          onClick={() => handleFolderClick(item)}
+                        />
+                      ))}
+                    <div
+                      className={`title-file-fileTree ${item.type} ${
+                        item.id === currentFile ? "selected" : ""
+                      }`}
+                      onClick={() => handleFileClick(item)}
+                      onDoubleClick={(e) => handleDoubleClick(e, item)}
+                    >
+                      {item.name}
                     </div>
-                  </span>
-                ) : (
-                  <span
-                    className={item.type === "file" ? "file" : "folder"}
-                    onClick={() => handleFileClick(item)}
-                    onDoubleClick={(e) => handleDoubleClick(e, item)}
+                  </div>
+
+                  <div
+                    className="controls"
+                    style={{
+                      opacity:
+                        hoveredItemId === item.id || item.id === currentFile
+                          ? 1
+                          : 0,
+                      transition: "opacity 0.3s ease-in-out",
+                    }}
                   >
-                    <div className="icon-and-title-left">
-                      {item.type === "folder" && (
-                        <Folder className="left folder-icon" />
-                      )}
-                      <div className="title-file-fileTree">{item.name}</div>
-                    </div>
-                  </span>
-                )}
-                {item.id !== -1 && (
-                  <div className="controls">
+                    <span
+                      className="icon"
+                      title="New File"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addNewFile(item.id);
+                      }}
+                    >
+                      <File className="all-icons-left" />
+                    </span>
+                    <span
+                      className="icon"
+                      title="New Folder"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addNewFolder(item.id);
+                      }}
+                    >
+                      <FolderPlus className="all-icons-left" />
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="file-item"
+                  onMouseEnter={() => setHoveredItemId(item.id)}
+                  onMouseLeave={() => setHoveredItemId(null)}
+                >
+                  {editingId === item.id ? (
+                    <span className={`${item.type} edit`}>
+                      <div className="icon-and-title-left">
+                        <div className="icon-and-title-left">
+                          {item.type === "folder" &&
+                            (openFolders[item.id] ? (
+                              <FolderOpen
+                                className="left folder-icon"
+                                onClick={() => handleFolderClick(item)}
+                              />
+                            ) : (
+                              <Folder
+                                className="left folder-icon"
+                                onClick={() => handleFolderClick(item)}
+                              />
+                            ))}
+                          <input
+                            ref={inputRef}
+                            className="title-file-fileTree edit"
+                            type="text"
+                            value={editText}
+                            placeholder="File name"
+                            style={{ width: `${initialWidth}px` }}
+                            onChange={(e) => {
+                              setEditText(e.target.value);
+                              autoResizeInput();
+                            }}
+                            onFocus={autoResizeInput}
+                            onInput={autoResizeInput}
+                            onBlur={() => handleRename(item.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleRename(item.id);
+                              } else if (e.key === "Escape") {
+                                // Revert to previous name and exit editing
+                                const original = findItemById(
+                                  fileTree,
+                                  item.id
+                                );
+                                if (original) setEditText(original.name);
+                                setEditingId(null);
+                              }
+                            }}
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                    </span>
+                  ) : (
+                    <span className={`${item.type} prev`}>
+                      <div className="icon-and-title-left">
+                        <div className="icon-and-title-left">
+                          {item.type === "folder" &&
+                            (openFolders[item.id] ? (
+                              <FolderOpen
+                                className="left folder-icon"
+                                onClick={() => handleFolderClick(item)}
+                              />
+                            ) : (
+                              <Folder
+                                className="left folder-icon"
+                                onClick={() => handleFolderClick(item)}
+                              />
+                            ))}
+                          <div
+                            className={`title-file-fileTree ${item.type} ${
+                              item.id === currentFile ? "selected" : ""
+                            }`}
+                            onClick={() => handleFileClick(item)}
+                            onDoubleClick={(e) => handleDoubleClick(e, item)}
+                          >
+                            {item.name}
+                          </div>
+                        </div>
+                      </div>
+                    </span>
+                  )}
+                  <div
+                    className="controls"
+                    style={{
+                      opacity:
+                        hoveredItemId === item.id || item.id === currentFile
+                          ? 1
+                          : 0,
+                      transition: "opacity 0.3s ease-in-out",
+                    }}
+                  >
                     <span
                       className="icon"
                       title="Delete"
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteItem(item.id);
+                        deleteItem(item.id, false);
                       }}
                     >
-                      <FaTrash />
+                      <Trash className="all-icons-left" />
                     </span>
+
                     {item.type === "folder" && (
                       <>
                         <span
@@ -381,7 +628,7 @@ const ProjectFiles = ({
                             addNewFile(item.id);
                           }}
                         >
-                          <FaFileAlt />
+                          <File className="all-icons-left" />
                         </span>
                         <span
                           className="icon"
@@ -391,19 +638,43 @@ const ProjectFiles = ({
                             addNewFolder(item.id);
                           }}
                         >
-                          <FaFolderPlus />
+                          <FolderPlus className="all-icons-left" />
                         </span>
                       </>
                     )}
                   </div>
-                )}
-              </div>
-            )}
-            {item.type === "folder" &&
-              item.children &&
-              renderTree(item.children)}
-          </li>
-        ))}
+                </div>
+              )}
+              {pendingDeleteId !== null && (
+                <div
+                  className="delete-overlay"
+                  onClick={() => setPendingDeleteId(null)}
+                >
+                  <div
+                    className="delete-dialog"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <p>Are you sure you want to delete this item?</p>
+                    <button onClick={() => performDelete(pendingDeleteId)}>
+                      Yes
+                    </button>
+                    <button onClick={() => setPendingDeleteId(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              {/*
+                Only render children if this is a folder, it has children,
+                and it is marked as open.
+              */}
+              {item.type === "folder" &&
+                item.children &&
+                openFolders[item.id] &&
+                renderTree(item.children)}
+            </li>
+          );
+        })}
       </ul>
     );
   }
@@ -411,9 +682,11 @@ const ProjectFiles = ({
   return (
     <div className="project-files">
       <div className="file-tree">
-        {/* Wrap the fileTree with a pseudo-root node before rendering.
-            This pseudo-root is only used for display; any actions using parentId = -1 are treated as root (null)
-            and it is removed before saving to the backend. */}
+        {/*
+          Wrap the fileTree with a pseudo-root node before rendering.
+          This pseudo-root is only used for display; any actions using parentId = -1 are treated as root (null)
+          and is removed before saving to the backend.
+        */}
         {renderTree([
           { id: -1, name: "Project Files", type: "folder", children: fileTree },
         ])}

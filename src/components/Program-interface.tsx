@@ -40,8 +40,8 @@ interface PythonPlaygroundProps {
   loading: boolean;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
-  codeMap: Record<number, string>;
-  setCodeForFile: (fileId: number, code: string) => void;
+  codeMap: Record<number, string | null>;
+  setCodeForFile: (fileId: number, code: string | null) => void;
   currentFile: number | null;
   currentFileName: string | null;
   fileTree: FileItem[];
@@ -252,7 +252,12 @@ export default function PythonPlayground({
       return;
     }
 
-    if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
+    if (
+      currentFile === null ||
+      codeMap[currentFile]?.trim() === "" ||
+      currentFile === -1
+    )
+      return;
 
     const selectedProblem =
       localStorage.getItem("selectedProblem") || "MyProblem";
@@ -260,6 +265,9 @@ export default function PythonPlayground({
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
     try {
       const code = codeMap[currentFile];
+
+      if (!code) return;
+
       const gptResponse = await ApiCallEditor(selectedProblemDetails, code);
 
       setChanged(true);
@@ -405,22 +413,24 @@ export default function PythonPlayground({
           />
         </div>
       </div>
-      {currentFile !== null && currentFile !== undefined && (
-        <CodeMirror
-          className="ILoveEprogg"
-          value={codeMap[currentFile] || ""}
-          extensions={[editorExtensions]}
-          onChange={(newCode) => {
-            setCodeForFile(currentFile, newCode);
-            saveCodeToBackend(newCode);
-          }}
-          theme="light"
-          basicSetup={{
-            lineNumbers: true,
-            foldGutter: true,
-          }}
-        />
-      )}
+      {currentFile !== null &&
+        currentFile !== undefined &&
+        codeMap[currentFile] !== null && (
+          <CodeMirror
+            className="ILoveEprogg"
+            value={codeMap[currentFile] || ""}
+            extensions={[editorExtensions]}
+            onChange={(newCode) => {
+              setCodeForFile(currentFile, newCode);
+              saveCodeToBackend(newCode);
+            }}
+            theme="light"
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+            }}
+          />
+        )}
       {showModal && (
         <div
           className="modal-overlay"

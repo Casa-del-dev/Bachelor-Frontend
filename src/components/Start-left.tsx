@@ -5,9 +5,9 @@ import Project_files from "./Project_files";
 import { problemDetailsMap } from "./Problem_detail";
 import { HiMenu, HiX } from "react-icons/hi";
 
-interface startleftInput {
-  codeMap: Record<number, string>;
-  setCodeForFile: (fileId: number, code: string) => void;
+interface StartLeftInput {
+  codeMap: Record<number, string | null>;
+  setCodeForFile: (fileId: number, code: string | null) => void;
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
   fileTree: any;
@@ -19,8 +19,8 @@ const StartLeft = ({
   currentFile,
   setCurrentFile,
   fileTree,
-}: startleftInput) => {
-  // Retrieve the last selected section from localStorage (default is "Problem" only on first load)
+}: StartLeftInput) => {
+  // Retrieve the last selected section from localStorage (default is "Problem")
   const storedSection = localStorage.getItem("selectedSection") as
     | "Project"
     | "Problem"
@@ -32,7 +32,6 @@ const StartLeft = ({
 
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
-
   const [selected, setSelected] = useState<string>("Project");
 
   // Retrieve the last selected problem from localStorage
@@ -42,17 +41,17 @@ const StartLeft = ({
     : null;
   const problemKeys = Object.keys(problemDetailsMap);
 
-  // Save the selected section to localStorage
+  // Persist the selected section in localStorage
   const selectSection = (section: "Project" | "Problem" | "Blocks") => {
     setSelectedSection(section);
     localStorage.setItem("selectedSection", section);
   };
 
-  // Change problem without refreshing the page
+  // Change problem without a full reload
   const handleProblemSelect = (problemKey: string) => {
     localStorage.setItem("selectedProblem", problemKey);
     setMenuOpen(false);
-    window.location.reload();
+    window.location.reload(); // Alternatively, update your state to avoid reload
   };
 
   const handleHamburgerClick = () => {
@@ -68,12 +67,16 @@ const StartLeft = ({
         setMenuOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Render the chosen content
+  // ***** Lifting Up the Folder Expansion State *****
+  // Define openFolders here so that it persists as long as StartLeft remains mounted.
+  // (You could also persist this in localStorage if needed.)
+  const [openFolders, setOpenFolders] = useState<Record<number, boolean>>({});
+
+  // Render content depending on the selected section.
   const renderContent = () => {
     switch (selectedSection) {
       case "Project":
@@ -84,6 +87,8 @@ const StartLeft = ({
             currentFile={currentFile}
             setCurrentFile={setCurrentFile}
             fileTree={fileTree}
+            openFolders={openFolders}
+            setOpenFolders={setOpenFolders}
           />
         );
       case "Problem":
@@ -98,7 +103,6 @@ const StartLeft = ({
                   onClick={handleHamburgerClick}
                 >
                   {menuOpen ? <HiX /> : <HiMenu />}
-                  {/* Dropdown menu */}
                   {menuOpen && (
                     <div className="dropdown-menu">
                       {problemKeys.map((key) => (
@@ -115,7 +119,6 @@ const StartLeft = ({
                 </div>
               )}
             </div>
-
             <div className="problem-text-left">
               {details || (
                 <div className="defaulttextytext">
@@ -170,7 +173,7 @@ const StartLeft = ({
             Building <br /> Blocks
           </div>
         </div>
-        {/* Dynamic section - will show whichever is selected */}
+        {/* Render dynamic content based on section */}
         <div className="all-type-of-content">{renderContent()}</div>
       </div>
     </div>

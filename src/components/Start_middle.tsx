@@ -16,7 +16,7 @@ interface PythonPlaygroundProps {
   setLoading: Dispatch<SetStateAction<boolean>>;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
   codeMap: Record<string, string>;
-  setCodeForFile: (fileId: number, code: string) => void;
+  setCodeForFile: (fileId: number, code: string | null) => void;
   currentFile: number | null;
   currentFileName: string | null;
   fileTree: any;

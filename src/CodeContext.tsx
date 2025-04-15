@@ -19,8 +19,8 @@ export interface FileItem {
 export interface CodeContextType {
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
-  codeMap: Record<number, string>;
-  setCodeForFile: (fileId: number, updatedCode: string) => void;
+  codeMap: Record<number, string | null>;
+  setCodeForFile: (fileId: number, updatedCode: string | null) => void;
   test: string;
   currentFileName: string | null;
   fileTree: FileItem[];
@@ -48,7 +48,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   const problemId = selectedProblem;
 
   const [currentFile, setCurrentFile] = useState<number | null>(null);
-  const [codeMap, setCodeMap] = useState<Record<number, string>>({});
+  const [codeMap, setCodeMap] = useState<Record<number, string | null>>({});
   const [test, setTest] = useState<string>("");
   const [fileTree, setFileTree] = useState<FileItem[]>([]);
 
@@ -66,7 +66,9 @@ export function CodeProvider({ children }: { children: ReactNode }) {
 
   const currentFileName =
     currentFile !== null
-      ? findFileNameById(fileTree, currentFile) || null
+      ? currentFile === -1
+        ? "Project Files"
+        : findFileNameById(fileTree, currentFile) || null
       : "No File Selected";
 
   // Function to load data from the backend.
@@ -137,6 +139,12 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const sanitizedCodeMap: Record<number, string> = Object.fromEntries(
+    Object.entries(codeMap)
+      .filter(([, value]) => value !== null)
+      .map(([key, value]) => [Number(key), value as string])
+  );
+
   // Load the data from the backend once when the CodeContext mounts.
   useEffect(() => {
     let mounted = true;
@@ -149,7 +157,12 @@ export function CodeProvider({ children }: { children: ReactNode }) {
         if (loadedFiles.length === 0) {
           // No files on the backend: use the fallback initialFiles.
           setFileTree(initialFiles);
-          await saveToBackend(problemId, initialFiles, codeMap, currentFile);
+          await saveToBackend(
+            problemId,
+            fileTree,
+            sanitizedCodeMap,
+            currentFile
+          );
         } else {
           setFileTree(loadedFiles);
         }
@@ -180,7 +193,10 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   }, [problemId]);
 
   // Helper to update the code map.
-  const setCodeForFileHandler = (fileId: number, updatedCode: string) => {
+  const setCodeForFileHandler = (
+    fileId: number,
+    updatedCode: string | null
+  ) => {
     setCodeMap((prev) => {
       const updated = {
         ...prev,
@@ -220,7 +236,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     const deletedIds = currentIds.filter((id) => !newIds.includes(id));
 
     // Merge codeMap: For every file in newTree that’s not in codeMap, add an empty string.
-    const mergedCodeMap: Record<number, string> = { ...codeMap };
+    const mergedCodeMap: Record<number, string | null> = { ...codeMap };
     newIds.forEach((idStr) => {
       const id = Number(idStr);
       if (!(id in mergedCodeMap)) {

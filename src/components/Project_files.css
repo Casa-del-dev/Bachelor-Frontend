@@ -38,35 +38,59 @@
 }
 
 .file-item {
-  display: flex;
-  flex-direction: row;
+  display: grid;
   align-items: center;
   text-align: end;
-  gap: 5vh;
+  cursor: default;
+  grid-template-areas: "left right";
+  grid-template-columns: 1fr auto;
+  justify-content: space-between;
+}
+
+.file.prev,
+.folder.prev {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.pseudo-root-header {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--step-font-size) * 0.2);
   cursor: default;
 }
 
-.file {
+.title-file-fileTree.file,
+.title-file-fileTree.folder {
   overflow: hidden;
   display: flex;
   align-items: center;
   padding: 0 calc(var(--step-font-size) * 0.4);
   border-radius: 8px;
+  border-inline: 2px solid transparent;
+  transition: background-color 0.2s, border 0.2s;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.file:not(.edit):hover {
+.title-file-fileTree.file:not(.edit):not(.selected):hover,
+.title-file-fileTree.folder:not(.edit):not(.selected):hover {
   background-color: lightblue;
+  border-inline-color: #a5d4f5;
 }
 
-.folder {
-  display: flex;
-  align-items: center;
-  padding: 0 calc(var(--step-font-size) * 0.4);
-  border-radius: 8px;
+.title-file-fileTree.file.selected,
+.title-file-fileTree.folder.selected {
+  background: rgb(125, 182, 240);
+  color: white;
 }
 
-.folder:not(.edit):hover {
-  background-color: lightblue;
+/* Selected + Hover */
+.title-file-fileTree.file.selected:hover,
+.title-file-fileTree.folder.selected:hover {
+  background: #187bcd;
+  border-inline-color: #125f9c;
 }
 
 .icon-and-title-left {
@@ -78,6 +102,11 @@
 
 .left.folder-icon {
   height: calc(var(--step-font-size) * 1.4);
+}
+
+.left.folder-icon:hover {
+  color: grey;
+  cursor: pointer;
 }
 
 .editing-stepTree {
@@ -108,17 +137,14 @@ Tree Styling START
   margin: 0;
   padding: 0;
   position: relative;
+  box-sizing: border-box;
 }
 
 .tree ul {
   margin-left: 0.75rem;
-  box-sizing: border-box;
-}
+  width: calc(100% - 0.75rem);
 
-.pseudo-root-header {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--step-font-size) * 0.2);
+  box-sizing: border-box;
 }
 
 .tree li {
@@ -147,7 +173,7 @@ Tree Styling START
 }
 
 .tree ul ul::before {
-  left: calc(var(--step-font-size) * 0.35);
+  left: calc(var(--step-font-size) * 0);
 }
 
 /***********************************************
@@ -160,7 +186,7 @@ Tree Styling START
 }
 
 .tree li li li:not(.pseudo-root-li) {
-  left: calc(var(--step-font-size) * 0.35);
+  left: calc(var(--step-font-size) * 0);
 }
 
 /* The horizontal connector line */
@@ -181,16 +207,16 @@ Tree Styling START
   content: "";
   position: absolute;
   left: 0;
-  top: 52%;
+  top: var(--connector-top, 50%);
   bottom: 0;
   width: 1px;
-  background: white; /* Or your actual background color */
-  border: none;
+  background: white;
   z-index: 1;
 }
 
 .tree > li.pseudo-root-li::after {
   content: none;
+  box-sizing: border-box;
 }
 
 .title-fileTree {
@@ -219,4 +245,135 @@ Tree Styling START
 
 /* ---------------------------------------
 Tree Styling END
+--------------------------------------- */
+
+/* ---------------------------------------
+Delete Overlay START
+--------------------------------------- */
+.delete-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(211, 211, 211, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.1; /* Final value */
+  z-index: 100111110;
+  animation: fadeIn 0.2s ease-out;
+  animation-fill-mode: forwards; /* keep final state */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.2;
+  }
+}
+
+.delete-dialog {
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: popIn 0.2s ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.delete-dialog p {
+  font-size: 1vw;
+}
+
+.delete-dialog button {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: linear-gradient(135deg, #d91e18, #f3664d);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.delete-dialog button:focus {
+  border: none;
+  outline: none;
+}
+
+.delete-dialog button:nth-child(2) {
+  background: linear-gradient(135deg, #194d22, #34921c);
+}
+
+.delete-dialog button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: skewX(-20deg);
+  transition: 0.3s;
+}
+
+.delete-dialog button:hover::after {
+  left: 120%;
+}
+
+.delete-dialog button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------------------------------------
+Delete Overlay END
+--------------------------------------- */
+
+/* ---------------------------------------
+Hiding icons START
+--------------------------------------- */
+
+.file-item .controls,
+.folder-item .controls {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  grid-area: right;
+}
+
+/* Show controls on hover */
+.file-item:hover .controls,
+.folder-item:hover .controls {
+  opacity: 1;
+}
+
+/* Also show controls when the parent is selected */
+.file-item.selected-item .controls,
+.folder-item.selected-item .controls {
+  opacity: 1;
+}
+
+.all-icons-left:hover {
+  color: grey;
+  cursor: pointer;
+}
+
+/* ---------------------------------------
+Hiding icons END
 --------------------------------------- */
