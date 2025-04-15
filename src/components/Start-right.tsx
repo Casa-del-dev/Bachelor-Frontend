@@ -196,7 +196,7 @@ interface StartRightProps {
   setLoading: Dispatch<SetStateAction<boolean>>;
   fromEditor: boolean;
   setFromEditor: Dispatch<SetStateAction<boolean>>;
-  codeMap: Record<string, string>;
+  codeMap: Record<string, string | null>;
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
 }
@@ -348,7 +348,8 @@ const StartRight: React.FC<StartRightProps> = ({
     if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
 
     try {
-      const code = codeMap[currentFile]
+      const code = codeMap[currentFile];
+      if (!code) return;
       const gptResponse = await apiCallTree(JSON.stringify(steps), code);
       const rawMessage = gptResponse.choices[0].message.content;
 
@@ -363,7 +364,7 @@ const StartRight: React.FC<StartRightProps> = ({
         console.error("Failed to parse GPT response:", rawMessage);
         throw e;
       }
-  
+
       // ✅ Safely apply code updates per file
       if (parsedResponse.code && typeof parsedResponse.code === "object") {
         Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
@@ -374,7 +375,10 @@ const StartRight: React.FC<StartRightProps> = ({
           }
         });
       } else {
-        console.warn("GPT response does not contain a valid 'code' object:", parsedResponse);
+        console.warn(
+          "GPT response does not contain a valid 'code' object:",
+          parsedResponse
+        );
       }
 
       // Extract steps
