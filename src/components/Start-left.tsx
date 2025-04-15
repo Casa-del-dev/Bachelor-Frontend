@@ -20,15 +20,9 @@ const StartLeft = ({
   setCurrentFile,
   fileTree,
 }: StartLeftInput) => {
-  // Retrieve the last selected section from localStorage (default is "Problem")
-  const storedSection = localStorage.getItem("selectedSection") as
-    | "Project"
-    | "Problem"
-    | "Blocks"
-    | null;
   const [selectedSection, setSelectedSection] = useState<
     "Project" | "Problem" | "Blocks"
-  >(storedSection || "Project");
+  >("Project");
 
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
