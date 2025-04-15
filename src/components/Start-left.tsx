@@ -28,7 +28,7 @@ const StartLeft = ({
     | null;
   const [selectedSection, setSelectedSection] = useState<
     "Project" | "Problem" | "Blocks"
-  >(storedSection || "Problem");
+  >(storedSection || "Project");
 
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
