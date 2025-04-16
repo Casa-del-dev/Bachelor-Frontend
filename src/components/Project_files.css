@@ -79,7 +79,7 @@
 .title-file-fileTree.file.selected,
 .title-file-fileTree.folder.selected {
   background: rgb(125, 182, 240);
-  color: white;
+  color: black;
 }
 
 /* Selected + Hover */
