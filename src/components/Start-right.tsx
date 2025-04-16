@@ -199,6 +199,7 @@ interface StartRightProps {
   codeMap: Record<string, string | null>;
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
+  problemId: string;
 }
 
 const StartRight: React.FC<StartRightProps> = ({
@@ -211,6 +212,7 @@ const StartRight: React.FC<StartRightProps> = ({
   codeMap,
   setCodeForFile,
   currentFile,
+  problemId,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
@@ -245,8 +247,7 @@ const StartRight: React.FC<StartRightProps> = ({
   }, []);
 
   // Build a storage key based on the selected problem name.
-  const selectedProblemName =
-    localStorage.getItem("selectedProblem") || "Default Problem";
+  const selectedProblemName = problemId;
   const StorageKey = "step" + `selectedSystemProblem_${selectedProblemName}`;
 
   // Load saved steps from localStorage on mount.

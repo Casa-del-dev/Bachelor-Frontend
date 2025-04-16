@@ -45,6 +45,7 @@ interface PythonPlaygroundProps {
   currentFile: number | null;
   currentFileName: string | null;
   fileTree: FileItem[];
+  problemId: string;
 }
 
 export default function PythonPlayground({
@@ -57,6 +58,7 @@ export default function PythonPlayground({
   currentFile,
   currentFileName,
   fileTree,
+  problemId,
 }: PythonPlaygroundProps) {
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -65,8 +67,7 @@ export default function PythonPlayground({
     return localStorage.getItem("colorMode") === "true";
   });
 
-  const selectedProblemName =
-    localStorage.getItem("selectedProblem") || "DefaultProblem";
+  const selectedProblemName = problemId;
 
   const StorageKey = `stepselectedSystemProblem_${selectedProblemName}`;
 

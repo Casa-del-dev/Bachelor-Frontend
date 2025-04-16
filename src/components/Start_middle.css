@@ -102,3 +102,7 @@
   word-break: break-all;
   overflow-x: hidden;
 }
+
+.xterm .xterm-viewport {
+  overflow: hidden;
+}

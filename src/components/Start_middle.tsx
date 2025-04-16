@@ -3,7 +3,6 @@ import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
-import { useCodeContext } from "../CodeContext";
 import { useAuth } from "../AuthContext";
 import "./Start_middle.css";
 import PythonPlayground from "./Program-interface";
@@ -20,6 +19,8 @@ interface PythonPlaygroundProps {
   currentFile: number | null;
   currentFileName: string | null;
   fileTree: any;
+  test: string;
+  problemId: string;
 }
 
 export default function ResizableSplitView({
@@ -31,7 +32,9 @@ export default function ResizableSplitView({
   setCodeForFile,
   currentFile,
   currentFileName,
+  test,
   fileTree,
+  problemId,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -42,7 +45,6 @@ export default function ResizableSplitView({
   const term = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
 
-  const { test } = useCodeContext();
   const { isAuthenticated } = useAuth();
   const socketRef = useRef<WebSocket | null>(null);
   const inputBuffer = useRef("");
@@ -145,6 +147,21 @@ export default function ResizableSplitView({
     return () => {
       term.current?.dispose();
       term.current = null;
+      fitAddon.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!terminalRef.current || !fitAddon.current) return;
+
+    const observer = new ResizeObserver(() => {
+      fitAddon.current?.fit();
+    });
+
+    observer.observe(terminalRef.current);
+
+    return () => {
+      observer.disconnect();
     };
   }, []);
 
@@ -249,6 +266,7 @@ export default function ResizableSplitView({
           currentFile={currentFile}
           currentFileName={currentFileName}
           fileTree={fileTree}
+          problemId={problemId}
         />
       </div>
 
@@ -286,7 +304,11 @@ export default function ResizableSplitView({
                 term.current?.focus();
               }, 0);
             }}
-            style={{ height: "100%", width: "100%", cursor: "text" }}
+            style={{
+              height: "100%",
+              width: "100%",
+              cursor: "text",
+            }}
           ></div>
         </div>
       </div>

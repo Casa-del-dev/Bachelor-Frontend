@@ -6,6 +6,19 @@
   flex-direction: column;
 }
 
+.title-middle-programming {
+  font-size: 1vw;
+  font-weight: bold;
+  color: #2d3436;
+  text-align: center;
+  border-bottom: 1px solid black;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: white;
+  width: 100%;
+}
+
 .Title-current-edit {
   font-size: 1vw;
   padding: 0.5vw;

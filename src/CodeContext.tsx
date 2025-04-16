@@ -26,6 +26,7 @@ export interface CodeContextType {
   fileTree: FileItem[];
   setFileTree: (files: FileItem[]) => void;
   problemId: string;
+  setProblemId: (newId: string) => void;
   saveTreeToBackend: (tree: FileItem[]) => Promise<void>;
 }
 
@@ -43,9 +44,9 @@ const initialFiles: FileItem[] = [
 ];
 
 export function CodeProvider({ children }: { children: ReactNode }) {
-  const selectedProblem =
-    localStorage.getItem("selectedProblem") || "MyProblem";
-  const problemId = selectedProblem;
+  const [problemId, setProblemId] = useState(
+    localStorage.getItem("selectedProblem") || "MyProblem"
+  );
 
   const [currentFile, setCurrentFile] = useState<number | null>(null);
   const [codeMap, setCodeMap] = useState<Record<number, string | null>>({});
@@ -295,6 +296,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
         fileTree,
         setFileTree,
         problemId,
+        setProblemId,
         saveTreeToBackend,
       }}
     >

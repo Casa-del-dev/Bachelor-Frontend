@@ -65,8 +65,11 @@ const Start: React.FC = () => {
     setCurrentFile,
     codeMap,
     setCodeForFile,
+    test,
     fileTree,
     currentFileName,
+    problemId,
+    setProblemId,
   } = useCodeContext();
 
   const [layout, setLayout] = useState<LayoutState>(() => {
@@ -223,6 +226,8 @@ const Start: React.FC = () => {
           currentFile={currentFile}
           setCurrentFile={setCurrentFile}
           fileTree={fileTree}
+          problemId={problemId}
+          setProblemId={setProblemId}
         />
       </div>
 
@@ -240,8 +245,10 @@ const Start: React.FC = () => {
             codeMap={codeMap}
             setCodeForFile={setCodeForFile}
             currentFile={currentFile}
+            test={test}
             currentFileName={currentFileName}
             fileTree={fileTree}
+            problemId={problemId}
           />
         </CodeProvider>
       </div>
@@ -268,6 +275,7 @@ const Start: React.FC = () => {
           codeMap={codeMap}
           setCodeForFile={setCodeForFile}
           currentFile={currentFile}
+          problemId={problemId}
         />
       </div>
     </div>
