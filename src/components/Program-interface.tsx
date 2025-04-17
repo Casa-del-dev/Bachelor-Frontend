@@ -9,7 +9,7 @@ import {
   ViewUpdate,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { Network, Paintbrush } from "lucide-react";
+import { Divide, Network, Paintbrush } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { problemDetailsMap } from "./Problem_detail";
 import ApiCallEditor from "./AI_Editor.tsx";
@@ -260,8 +260,7 @@ export default function PythonPlayground({
     )
       return;
 
-    const selectedProblem =
-      localStorage.getItem("selectedProblem") || "MyProblem";
+    const selectedProblem = problemId;
 
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
     try {
@@ -415,23 +414,25 @@ export default function PythonPlayground({
         </div>
       </div>
       {currentFile !== null &&
-        currentFile !== undefined &&
-        codeMap[currentFile] !== null && (
-          <CodeMirror
-            className="ILoveEprogg"
-            value={codeMap[currentFile] || ""}
-            extensions={[editorExtensions]}
-            onChange={(newCode) => {
-              setCodeForFile(currentFile, newCode);
-              saveCodeToBackend(newCode);
-            }}
-            theme="light"
-            basicSetup={{
-              lineNumbers: true,
-              foldGutter: true,
-            }}
-          />
-        )}
+      currentFile !== undefined &&
+      codeMap[currentFile] !== null ? (
+        <CodeMirror
+          className="ILoveEprogg"
+          value={codeMap[currentFile] || ""}
+          extensions={[editorExtensions]}
+          onChange={(newCode) => {
+            setCodeForFile(currentFile, newCode);
+            saveCodeToBackend(newCode);
+          }}
+          theme="light"
+          basicSetup={{
+            lineNumbers: true,
+            foldGutter: true,
+          }}
+        />
+      ) : (
+        <div className="blank-file-selector">Select A File</div>
+      )}
       {showModal && (
         <div
           className="modal-overlay"
