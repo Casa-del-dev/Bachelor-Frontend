@@ -9,7 +9,7 @@ import {
   ViewUpdate,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { Divide, Network, Paintbrush } from "lucide-react";
+import { Network, Paintbrush } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { problemDetailsMap } from "./Problem_detail";
 import ApiCallEditor from "./AI_Editor.tsx";
