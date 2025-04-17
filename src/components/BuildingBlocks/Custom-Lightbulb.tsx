@@ -4,10 +4,12 @@ const CustomLightbulb = ({
   number,
   fill = "yellow",
   onGiveHint = () => {},
+  color,
 }: {
   number: number | null;
   fill: string;
   onGiveHint: () => void;
+  color: string;
 }) => {
   return (
     <div className="lightbulb-container">
@@ -21,6 +23,7 @@ const CustomLightbulb = ({
         strokeLinecap="round"
         strokeLinejoin="round"
         onClick={() => onGiveHint()}
+        style={{ stroke: color }}
       >
         <path d="M9 18h6" />
         <path d="M12 2a6 6 0 0 1 6 6c0 1.5-.5 3-1.5 4s-1.5 2.5-1.5 4h-6c0-1.5-.5-3-1.5-4S6 9.5 6 8a6 6 0 0 1 6-6z" />

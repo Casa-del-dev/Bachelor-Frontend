@@ -427,6 +427,27 @@ Checking Code and Tree START
     return getBackgroundColor(step);
   }
 
+  function getStepBoxTextColor(step: Step): string {
+    if (
+      step.code !== "" &&
+      step.status.correctness !== "" &&
+      step.status.can_be_further_divided !== ""
+    ) {
+      if (
+        step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+      ) {
+        return "black";
+      }
+      if (step.status.correctness === "incorrect") {
+        return "black";
+      }
+      return "white";
+    }
+
+    return "black";
+  }
+
   /* -------------------------------------------------------------
 Checking Code and Tree END
 ------------------------------------------------------------- */
@@ -1357,6 +1378,7 @@ Editing logic START
                 style={{
                   backgroundColor: getStepBoxColor(step),
                   border: "1px " + getBorder(step) + " black",
+                  color: getStepBoxTextColor(step),
                 }}
               >
                 <div className="unpromote">
@@ -1381,6 +1403,7 @@ Editing logic START
                       <CustomLightbulb
                         number={getNumberForStep(step)}
                         fill={getNumberForStep(step) ? "yellow" : "none"}
+                        color={getStepBoxTextColor(step)}
                         onGiveHint={() =>
                           handleGiveHint(
                             currentPath,
@@ -2535,6 +2558,7 @@ Editing logic START
               : backgroundColorTitle(substep, false)
             : getStepBoxColor(substep),
 
+        color: getStepBoxTextColor(substep),
         cursor: isHoveredTitle ? "pointer" : "default",
         border: "1px " + getBorder(step) + " black",
       });
@@ -2797,6 +2821,7 @@ Biggest render Tree ever recored START
             style={{
               backgroundColor: getStepBoxColor(step),
               border: "1px " + getBorder(step) + " black",
+              color: getStepBoxTextColor(step),
             }}
           >
             <div className="step-title">
@@ -2815,6 +2840,7 @@ Biggest render Tree ever recored START
                   <CustomLightbulb
                     number={hintNumber}
                     fill={hintNumber ? "yellow" : "none"}
+                    color={getStepBoxTextColor(step)}
                     onGiveHint={() =>
                       handleGiveHint(
                         currentPath,

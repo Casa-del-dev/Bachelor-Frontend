@@ -343,6 +343,7 @@ Textarea for starting prompt END
   width: 80%;
   margin: auto;
   font-weight: bold;
+  margin-top: 2vh;
 }
 
 /* Default text if no steps are present */

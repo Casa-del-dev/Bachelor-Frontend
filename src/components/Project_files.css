@@ -87,6 +87,7 @@
 .title-file-fileTree.folder.selected:hover {
   background: #187bcd;
   border-inline-color: #125f9c;
+  color: white;
 }
 
 .icon-and-title-left {

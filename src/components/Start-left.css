@@ -7,7 +7,7 @@
 
 .left-content-main {
   display: grid;
-  grid-template-rows: calc(var(--step-font-size) * 3.5) auto;
+  grid-template-rows: calc(var(--step-font-size) * 5) auto;
   grid-template-areas: "header" "main";
   width: 100%;
   overflow: auto;
@@ -19,7 +19,7 @@
   justify-content: space-evenly;
   gap: calc((25%) / 5);
   margin: 0 calc(var(--step-font-size) * 0.8);
-  margin-top: calc(var(--step-font-size) * 0.8);
+  margin-top: 2vh;
   box-sizing: border-box;
 }
 
