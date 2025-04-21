@@ -5,6 +5,43 @@ import "./Header.css";
 import SignUp from "./SignUp";
 import Login from "./Login";
 import { useAuth } from "../AuthContext";
+import Profile from "./Profile";
+
+export function ProfilePage() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+
+  return (
+    <>
+      <Profile
+        openLogin={() => setIsLoginModalOpen(true)}
+        openSignup={() => setIsSignUpModalOpen(true)}
+      />
+
+      {isLoginModalOpen && (
+        <div className="overlay">
+          <div className="overlay-content-login">
+            <Login
+              setIsLoginModalOpen={setIsLoginModalOpen}
+              setIsModalOpen={setIsSignUpModalOpen}
+            />
+          </div>
+        </div>
+      )}
+
+      {isSignUpModalOpen && (
+        <div className="overlay">
+          <div className="overlay-content">
+            <SignUp
+              setIsModalOpen={setIsSignUpModalOpen}
+              setIsLoginModalOpen={setIsLoginModalOpen}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);

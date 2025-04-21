@@ -18,6 +18,22 @@ type AuthTokenResponse = {
   token: string;
 };
 
+function parseJWT(token: string): { username: string } | null {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload).payload;
+  } catch {
+    return null;
+  }
+}
+
 export default function Login({
   setIsLoginModalOpen,
   setIsModalOpen,
@@ -70,6 +86,14 @@ export default function Login({
           setMessage("Login successful! Redirecting...");
           const authTokenResponse: AuthTokenResponse = await response.json();
           login(authTokenResponse.token);
+
+          const payload = parseJWT(authTokenResponse.token);
+          if (payload?.username) {
+            localStorage.setItem("username", payload.username);
+          }
+
+          console.log(payload);
+
           setTimeout(() => {
             setIsLoginModalOpen(false);
           }, 1500);

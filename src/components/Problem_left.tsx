@@ -37,8 +37,6 @@ const Problem_left = ({ onSelect }: ProblemLeftProps) => {
 
   return (
     <div className="left-side">
-      <div className="left-side-title">Problems</div>
-      <div className="custom-line-left-side"></div>
       <div className="left-side-content">
         {problems.map((p, index) => (
           <div

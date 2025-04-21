@@ -1,12 +1,45 @@
-import "./Profile.css"; // Optionally add your own styling
+import "./Profile.css";
+import { useAuth } from "../AuthContext";
 
-export default function Profile() {
+interface ProfileProps {
+  openLogin: () => void;
+  openSignup: () => void;
+}
+
+export default function Profile({ openLogin, openSignup }: ProfileProps) {
   const username = localStorage.getItem("username");
+  const email = localStorage.getItem("email");
+  const { logout } = useAuth();
 
   return (
     <div className="profile-container">
-      <h1>Profile</h1>
-      {username ? <p>Welcome, {username}!</p> : <p>No user logged in.</p>}
+      <div className="profile-card">
+        {username ? (
+          <>
+            <div className="avatar">
+              <span>{username.charAt(0).toUpperCase()}</span>
+            </div>
+            <h2>{username}</h2>
+            <p className="email">{email || "No email available"}</p>
+            <button className="logout-btn" onClick={logout}>
+              Log Out
+            </button>
+          </>
+        ) : (
+          <>
+            <h2>Welcome!</h2>
+            <p className="login-hint">
+              Log in or sign up to view your profile.
+            </p>
+            <button className="auth-btn login" onClick={openLogin}>
+              Log In
+            </button>
+            <button className="auth-btn signup" onClick={openSignup}>
+              Sign Up
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,1 +1,101 @@
+.profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: linear-gradient(to bottom right, #e0eafc, #cfdef3);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: black;
+  width: 100%;
+}
 
+.profile-card {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  width: 300px;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1rem;
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
+  font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-card h2 {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.email {
+  color: #555;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.logout-btn {
+  background-color: #ff5e57;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+  background-color: #e74c3c;
+}
+
+.login-hint {
+  font-style: italic;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------
+Buttons when not Logged in START
+---------------------------------- */
+
+.auth-btn {
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0.5rem;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.auth-btn.login {
+  background-color: #3498db;
+  color: white;
+}
+
+.auth-btn.login:hover {
+  background-color: #2980b9;
+}
+
+.auth-btn.signup {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.auth-btn.signup:hover {
+  background-color: #27ae60;
+}
+
+/* ---------------------------------
+Buttons when not Logged in END
+---------------------------------- */

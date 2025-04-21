@@ -2,11 +2,8 @@
 .left-side {
   grid-area: left-side;
   display: grid;
-  grid-template-rows: 5vw 1px auto;
-  grid-template-areas:
-    "title"
-    "seperating"
-    "content";
+  grid-template-rows: 2vw auto;
+  grid-template-areas: "seperator" "content";
   width: 100%;
   height: inherit;
 }

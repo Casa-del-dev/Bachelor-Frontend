@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const logout = () => {
     console.log("logout");
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem("username");
     setIsAuthenticated(false);
   };
 
