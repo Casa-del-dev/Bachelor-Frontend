@@ -1,7 +1,6 @@
 import React, { useState, useRef, JSX, useEffect, useMemo } from "react";
 import "./Project_files.css";
 import { useCodeContext } from "../CodeContext";
-// Import both FolderOpen (open) and Folder (closed) icons from lucide-react.
 import { FolderOpen, Folder, Trash, File, FolderPlus } from "lucide-react";
 
 export interface FileItem {
@@ -17,6 +16,7 @@ interface InputProps {
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
   fileTree: FileItem[];
+  setFileTree: any;
   openFolders: Record<number, boolean>;
   setOpenFolders: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
 }
@@ -27,6 +27,7 @@ const ProjectFiles = ({
   currentFile,
   setCurrentFile,
   fileTree,
+  setFileTree,
   openFolders,
   setOpenFolders,
 }: InputProps) => {
@@ -78,8 +79,9 @@ const ProjectFiles = ({
   }
 
   // Always call saveTreeToBackend with the actual fileTree (without pseudo-root)
-  async function handleUpdateFiles(newFiles: FileItem[]) {
-    await saveTreeToBackend(newFiles);
+  function handleUpdateFiles(newFiles: FileItem[]) {
+    setFileTree(newFiles);
+    void saveTreeToBackend(newFiles);
   }
 
   // Rename functionality
@@ -169,6 +171,8 @@ const ProjectFiles = ({
   }
 
   async function addNewFile(parentId: number | null = null) {
+    if (parentId === -1) parentId = null;
+
     const newId = Date.now(); // temporary unique ID
     const newFile: FileItem = {
       id: newId,
@@ -260,8 +264,12 @@ const ProjectFiles = ({
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setPendingDeleteId(null);
+      if (pendingDeleteId !== null) {
+        if (e.key === "Escape") {
+          setPendingDeleteId(null);
+        } else if (e.key === "Enter") {
+          performDelete(pendingDeleteId);
+        }
       }
     }
 
@@ -269,7 +277,7 @@ const ProjectFiles = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [pendingDeleteId]);
 
   function deleteItem(itemId: number, handleRename: boolean) {
     if (!handleRename) {

@@ -67,6 +67,7 @@ const Start: React.FC = () => {
     setCodeForFile,
     test,
     fileTree,
+    setFileTree,
     currentFileName,
     problemId,
     setProblemId,
@@ -226,6 +227,7 @@ const Start: React.FC = () => {
           currentFile={currentFile}
           setCurrentFile={setCurrentFile}
           fileTree={fileTree}
+          setFileTree={setFileTree}
           problemId={problemId}
           setProblemId={setProblemId}
         />

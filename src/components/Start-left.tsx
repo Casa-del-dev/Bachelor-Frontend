@@ -10,6 +10,7 @@ interface StartLeftInput {
   currentFile: number | null;
   setCurrentFile: (fileId: number | null) => void;
   fileTree: any;
+  setFileTree: any;
   problemId: string;
   setProblemId: (newId: string) => void;
 }
@@ -20,6 +21,7 @@ const StartLeft = ({
   currentFile,
   setCurrentFile,
   fileTree,
+  setFileTree,
   problemId,
   setProblemId,
 }: StartLeftInput) => {
@@ -90,6 +92,7 @@ const StartLeft = ({
             currentFile={currentFile}
             setCurrentFile={setCurrentFile}
             fileTree={fileTree}
+            setFileTree={setFileTree}
             openFolders={openFolders}
             setOpenFolders={setOpenFolders}
           />

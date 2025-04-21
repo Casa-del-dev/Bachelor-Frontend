@@ -27,7 +27,7 @@ export interface CodeContextType {
   setFileTree: (files: FileItem[]) => void;
   problemId: string;
   setProblemId: (newId: string) => void;
-  saveTreeToBackend: (tree: FileItem[]) => Promise<void>;
+  saveTreeToBackend: (tree: FileItem[]) => void;
 }
 
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
@@ -276,8 +276,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
           }),
         }
       );
-      // Update the context state after successful save
-      setFileTree(newTree);
       // (Optionally) update codeMap state here if you want to force it.
     } catch (err) {
       console.error("Save failed:", err);
