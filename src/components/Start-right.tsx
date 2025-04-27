@@ -199,7 +199,8 @@ interface StartRightProps {
   codeMap: Record<string, string | null>;
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
-  problemId: string;
+  stepTree: Step[];
+  setStepTree: React.Dispatch<React.SetStateAction<Step[]>>;
 }
 
 const StartRight: React.FC<StartRightProps> = ({
@@ -212,7 +213,8 @@ const StartRight: React.FC<StartRightProps> = ({
   codeMap,
   setCodeForFile,
   currentFile,
-  problemId,
+  stepTree,
+  setStepTree,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
@@ -247,30 +249,28 @@ const StartRight: React.FC<StartRightProps> = ({
   }, []);
 
   // Build a storage key based on the selected problem name.
-  const selectedProblemName = problemId;
-  const StorageKey = "step" + `selectedSystemProblem_${selectedProblemName}`;
 
   // Load saved steps from localStorage on mount.
   useEffect(() => {
-    const savedSteps = localStorage.getItem(StorageKey);
-    if (savedSteps) {
-      try {
-        const parsedSteps = JSON.parse(savedSteps);
-        setSteps(parsedSteps);
-      } catch (error) {
-        console.error("Error parsing saved steps:", error);
-      }
-    } else {
-      setSteps([]);
+    try {
+      setSteps(stepTree);
+    } catch (error) {
+      console.error("Error parsing saved steps:", error);
     }
-  }, [StorageKey]);
+  }, [stepTree]);
 
-  // Save steps to localStorage whenever they change
-  useEffect(() => {
-    if (steps.length > 0) {
-      localStorage.setItem(StorageKey, JSON.stringify(steps));
+  function updateSteps(updater: Step[] | ((prev: Step[]) => Step[])) {
+    if (typeof updater === "function") {
+      setSteps((prev) => {
+        const updated = (updater as (prev: Step[]) => Step[])(prev);
+        setStepTree(updated);
+        return updated;
+      });
+    } else {
+      setSteps(updater);
+      setStepTree(updater);
     }
-  }, [steps, StorageKey]);
+  }
 
   // Adjust textarea height on input
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -366,7 +366,6 @@ const StartRight: React.FC<StartRightProps> = ({
         throw e;
       }
 
-      // ✅ Safely apply code updates per file
       if (parsedResponse.code && typeof parsedResponse.code === "object") {
         Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
           if (typeof codeValue === "string") {
@@ -388,8 +387,8 @@ const StartRight: React.FC<StartRightProps> = ({
         : parsedResponse;
 
       const stepsArray = transformStepsObject(stepsData);
-      localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
-      setSteps(stepsArray);
+
+      updateSteps(stepsArray);
       setText("");
       setSentPrompt(true);
       setFadeInTree(true);
@@ -477,9 +476,8 @@ Checking Code and Tree END
         : parsedResponse;
 
       const stepsArray = transformStepsObject(stepsData);
-      localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
 
-      setSteps(stepsArray);
+      updateSteps(stepsArray);
       setFadeInTree(true);
       setText("");
       setSentPrompt(true);
@@ -504,8 +502,8 @@ Checking Code and Tree END
 
         try {
           const stepsArray = transformStepsObject(newStepsData);
-          localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
-          setSteps(stepsArray);
+
+          updateSteps(stepsArray);
           setText("");
           setFadeInTree(true);
           setTimeout(() => setFadeInTree(false), 2000);
@@ -523,7 +521,7 @@ Checking Code and Tree END
     // Poll every 3 seconds for changes
     const interval = setInterval(fetchStepsData, 3000);
     return () => clearInterval(interval);
-  }, [StorageKey, fromEditor]);
+  }, [fromEditor]);
 
   async function handleGenerateWithChatGPTCheck(Context: string) {
     if (!isAuthenticated) {
@@ -552,8 +550,8 @@ Checking Code and Tree END
         : parsedResponse;
 
       const stepsArray = transformStepsObject(stepsData);
-      localStorage.setItem(StorageKey, JSON.stringify(stepsArray));
-      setSteps(stepsArray);
+
+      updateSteps(stepsArray);
       setText("");
       setFadeInTree(true);
       setTimeout(() => setFadeInTree(false), 2000);
@@ -570,20 +568,19 @@ Delete Functions START
 ------------------------------------------------------ */
 
   const HandleDeleteTree = () => {
-    setSteps([]);
+    updateSteps([]);
     setSentPrompt(false);
-    localStorage.setItem(StorageKey, "[]");
   };
 
   // Removal with fade-out
   const handleRemoveStep = (id: string) => {
-    setSteps((prevSteps) =>
+    updateSteps((prevSteps) =>
       prevSteps.map((step) => markStepAndChildrenAsDeleting(step, id))
     );
+
     setTimeout(() => {
-      setSteps((prevSteps) => {
+      updateSteps((prevSteps) => {
         const newSteps = removeStepById(prevSteps, id);
-        localStorage.setItem(StorageKey, JSON.stringify(newSteps));
         return newSteps;
       });
     }, 300);
@@ -631,7 +628,7 @@ Insert Steps Functions START
   // Insert with fade-in
   const insertTopLevelStepAt = (index: number) => {
     const newStep = createBlankStep(true);
-    setSteps((prevSteps) => {
+    updateSteps((prevSteps) => {
       const newSteps = [...prevSteps];
       newSteps.splice(index, 0, newStep);
       return newSteps;
@@ -660,7 +657,7 @@ Insert Steps Functions START
     if (parentStep?.isexpanded) {
       shouldAnimate = true;
     }
-    setSteps((prevSteps) => {
+    updateSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps));
       let parent = newSteps;
       for (let i = 0; i < parentPath.length; i++) {
@@ -697,7 +694,7 @@ Insert Steps Functions START
       shouldAnimate = true;
     }
 
-    setSteps((prevSteps) => {
+    updateSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps));
       let parent = newSteps;
       for (let i = 0; i < parentPath.length; i++) {
@@ -796,7 +793,7 @@ Editing logic START
   function handleBlur() {
     setTimeout(() => {
       if (editingPath !== null) {
-        setSteps((prev) =>
+        updateSteps((prev) =>
           updateStepContentAtPath(prev, editingPath!, tempContent)
         );
         setEditingPath(null);
@@ -882,12 +879,12 @@ Editing logic START
       });
     }
 
-    setSteps((prevSteps) => updateStepHints(prevSteps));
+    updateSteps((prevSteps) => updateStepHints(prevSteps));
   }
 
   // Reveal correct step
   function revealCorrectStep(path: number[]) {
-    setSteps((prevSteps) => {
+    updateSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
       let current = newSteps;
       for (let i = 0; i < path.length - 1; i++) {
@@ -942,7 +939,7 @@ Editing logic START
     }
 
     // otherwise, general/detailed hints
-    setSteps((prevSteps) => {
+    updateSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
       let current = newSteps;
       for (let i = 0; i < path.length - 1; i++) {
@@ -1051,7 +1048,7 @@ Editing logic START
       let stepToClone!: Step;
       let clonedStep!: Step;
 
-      setSteps((prevSteps) => {
+      updateSteps((prevSteps) => {
         const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
 
         let current = newSteps;
@@ -1214,7 +1211,7 @@ Editing logic START
 
   // Toggle function: simply toggles the "selected" flag on the step at currentPath.
   const toggleSelected = (currentPath: number[]) => {
-    setSteps((prevSteps: Step[]) => {
+    updateSteps((prevSteps: Step[]) => {
       const updateSteps = (steps: Step[], path: number[]): Step[] => {
         if (path.length === 0) return steps;
         const index = path[0];
@@ -2420,7 +2417,7 @@ Editing logic START
       const newSubStep = createBlankStep(false);
       newSubStep.content = "New Substep";
       newSubStep.hasparent = true;
-      setSteps((prevSteps) => {
+      updateSteps((prevSteps) => {
         const newSteps = JSON.parse(JSON.stringify(prevSteps));
         let parent = newSteps;
         for (let i = 0; i < parentPath.length; i++) {
@@ -2437,7 +2434,7 @@ Editing logic START
       const newSubStep = createBlankStep(false);
       newSubStep.content = "New Substep";
       newSubStep.hasparent = true;
-      setSteps((prevSteps) => {
+      updateSteps((prevSteps) => {
         const newSteps = JSON.parse(JSON.stringify(prevSteps));
         let parent = newSteps;
         for (let i = 0; i < parentPath.length; i++) {

@@ -45,9 +45,6 @@ const MIN_LEFT = 15; // Minimum width for left column
 const MIN_RIGHT = 20; // Minimum width for right column
 
 const Start: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [_, setSelectedProblem] = useState<string>("");
-
   const rightRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +70,110 @@ const Start: React.FC = () => {
     setProblemId,
   } = useCodeContext();
 
+  /* --------------------------------------
+     API for StepTree START
+  -------------------------------------- */
+
+  const [stepTree, setStepTree] = useState<Step[]>([]);
+  const hasInitializedStepTree = useRef(false);
+
+  useEffect(() => {
+    if (!problemId) return;
+
+    setLoading(true);
+    loadStepTreeFromBackend(problemId)
+      .then((tree) => {
+        if (tree === null) {
+          setStepTree([]);
+          saveStepTree([]);
+        } else {
+          console.log("before", tree);
+          setStepTree(tree);
+        }
+        hasInitializedStepTree.current = true;
+      })
+      .catch((err) => console.error("Error loading stepTree:", err))
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [problemId]);
+
+  useEffect(() => {
+    console.log("stepTree updated:", stepTree);
+  }, [stepTree]);
+
+  async function loadStepTreeFromBackend(
+    problemId: string
+  ): Promise<Step[] | null> {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return null;
+
+      const res = await fetch(
+        `https://bachelor-backend.erenhomburg.workers.dev/problem/v2/loadStepTree?id=${encodeURIComponent(
+          problemId
+        )}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        if (res.status === 404) return null;
+        throw new Error(`Load failed (${res.status})`);
+      }
+
+      const data = (await res.json()) as { root: Step[] };
+      console.log(data.root);
+      return data.root;
+    } catch (err) {
+      console.error("Error in loadStepTreeFromBackend:", err);
+      return null;
+    }
+  }
+
+  const saveStepTree = useCallback(
+    async (newTree: Step[]) => {
+      if (!problemId) return;
+
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      try {
+        const res = await fetch(
+          `https://bachelor-backend.erenhomburg.workers.dev/problem/v2/saveStepTree?id=${encodeURIComponent(
+            problemId
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ problemId: problemId, stepTree: newTree }),
+          }
+        );
+        if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      } catch (err) {
+        console.error("Error in saveStepTree:", err);
+      }
+    },
+    [problemId]
+  );
+
+  useEffect(() => {
+    if (!hasInitializedStepTree.current) return;
+    saveStepTree(stepTree);
+  }, [stepTree, saveStepTree]);
+
+  /* --------------------------------------
+     API for StepTree END
+  -------------------------------------- */
+
   const [layout, setLayout] = useState<LayoutState>(() => {
     const storedLayout = localStorage.getItem("layoutDimensions");
     if (storedLayout) {
@@ -95,15 +196,11 @@ const Start: React.FC = () => {
 
   // Set selected problem from URL or local storage
   useEffect(() => {
-    if (id) {
-      setSelectedProblem(id);
-    } else {
-      const stored = localStorage.getItem("selectedProblem");
-      if (stored) {
-        setSelectedProblem(stored);
-      }
+    const stored = localStorage.getItem("selectedProblem");
+    if (stored) {
+      setProblemId(stored);
     }
-  }, [id]);
+  }, []);
 
   // Update layout based on divider dragging
   const updateLayout = (deltaX: number, divider: "left" | "right") => {
@@ -277,7 +374,8 @@ const Start: React.FC = () => {
           codeMap={codeMap}
           setCodeForFile={setCodeForFile}
           currentFile={currentFile}
-          problemId={problemId}
+          stepTree={stepTree}
+          setStepTree={setStepTree}
         />
       </div>
     </div>
