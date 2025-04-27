@@ -1,6 +1,5 @@
 import "./Start.css";
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
 import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
@@ -83,24 +82,14 @@ const Start: React.FC = () => {
     setLoading(true);
     loadStepTreeFromBackend(problemId)
       .then((tree) => {
-        if (tree === null) {
-          setStepTree([]);
-          saveStepTree([]);
-        } else {
-          console.log("before", tree);
-          setStepTree(tree);
-        }
+        setStepTree(tree ?? []);
         hasInitializedStepTree.current = true;
       })
-      .catch((err) => console.error("Error loading stepTree:", err))
+      .catch((err) => console.error("Unexpected load error:", err))
       .finally(() => {
         setLoading(false);
       });
   }, [problemId]);
-
-  useEffect(() => {
-    console.log("stepTree updated:", stepTree);
-  }, [stepTree]);
 
   async function loadStepTreeFromBackend(
     problemId: string
@@ -128,7 +117,6 @@ const Start: React.FC = () => {
       }
 
       const data = (await res.json()) as { root: Step[] };
-      console.log(data.root);
       return data.root;
     } catch (err) {
       console.error("Error in loadStepTreeFromBackend:", err);
