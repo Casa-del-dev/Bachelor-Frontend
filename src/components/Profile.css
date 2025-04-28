@@ -3,19 +3,31 @@
   justify-content: center;
   align-items: center;
   height: 100%;
-  background: linear-gradient(to bottom right, #e0eafc, #cfdef3);
+  background: #ffffff;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: black;
   width: 100%;
 }
 
 .profile-card {
-  background-color: white;
+  background: linear-gradient(to bottom right, #e0eafc, #cfdef3);
   padding: 2rem;
   border-radius: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid black;
   text-align: center;
-  width: 300px;
+  width: 500px;
+}
+
+.profile-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.profile-info {
+  text-align: center;
 }
 
 .avatar {
@@ -43,18 +55,21 @@
 }
 
 .logout-btn {
-  background-color: #ff5e57;
+  margin-top: 2rem;
+  background-color: #ff6b6b;
   border: none;
   padding: 0.6rem 1.2rem;
+  border: 1px solid transparent;
   color: white;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .logout-btn:hover {
-  background-color: #e74c3c;
+  background-color: #ff5252;
+  border: black 1px solid;
 }
 
 .login-hint {
@@ -63,10 +78,7 @@
   font-size: 0.85rem;
 }
 
-/* ---------------------------------
-Buttons when not Logged in START
----------------------------------- */
-
+/* Buttons when not Logged in */
 .auth-btn {
   border: none;
   padding: 0.6rem 1.2rem;
@@ -96,6 +108,66 @@ Buttons when not Logged in START
   background-color: #27ae60;
 }
 
-/* ---------------------------------
-Buttons when not Logged in END
----------------------------------- */
+/* LocalStorage section */
+.localstorage-section {
+  text-align: left;
+  padding: 0 0.5rem;
+}
+
+.localstorage-item {
+  margin-top: 10px;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;
+  border-radius: 8px;
+  padding: 5px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+}
+
+.localstorage-item p {
+  margin: 0 0 5px 0;
+  font-weight: bold;
+  word-break: break-word;
+}
+
+.button-group-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Skip/Don't Skip Button */
+.option-btn {
+  background-color: #5ea5f1;
+  color: white;
+  border: 1px solid #007bff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: default;
+}
+
+/* Refresh Icon Button */
+.refresh-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: #555;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.refresh-btn:hover {
+  color: #007bff;
+  transform: rotate(90deg);
+}
+
+/* General Button Fixes */
+.clear-btn:focus,
+.option-btn:focus,
+.refresh-btn:focus {
+  outline: none;
+}

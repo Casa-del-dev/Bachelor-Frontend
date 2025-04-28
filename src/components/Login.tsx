@@ -18,7 +18,7 @@ type AuthTokenResponse = {
   token: string;
 };
 
-function parseJWT(token: string): { username: string } | null {
+function parseJWT(token: string): { username: string; email: string } | null {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -92,7 +92,9 @@ export default function Login({
             localStorage.setItem("username", payload.username);
           }
 
-          console.log(payload);
+          if (payload?.email) {
+            localStorage.setItem("email", payload.email);
+          }
 
           setTimeout(() => {
             setIsLoginModalOpen(false);

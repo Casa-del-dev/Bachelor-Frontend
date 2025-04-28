@@ -337,6 +337,25 @@ export default function PythonPlayground({
     localStorage.setItem("colorMode", colorMode.toString());
   }, [colorMode]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setTimeout(() => {
+          setShowModal(false);
+        }, 300);
+        setFadeClass("fade-out");
+      }
+    };
+
+    if (showModal) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showModal]);
+
   function convertFileItemToTreeNode(item: FileItem): TreeNode {
     return {
       id: item.id.toString(), // Convert number id to string

@@ -96,6 +96,7 @@ interface CorrectStepOverlayProps {
   saveChecked: boolean;
   setSaveChecked: (val: boolean) => void;
 }
+
 const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   onClose,
   onConfirm,
@@ -124,6 +125,20 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   return (
@@ -222,13 +237,13 @@ const StartRight: React.FC<StartRightProps> = ({
   const [loadingCheck, setLoadingCheck] = useState(false);
   const { isAuthenticated } = useAuth();
   const [fadeInTree, setFadeInTree] = useState(false);
+  const pendingStepTreeUpdate = useRef<Step[] | null>(null);
 
   // For revealing correct steps
   const [showCorrectStepOverlay, setShowCorrectStepOverlay] = useState<
     number[] | null
   >(null);
   const [saveCorrectStep, setSaveCorrectStep] = useState(false);
-  const [savedCorrectSteps, setSavedCorrectSteps] = useState<string[]>([]);
 
   // ephemeral for fade-in
   const [justUnlockedHintId, setJustUnlockedHintId] = useState<string | null>(
@@ -243,14 +258,9 @@ const StartRight: React.FC<StartRightProps> = ({
     setSentPrompt(steps.length > 0);
   }, [steps]);
 
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("savedCorrectSteps") || "[]");
-    setSavedCorrectSteps(saved);
-  }, []);
-
   // Build a storage key based on the selected problem name.
 
-  // Load saved steps from localStorage on mount.
+  // Load saved steps on mount.
   useEffect(() => {
     try {
       setSteps(stepTree);
@@ -259,16 +269,23 @@ const StartRight: React.FC<StartRightProps> = ({
     }
   }, [stepTree]);
 
+  useEffect(() => {
+    if (pendingStepTreeUpdate.current) {
+      setStepTree(pendingStepTreeUpdate.current);
+      pendingStepTreeUpdate.current = null;
+    }
+  }, [steps]);
+
   function updateSteps(updater: Step[] | ((prev: Step[]) => Step[])) {
     if (typeof updater === "function") {
       setSteps((prev) => {
         const updated = (updater as (prev: Step[]) => Step[])(prev);
-        setStepTree(updated);
+        pendingStepTreeUpdate.current = updated;
         return updated;
       });
     } else {
       setSteps(updater);
-      setStepTree(updater);
+      pendingStepTreeUpdate.current = updater;
     }
   }
 
@@ -902,21 +919,21 @@ Editing logic START
     }, 300);
   }
 
-  function handleGiveCorrectStep() {
+  function handleGiveCorrectStep(checked: string) {
     if (!showCorrectStepOverlay) return;
     // reveal correct
     revealCorrectStep(showCorrectStepOverlay);
 
     // save?
-    if (saveCorrectStep) {
-      const stepId = `step-${showCorrectStepOverlay.join("-")}-correct`;
-      const updated = [...savedCorrectSteps, stepId];
-      setSavedCorrectSteps(updated);
-      localStorage.setItem("savedCorrectSteps", JSON.stringify(updated));
+    if (checked === "true") {
+      localStorage.setItem("savedCorrectSteps", "true");
     }
+
     // done
-    setShowCorrectStepOverlay(null);
-    setSaveCorrectStep(false);
+    setTimeout(() => {
+      setShowCorrectStepOverlay(null);
+      setSaveCorrectStep(false);
+    }, 300);
   }
 
   // handleGiveHint
@@ -927,13 +944,14 @@ Editing logic START
   ) {
     if (hintNumber === null) return;
 
+    const saved = localStorage.getItem("savedCorrectSteps") === "true"; // freshly check
+
     // correct step => show overlay or reveal immediately if saved
     if (hintNumber === 1) {
-      const stepId = `step-${path.join("-")}-correct`;
-      if (savedCorrectSteps.includes(stepId)) {
+      if (saved === true) {
         revealCorrectStep(path);
       } else {
-        setShowCorrectStepOverlay(path); // triggers overlay
+        setShowCorrectStepOverlay(path);
       }
       return;
     }
@@ -2211,33 +2229,15 @@ Editing logic START
   // This component renders all substeps (only title and trash icon) in a scrollable, animated container.
   // It applies a folding rotation and stacking effect.
 
-  // initialIndexStore.ts
-
-  const INITIAL_INDEX_PREFIX =
-    localStorage.getItem("selectedProblem") + "animatedSubstep-" || "null-";
-
-  useEffect(() => {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith(INITIAL_INDEX_PREFIX)) {
-        localStorage.removeItem(key);
-      }
-    });
-  }, []);
+  // A single in-memory object to store indices
+  const indicesRef = { current: {} as Record<string, number> };
 
   function getInitialIndex(key: string, defaultValue = 0): number {
-    // Make sure our key is namespaced
-    const namespacedKey = INITIAL_INDEX_PREFIX + key;
-    const stored = localStorage.getItem(namespacedKey);
-    if (stored !== null) {
-      return Number(stored);
-    }
-    localStorage.setItem(namespacedKey, defaultValue.toString());
-    return defaultValue;
+    return indicesRef.current[key] ?? defaultValue;
   }
 
   function setInitialIndex(key: string, index: number): void {
-    const namespacedKey = INITIAL_INDEX_PREFIX + key;
-    localStorage.setItem(namespacedKey, index.toString());
+    indicesRef.current[key] = index;
   }
 
   function AnimatedSubsteps({
@@ -3543,7 +3543,7 @@ Biggest render Tree ever recored END
       {showCorrectStepOverlay && (
         <CorrectStepOverlay
           onClose={() => setShowCorrectStepOverlay(null)}
-          onConfirm={handleGiveCorrectStep}
+          onConfirm={() => handleGiveCorrectStep(saveCorrectStep.toString())}
           saveChecked={saveCorrectStep}
           setSaveChecked={setSaveCorrectStep}
         />

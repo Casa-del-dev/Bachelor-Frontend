@@ -491,7 +491,7 @@ HINT HANDLING
 ------------------------------------------- */
 
 .hint-container {
-  width: 100%;
+  width: 90%;
 }
 
 .hint-container.promoted {

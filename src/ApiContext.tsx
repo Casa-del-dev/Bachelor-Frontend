@@ -29,7 +29,6 @@ export const ApiProvider: React.FC<{ children: ReactNode }> = ({
       }
     );
 
-    console.log(response);
     if (response.status === 401) {
       useAuth().logout();
     }
