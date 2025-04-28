@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 100px;
+  background-color: var(--header-background);
+  color: var(--text-color);
 }
 
 .container-fluid {
@@ -11,11 +13,12 @@
   align-items: center;
 }
 
+/* Shared body styles */
 .body-1,
 .body-2 {
   width: 80vw;
   font-weight: bold;
-  color: black;
+  color: var(--text-color);
   display: flex;
   justify-content: flex-start;
   padding-top: 5%;
@@ -53,10 +56,11 @@
 .Third-text,
 .Fourth-text {
   font-size: 2vw;
+  color: var(--text-color);
 }
 
-/*Review part*/
+/* Review part */
 .container-review hr {
   width: 90%;
-  border: 1px light black;
+  border: 1px solid var(--border-color);
 }

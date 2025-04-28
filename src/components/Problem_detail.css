@@ -50,6 +50,7 @@
   border-radius: 0.5vw;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  color: whitesmoke;
 }
 
 .check-button:hover {

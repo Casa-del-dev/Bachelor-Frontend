@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { HiMenu, HiX, HiUserCircle } from "react-icons/hi";
+import { HiMenu, HiX, HiUserCircle, HiMoon, HiSun } from "react-icons/hi";
 import Logo from "../assets/Peachlab.svg";
 import "./Header.css";
 import SignUp from "./SignUp";
@@ -48,67 +48,78 @@ export function Header() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  // Dark mode state: init from localStorage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   const { isAuthenticated, logout } = useAuth();
 
-  // Reset menuOpen when window width > 768px
+  // reset menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768 && menuOpen) {
         setMenuOpen(false);
       }
     };
-
     window.addEventListener("resize", handleResize);
     handleResize();
-
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [menuOpen]);
 
-  // Close profile dropdown when clicking outside OR when modal opens
+  // close profile dropdown when clicking outside or when any modal opens
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (!profileDropdownRef.current || !(event.target instanceof Node)) {
-        return;
-      }
-      if (!profileDropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(e.target as Node)
+      ) {
         setProfileDropdownOpen(false);
       }
-    }
-
+    };
     if (isModalOpen || isLoginModalOpen) {
       setProfileDropdownOpen(false);
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isModalOpen, isLoginModalOpen]);
 
-  // Close modal when clicking outside of modal content
+  // close sign-up modal when clicking outside it
   useEffect(() => {
-    function handleClickOutsideModal(event: MouseEvent) {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
+    const handleClickOutsideModal = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         setIsModalOpen(false);
       }
-    }
-
+    };
     if (isModalOpen) {
       document.addEventListener("mousedown", handleClickOutsideModal);
     } else {
       document.removeEventListener("mousedown", handleClickOutsideModal);
     }
-
     return () =>
       document.removeEventListener("mousedown", handleClickOutsideModal);
   }, [isModalOpen]);
 
+  // apply dark-mode class on body
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", isDarkMode);
+  }, [isDarkMode]);
+
   const toggleProfileDropdown = () => {
-    setProfileDropdownOpen(!profileDropdownOpen);
+    setProfileDropdownOpen((prev) => !prev);
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      localStorage.setItem("theme", next ? "dark" : "light");
+      window.dispatchEvent(new Event("storage"));
+      return next;
+    });
   };
 
   return (
@@ -136,19 +147,31 @@ export function Header() {
         </nav>
 
         <div className="container-for-besties">
-          {/* Hamburger Menu */}
+          {/* Hamburger + Dark/Light toggle */}
           <div className="hamburgers-container">
-            <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+            <div
+              className="hamburger"
+              onClick={() => setMenuOpen((prev) => !prev)}
+            >
               {menuOpen ? <HiX /> : <HiMenu />}
+            </div>
+
+            <div
+              className="darkmode-toggle"
+              onClick={toggleDarkMode}
+              title={
+                isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+            >
+              {isDarkMode ? <HiSun /> : <HiMoon />}
             </div>
           </div>
 
-          {/* User Profile Icon with Dropdown */}
+          {/* User Profile Icon */}
           <div className="user-profile" ref={profileDropdownRef}>
             <div className="profile-icon" onClick={toggleProfileDropdown}>
               <HiUserCircle />
             </div>
-
             {profileDropdownOpen && (
               <div className="profile-dropdown">
                 <ul>
@@ -178,19 +201,17 @@ export function Header() {
         </div>
       </header>
 
-      {/* Sign-Up Modal (Only appears when isModalOpen is true) */}
+      {/* Modals */}
       {isModalOpen && (
         <div className="overlay">
-          <div className="overlay-content">
+          <div className="overlay-content" ref={modalRef}>
             <SignUp
               setIsModalOpen={setIsModalOpen}
               setIsLoginModalOpen={setIsLoginModalOpen}
-            />{" "}
+            />
           </div>
         </div>
       )}
-
-      {/* Login Modal */}
       {isLoginModalOpen && (
         <div className="overlay">
           <div className="overlay-content-login">

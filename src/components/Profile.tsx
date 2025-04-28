@@ -70,7 +70,7 @@ export default function Profile({ openLogin, openSignup }: ProfileProps) {
                     </button>
                     <FiRefreshCw
                       className="refresh-btn"
-                      onClick={clearDontAsk}
+                      onClick={clearSavedSteps}
                     />
                   </div>
                 </div>

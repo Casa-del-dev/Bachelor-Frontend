@@ -67,6 +67,18 @@ export default function PythonPlayground({
     return localStorage.getItem("colorMode") === "true";
   });
 
+  const [isDarkMode, setIsDarkMode] = useState(
+    localStorage.getItem("theme") === "dark"
+  );
+
+  useEffect(() => {
+    const handler = () => {
+      setIsDarkMode(localStorage.getItem("theme") === "dark");
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   const selectedProblemName = problemId;
 
   const StorageKey = `stepselectedSystemProblem_${selectedProblemName}`;
@@ -443,7 +455,7 @@ export default function PythonPlayground({
             setCodeForFile(currentFile, newCode);
             saveCodeToBackend(newCode);
           }}
-          theme="light"
+          theme={isDarkMode ? "dark" : "light"}
           basicSetup={{
             lineNumbers: true,
             foldGutter: true,

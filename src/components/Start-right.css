@@ -1,3 +1,13 @@
+:root {
+  --main-background: #ffffff;
+  --main-text: #000000;
+}
+
+body.dark-mode {
+  --main-background: #121212;
+  --main-text: #f0f0f0;
+}
+
 .Right-Side-main {
   height: 100%;
   overflow: hidden;

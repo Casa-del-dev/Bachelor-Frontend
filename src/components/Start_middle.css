@@ -12,26 +12,28 @@
   justify-content: center;
   width: 100%;
   overflow: auto;
+  background-color: var(--main-background);
+  color: var(--text-color);
 }
 
 .resizer {
   height: 4px;
-  background: black;
+  background: var(--border-color);
   cursor: ns-resize;
   user-select: none;
 }
 
 .bottom-section {
-  background-color: white;
-  color: black;
-  width: 100%;
   display: grid;
   grid-template-columns: 5vw 1px 1fr;
   grid-template-areas: "Left Separator Right";
-  justify-content: start;
+  width: 100%;
+  background-color: var(--main-background);
+  color: var(--text-color);
 }
 
 .icon-terminal {
+  grid-area: Left;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -40,17 +42,16 @@
   justify-content: center;
   gap: 20%;
   align-items: center;
-  grid-area: Left;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: var(--header-background);
+  color: var(--text-color);
 }
 
 .simple-line {
   grid-area: Separator;
-  background-color: black;
-  color: black;
-  height: 100%;
+  background-color: var(--border-color);
   width: 100%;
+  height: 100%;
 }
 
 .bottom-terminal-start {
@@ -58,10 +59,12 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  align-items: start;
-  height: 100%;
+  align-items: flex-start;
   width: 100%;
+  height: 100%;
   overflow-x: hidden;
+  background-color: var(--main-background);
+  color: var(--text-color);
 }
 
 .bottom-section input {
@@ -69,7 +72,7 @@
   margin: 0;
   outline: none;
   background-color: transparent;
-  color: black;
+  color: var(--text-color);
   width: 100%;
   font-size: 1vw;
 }
@@ -78,13 +81,15 @@
   font-size: 1vw;
   white-space: pre-line;
   overflow-y: auto;
-  height: 100%;
   width: 100%;
+  height: 100%;
   word-break: break-all;
+  color: var(--text-color);
+  background-color: var(--main-background);
 }
 
 .play-icon {
-  color: #000000;
+  color: var(--text-color);
   transition: transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 
@@ -94,16 +99,18 @@
 }
 
 .icons-for-terminal:hover {
-  fill: darkgrey;
+  fill: var(--link-hover-color);
 }
 
 .xterm-screen {
   width: 100% !important;
-  background-color: #f1f1f1;
+  background-color: var(--header-background);
   word-break: break-all;
   overflow-x: hidden;
+  color: var(--text-color);
 }
 
 .xterm .xterm-viewport {
   overflow: hidden;
+  background-color: var(--header-background) !important;
 }

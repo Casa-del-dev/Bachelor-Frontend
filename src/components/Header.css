@@ -1,6 +1,16 @@
 :root {
   --border-color: rgb(0, 0, 0);
   --header-height: 10vh;
+  --header-background: #fff;
+  --text-color: black;
+  --link-hover-color: grey;
+  --profile-dropdown-background: white;
+  --profile-dropdown-hover-background: #f5f5f5;
+}
+
+body {
+  background-color: var(--header-background);
+  color: var(--text-color);
 }
 
 .header {
@@ -14,7 +24,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  background-color: #fff;
+  background-color: var(--header-background);
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-color);
   padding: 0 2vw;
@@ -37,7 +47,6 @@
   justify-content: center;
   height: var(--header-height);
   gap: calc(50vw / 3);
-  color: black;
 }
 
 .nav-links li {
@@ -46,14 +55,14 @@
 }
 
 .nav-links a {
-  color: black;
+  color: var(--text-color);
   font-size: 1.5vw;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .nav-links a:hover {
-  color: grey;
+  color: var(--link-hover-color);
 }
 
 /* User Profile */
@@ -62,21 +71,34 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: black;
+  color: var(--text-color);
   font-size: 4vh;
-  text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .profile-icon:hover {
   cursor: pointer;
-  color: grey;
+  color: var(--link-hover-color);
 }
 
 /* Hamburger Menu (default hidden) */
 .hamburger {
   display: none;
   cursor: pointer;
+  color: var(--text-color);
+}
+
+/* Dark/Light Toggle */
+.darkmode-toggle {
+  font-size: 4vh;
+  margin-left: 1rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.darkmode-toggle:hover {
+  color: var(--link-hover-color);
 }
 
 .container-for-besties {
@@ -84,11 +106,12 @@
   align-items: center;
 }
 
+/* Profile Dropdown */
 .profile-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: white;
+  background-color: var(--profile-dropdown-background);
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   min-width: 120px;
@@ -103,51 +126,43 @@
   margin: 0;
 }
 
-.profile-dropdown ul li {
-  padding: 0;
-}
-
 .profile-dropdown ul li a {
   display: block;
   padding: 10px 15px;
-  color: #333;
+  color: var(--text-color);
   text-decoration: none;
   transition: background-color 0.2s;
 }
 
 .profile-dropdown ul li a:hover {
-  background-color: #f5f5f5;
+  background-color: var(--profile-dropdown-hover-background);
 }
 
 /* Mobile Styles */
 @media (max-width: 768px) {
-  /* Hamburger Menu */
   .hamburger {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     width: 100%;
-    color: black;
     font-size: 4vh;
-    z-index: 1010; /* Ensure it's on top */
+    z-index: 1010;
   }
 
   .hamburger:hover {
-    color: grey;
+    color: var(--link-hover-color);
   }
 
-  /* Hide regular nav-links on mobile */
   .nav-links {
     display: none;
   }
 
-  /* Dropdown Navigation */
   .header-nav {
     position: absolute;
     top: var(--header-height);
     right: 0;
     width: 100vw;
-    background-color: #fff; /* Ensure the background is white */
+    background-color: var(--header-background);
     border-top: 1px solid var(--border-color);
     display: none;
     flex-direction: column;
@@ -160,11 +175,9 @@
     flex-direction: column;
   }
 
-  /* Make sure each menu item has a background */
   .nav-links.show {
     display: flex;
     flex-direction: column;
-
     width: 100%;
     gap: 0;
   }
@@ -173,14 +186,14 @@
     width: 100%;
     text-align: center;
     border-bottom: 1px solid var(--border-color);
-    background-color: #fff; /* Ensures each item has a white background */
+    background-color: var(--header-background);
   }
 
   .nav-links a {
     width: 100%;
     font-size: 2.15vh;
     text-decoration: none;
-    color: black;
+    color: var(--text-color);
     flex-shrink: 0;
   }
 }
@@ -196,4 +209,16 @@
     align-items: center;
     justify-content: center;
   }
+}
+
+/* Dark Mode Theme */
+body.dark-mode {
+  --border-color: rgb(255, 255, 255);
+  --header-background: #121212;
+  --text-color: #f0f0f0;
+  --link-hover-color: #bbbbbb;
+  --profile-dropdown-background: #1e1e1e;
+  --profile-dropdown-hover-background: #333;
+  background-color: #121212;
+  color: #f0f0f0;
 }

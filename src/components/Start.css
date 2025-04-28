@@ -1,22 +1,57 @@
+:root {
+  --main-background: #ffffff;
+  --text-color: #000000;
+  --border-color: #000000;
+}
+
+body.dark-mode {
+  --main-background: #121212;
+  --text-color: #f0f0f0;
+  --border-color: #f0f0f0;
+}
+
+/* Main container */
 .container-main {
   display: flex;
   flex-direction: row;
-  color: black;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background-color: var(--main-background);
+  color: var(--text-color);
 }
 
-/* Left column, middle column, right column basic styling */
+/* Left, Middle, Right Columns */
 .left-column,
 .middle-column,
 .right-column {
   width: 100%;
+  height: 100%;
+  background-color: var(--main-background);
+  color: var(--text-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Divider styling */
+/* Divider between sections */
 .divider {
   width: 5px;
+  background-color: var(--border-color);
   cursor: col-resize;
-  background-color: #000;
+  user-select: none;
+}
+
+/* Optional: visual hover effect on divider for better UX */
+.divider:hover {
+  background-color: grey;
+}
+
+/* Smooth transitions when switching themes */
+.container-main,
+.left-column,
+.middle-column,
+.right-column,
+.divider {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

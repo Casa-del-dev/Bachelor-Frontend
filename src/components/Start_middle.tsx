@@ -1,4 +1,11 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+// Start_middle.tsx
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
@@ -39,7 +46,6 @@ export default function ResizableSplitView({
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
   });
-
   const isResizing = useRef(false);
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const term = useRef<Terminal | null>(null);
@@ -49,8 +55,20 @@ export default function ResizableSplitView({
   const socketRef = useRef<WebSocket | null>(null);
   const inputBuffer = useRef("");
   const waitingForInputRef = useRef(false);
-
   const cursorPos = useRef(0);
+
+  // Apply current CSS theme into xterm
+  const applyTheme = () => {
+    if (!term.current) return;
+    const isDark = document.body.classList.contains("dark-mode");
+    term.current.options = {
+      theme: {
+        background: isDark ? "#121212" : "#f1f1f1",
+        foreground: isDark ? "#f0f0f0" : "#000000",
+        cursor: isDark ? "#f0f0f0" : "#000000",
+      },
+    };
+  };
 
   /** Setup xterm.js on mount */
   useEffect(() => {
@@ -62,33 +80,36 @@ export default function ResizableSplitView({
       cursorWidth: 10,
       theme: {
         background: "#f1f1f1",
-        foreground: "#000",
+        foreground: "#000000",
         cursor: "black",
       },
-      // @ts-ignore: cursorAccentColor is supported in xterm@5.3.0
+      // @ts-ignore: supported in xterm@5.3.0
       cursorAccentColor: "#f1f1f1",
     });
 
     fitAddon.current = new FitAddon();
     term.current.loadAddon(fitAddon.current);
 
+    // allow browser refresh on Ctrl+R
     term.current.attachCustomKeyEventHandler((e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === "r") {
-        return false; // allow browser refresh
+        return false;
       }
       return true;
     });
 
+    // open terminal and apply theme
     setTimeout(() => {
       if (term.current && terminalRef.current) {
         term.current.open(terminalRef.current);
         fitAddon.current?.fit();
+        applyTheme();
       }
     }, 100);
 
+    // handle user input
     term.current.onData((key) => {
       if (key === "\r") {
-        // Enter: finish the input, send it via WebSocket, then reset the buffer.
         term.current?.writeln("");
         if (socketRef.current?.readyState === WebSocket.OPEN) {
           const payload = waitingForInputRef.current
@@ -100,39 +121,32 @@ export default function ResizableSplitView({
         inputBuffer.current = "";
         cursorPos.current = 0;
       } else if (key === "\u007F") {
-        // Backspace: delete the character before the cursor if one exists.
         if (cursorPos.current > 0) {
           inputBuffer.current =
             inputBuffer.current.slice(0, cursorPos.current - 1) +
             inputBuffer.current.slice(cursorPos.current);
           cursorPos.current--;
-          // Use ANSI codes to move the cursor back, erase the character and reprint the rest
           term.current?.write("\b \b");
         } else {
-          // Bell sound if there's nothing to remove
           term.current?.write("\x07");
         }
       } else if (key === "\x1B[D") {
-        // Left arrow: only move left if not at start
         if (cursorPos.current > 0) {
           cursorPos.current--;
           term.current?.write("\x1b[D");
         } else {
-          term.current?.write("\x07"); // beep if already at left end
+          term.current?.write("\x07");
         }
       } else if (key === "\x1B[C") {
-        // Right arrow: only move right if there is text to the right
         if (cursorPos.current < inputBuffer.current.length) {
           cursorPos.current++;
           term.current?.write("\x1b[C");
         } else {
-          term.current?.write("\x07"); // beep if already at right end
+          term.current?.write("\x07");
         }
       } else if (key === "\x1B[A" || key === "\x1B[B") {
-        // Up or down arrow: disable by emitting a bell sound.
         term.current?.write("\x07");
       } else {
-        // Normal character input: insert at the current position.
         inputBuffer.current =
           inputBuffer.current.slice(0, cursorPos.current) +
           key +
@@ -151,24 +165,28 @@ export default function ResizableSplitView({
     };
   }, []);
 
+  /** Re-apply theme when <body> class changes */
   useEffect(() => {
-    if (!terminalRef.current || !fitAddon.current) return;
-
-    const observer = new ResizeObserver(() => {
-      fitAddon.current?.fit();
+    const obs = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.attributeName === "class") applyTheme();
+      }
     });
-
-    observer.observe(terminalRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
+    obs.observe(document.body, { attributes: true });
+    return () => obs.disconnect();
   }, []);
 
-  /** Setup WebSocket connection */
+  /** Fit terminal on resize */
+  useEffect(() => {
+    if (!terminalRef.current || !fitAddon.current) return;
+    const ro = new ResizeObserver(() => fitAddon.current?.fit());
+    ro.observe(terminalRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  /** WebSocket connection */
   useEffect(() => {
     if (!isAuthenticated) return;
-
     socketRef.current = new WebSocket("wss://python-api.erenhomburg.com/ws");
 
     socketRef.current.onopen = () => {
@@ -181,11 +199,9 @@ export default function ResizableSplitView({
         if (message.action === "input_request") {
           term.current?.writeln(message.prompt);
           waitingForInputRef.current = true;
-          return; // Don't print the raw JSON
+          return;
         }
-      } catch (err) {
-        // If the message isn't JSON or doesn't match, simply print it.
-      }
+      } catch {}
       const lines = event.data.split(/\r?\n/);
       for (const line of lines) {
         term.current?.writeln(line);
@@ -205,16 +221,15 @@ export default function ResizableSplitView({
     };
   }, [isAuthenticated]);
 
+  /** Send code/compile/test to backend */
   const sendCodeToBackend = (action: "run" | "compile" | "test") => {
     if (!isAuthenticated || !socketRef.current) {
       term.current?.writeln(">>⚠️ Not authenticated. Please log in.");
       return;
     }
-
     const actionMessage = getActionMessage(action);
     term.current?.clear();
     term.current?.writeln(`${actionMessage}...\r\n`);
-
     if (!currentFile) return;
     const code = codeMap[currentFile];
     if (action === "test") {
@@ -225,25 +240,22 @@ export default function ResizableSplitView({
     term.current?.focus();
   };
 
+  /** Vertical resizer handlers */
   const handleMouseDown = () => {
     isResizing.current = true;
   };
-
-  const handleMouseMove = (event: MouseEvent) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (!isResizing.current) return;
-    event.preventDefault();
-
-    const newHeight = ((event.clientY - 40) / window.innerHeight) * 100;
+    e.preventDefault();
+    const newHeight = ((e.clientY - 40) / window.innerHeight) * 100;
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());
     }
   };
-
   const handleMouseUp = () => {
     isResizing.current = false;
   };
-
   useEffect(() => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
@@ -276,40 +288,27 @@ export default function ResizableSplitView({
         <div className="icon-terminal">
           <FaPlay
             className="icons-for-terminal"
-            size={"1.5vw"}
+            size="1.5vw"
             onClick={() => sendCodeToBackend("run")}
-            style={{ cursor: "pointer" }}
           />
           <FaCog
             className="icons-for-terminal"
-            size={"1.5vw"}
+            size="1.5vw"
             onClick={() => sendCodeToBackend("compile")}
-            style={{ cursor: "pointer" }}
           />
           <FaHourglassHalf
             className="icons-for-terminal"
-            size={"1.5vw"}
-            onClick={() => {
-              sendCodeToBackend("test");
-            }}
-            style={{ cursor: "pointer" }}
+            size="1.5vw"
+            onClick={() => sendCodeToBackend("test")}
           />
         </div>
-        <div className="simple-line"></div>
+        <div className="simple-line" />
         <div className="bottom-terminal-start">
           <div
             ref={terminalRef}
-            onClick={() => {
-              setTimeout(() => {
-                term.current?.focus();
-              }, 0);
-            }}
-            style={{
-              height: "100%",
-              width: "100%",
-              cursor: "text",
-            }}
-          ></div>
+            onClick={() => setTimeout(() => term.current?.focus(), 0)}
+            style={{ width: "100%", height: "100%", cursor: "text" }}
+          />
         </div>
       </div>
     </div>
