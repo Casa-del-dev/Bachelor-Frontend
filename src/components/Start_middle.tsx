@@ -1,11 +1,5 @@
 // Start_middle.tsx
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
