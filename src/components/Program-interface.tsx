@@ -351,6 +351,7 @@ export default function PythonPlayground({
     localStorage.setItem("colorMode", colorMode.toString());
   }, [colorMode]);
 
+  //click ESC in modal modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -367,6 +368,28 @@ export default function PythonPlayground({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showModal]);
+
+  //click outside of the modal
+  useEffect(() => {
+    if (!showModal) return;
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      const modalContent = document.querySelector(".modal-content");
+      if (modalContent && !modalContent.contains(e.target as Node)) {
+        // If the click is NOT inside the modal -> close it
+        setTimeout(() => {
+          setShowModal(false);
+        }, 300);
+        setFadeClass("fade-out");
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [showModal]);
 
