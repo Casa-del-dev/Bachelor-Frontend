@@ -51,18 +51,11 @@ export default function ResizableSplitView({
   const inputBuffer = useRef("");
   const waitingForInputRef = useRef(false);
   const cursorPos = useRef(0);
+  const terminalCols = () => term.current?.cols || 80; // default 80
+  const startRow = useRef(0); // used to know what row it's writing on
+  let previousCursorPos = useRef(0); // needed for making the char under the bar black or white again
 
   const PROMPT = "> ";
-
-  const refreshLine = () => {
-    if (!term.current) return;
-    term.current.write("\x1b[2K\r");
-    term.current.write(PROMPT + inputBuffer.current);
-    const offset = inputBuffer.current.length - cursorPos.current;
-    if (offset > 0) {
-      term.current.write(`\x1b[${offset}D`);
-    }
-  };
 
   useEffect(() => {
     if (!terminalRef.current || term.current) return;
@@ -92,10 +85,8 @@ export default function ResizableSplitView({
       if (term.current && terminalRef.current) {
         term.current.open(terminalRef.current);
         fitAddon.current?.fit();
-        term.current.write(PROMPT);
-        term.current.focus();
       }
-    }, 100);
+    }, 300);
 
     term.current.onKey(({ domEvent }) => {
       const key = domEvent.key;
@@ -105,10 +96,35 @@ export default function ResizableSplitView({
             inputBuffer.current =
               inputBuffer.current.slice(0, cursorPos.current - 1) +
               inputBuffer.current.slice(cursorPos.current);
+
             cursorPos.current--;
+
+            const promptLength = PROMPT.length;
+            const termWidth = terminalCols();
+            const col = (promptLength + cursorPos.current) % termWidth;
+
+            if (col === termWidth - 1) {
+              // We crossed into the previous line
+              term.current?.write("\x1b[A"); // move up one line
+              term.current?.write(`\x1b[${termWidth}G`); // go to last column
+            } else {
+              term.current?.write("\x1b[D"); // move left normally
+            }
+
+            // Save cursor
+            term.current?.write("\x1b[s");
+
+            // Write rest of the text after the deleted character + space
+            const afterCursor = inputBuffer.current.slice(cursorPos.current);
+            term.current?.write(afterCursor + " ");
+
+            // Restore cursor
+            term.current?.write("\x1b[u");
           } else {
-            term.current?.write("\x07");
+            term.current?.write("\x07"); // bell if can't backspace
           }
+
+          refreshCursor();
           break;
 
         case "Delete":
@@ -116,25 +132,66 @@ export default function ResizableSplitView({
             inputBuffer.current =
               inputBuffer.current.slice(0, cursorPos.current) +
               inputBuffer.current.slice(cursorPos.current + 1);
+
+            const afterCursor = inputBuffer.current.slice(cursorPos.current);
+
+            // Save cursor position
+            term.current?.write("\x1b[s");
+
+            // Write the rest after the deleted character + a space to clear leftover
+            term.current?.write(afterCursor + " ");
+
+            // Restore cursor back
+            term.current?.write("\x1b[u");
           } else {
-            term.current?.write("\x07");
+            term.current?.write("\x07"); // Bell sound if nothing to delete
           }
+
+          refreshCursor();
           break;
 
         case "ArrowLeft":
           if (cursorPos.current > 0) {
             cursorPos.current--;
+
+            // calculate actual cursor position
+            const col = (PROMPT.length + cursorPos.current) % terminalCols();
+
+            if (col === terminalCols() - 1) {
+              // if we wrapped back to previous line
+              term.current?.write("\x1b[A"); // move cursor up
+              term.current?.write(`\x1b[${terminalCols()}G`); // go to last column
+            } else {
+              term.current?.write("\x1b[D"); // move left normally
+            }
           } else {
-            term.current?.write("\x07");
+            term.current?.write("\x07"); // bell
           }
+
+          refreshCursor();
           break;
 
         case "ArrowRight":
           if (cursorPos.current < inputBuffer.current.length) {
+            const promptLength = PROMPT.length;
+            const termWidth = terminalCols();
+
+            const nextCursorPos = cursorPos.current + 1;
+            const nextCol = (promptLength + nextCursorPos) % termWidth;
+
             cursorPos.current++;
+
+            if (nextCol === 1) {
+              // We wrapped onto a new line
+              term.current?.write("\r\n"); // move to beginning of next line
+            } else {
+              term.current?.write("\x1b[C"); // move right normally
+            }
           } else {
-            term.current?.write("\x07");
+            term.current?.write("\x07"); // bell
           }
+
+          refreshCursor();
           break;
 
         case "Enter":
@@ -148,6 +205,7 @@ export default function ResizableSplitView({
           }
           inputBuffer.current = "";
           cursorPos.current = 0;
+          startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
           term.current?.write(PROMPT);
           return;
 
@@ -157,19 +215,82 @@ export default function ResizableSplitView({
               inputBuffer.current.slice(0, cursorPos.current) +
               key +
               inputBuffer.current.slice(cursorPos.current);
+
             cursorPos.current++;
-          } else {
-            return;
+
+            const promptLength = PROMPT.length;
+            const termWidth = terminalCols();
+            const afterCursor = inputBuffer.current.slice(cursorPos.current);
+
+            // Save cursor
+            term.current?.write("\x1b[s");
+
+            // Write inserted char + after text
+            term.current?.write(key + afterCursor);
+
+            // Calculate absolute cursor position
+            const absoluteCursorPos = promptLength + cursorPos.current;
+            const cursorRow =
+              startRow.current + Math.floor(absoluteCursorPos / termWidth);
+            const cursorCol = (absoluteCursorPos % termWidth) + 1; // +1 because terminal columns are 1-based
+
+            // Restore cursor and move to new correct row and col
+            term.current?.write("\x1b[u"); // restore
+            term.current?.write(`\x1b[${cursorRow};${cursorCol}H`); // move to exact row,col
           }
       }
-      refreshLine();
     });
+
+    //to make the char after the bar show
+    const refreshCursor = () => {
+      if (!term.current) return;
+
+      const promptLength = PROMPT.length;
+      const termWidth = terminalCols();
+
+      const absolutePrevPos = promptLength + previousCursorPos.current;
+      const prevRow =
+        startRow.current + Math.floor(absolutePrevPos / termWidth);
+      const prevCol = (absolutePrevPos % termWidth) + 1;
+
+      const absoluteCursorPos = promptLength + cursorPos.current;
+      const cursorRow =
+        startRow.current + Math.floor(absoluteCursorPos / termWidth);
+      const cursorCol = (absoluteCursorPos % termWidth) + 1;
+
+      // Save terminal cursor
+      term.current.write("\x1b[s");
+
+      // 1. Restore previous position (normal color)
+      term.current.write(`\x1b[${prevRow};${prevCol}H`);
+      const prevChar = inputBuffer.current[previousCursorPos.current] || " ";
+      term.current.write("\x1b[27m"); // normal color
+      term.current.write(prevChar);
+
+      // 2. Move to new cursor position
+      term.current.write(`\x1b[${cursorRow};${cursorCol}H`);
+      const currChar = inputBuffer.current[cursorPos.current] || " ";
+      term.current.write("\x1b[7m"); // inverted color
+      term.current.write(currChar);
+      term.current.write("\x1b[27m"); // back to normal after writing
+
+      // 3. Restore terminal cursor (real position, for xterm)
+      term.current.write("\x1b[u");
+
+      // Finally, update previousCursorPos
+      previousCursorPos.current = cursorPos.current;
+    };
 
     const ro = new ResizeObserver(() => fitAddon.current?.fit());
     if (terminalRef.current) ro.observe(terminalRef.current);
 
     return () => {
+      // dispose xterm instance and clear container to prevent duplicate terminals (e.g. React StrictMode remount)
       term.current?.dispose();
+      term.current = null;
+      if (terminalRef.current) {
+        terminalRef.current.innerHTML = "";
+      }
       ro.disconnect();
     };
   }, []);
@@ -204,32 +325,39 @@ export default function ResizableSplitView({
     socketRef.current = new WebSocket("wss://python-api.erenhomburg.com/ws");
 
     socketRef.current.onopen = () => {
-      term.current?.writeln("✅ Connected to Python backend.");
+      term.current?.writeln("✅ Connected to Python backend.", () => {
+        startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
+        term.current?.write(PROMPT);
+      });
     };
 
     socketRef.current.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         if (message.action === "input_request") {
-          term.current?.writeln(message.prompt);
+          term.current?.writeln(message.prompt, () => {
+            startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
+            term.current?.write(PROMPT);
+          });
           waitingForInputRef.current = true;
           return;
         }
       } catch {}
       const lines = event.data.split(/\r?\n/);
       for (const line of lines) {
-        term.current?.writeln(line);
+        term.current?.writeln(line, () => {
+          startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
+          term.current?.write(PROMPT);
+        });
       }
     };
 
     socketRef.current.onclose = () => {
-      term.current?.writeln(`\r
->> ⚠️ WebSocket disconnected.`);
+      term.current?.writeln(`\r⚠️ WebSocket disconnected.`);
     };
 
     socketRef.current.onerror = (err) => {
-      term.current?.writeln(`\r
->> ⚠️ WebSocket error: ${err}`);
+      term.current?.writeln(`\r⚠️ WebSocket error: ${err}`);
     };
 
     return () => {
@@ -283,7 +411,10 @@ export default function ResizableSplitView({
   }, []);
 
   return (
-    <div className="container">
+    <div
+      className="container"
+      style={{ height: "100vh", display: "flex", flexDirection: "column" }}
+    >
       <div className="top-section" style={{ height: `${topHeight}%` }}>
         <PythonPlayground
           setHoveredStep={setHoveredStep}
