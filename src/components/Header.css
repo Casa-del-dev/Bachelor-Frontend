@@ -58,10 +58,10 @@ body {
   color: var(--text-color);
   font-size: 1.5vw;
   text-decoration: none;
-  transition: color 0.3s ease;
 }
 
 .nav-links a:hover {
+  transition: color 0.3s ease;
   color: var(--link-hover-color);
 }
 
