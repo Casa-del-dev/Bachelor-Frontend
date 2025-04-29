@@ -37,6 +37,10 @@ body {
   height: 5vh;
 }
 
+/* -----------------------------------------------------
+Dropdown when screen to narrow START
+---------------------------------------------------- */
+
 /* Navigation (for larger screens) */
 .nav-links {
   list-style: none;
@@ -45,16 +49,26 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: var(--header-height);
-  gap: calc(50vw / 3);
+  top: var(--header-height);
+  gap: calc(50vw / 4);
+}
+
+.nav-links.show {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
 }
 
 .nav-links li {
   display: flex;
   align-items: center;
+  width: 100%;
+  text-align: center;
 }
 
 .nav-links a {
+  width: 100%;
   color: var(--text-color);
   font-size: 1.5vw;
   text-decoration: none;
@@ -64,6 +78,26 @@ body {
   transition: color 0.3s ease;
   color: var(--link-hover-color);
 }
+
+.only-when-open {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.only-when-open.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.only-when-open.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* -----------------------------------------------------
+Dropdown when screen to narrow END
+---------------------------------------------------- */
 
 /* User Profile */
 .profile-icon {
@@ -81,6 +115,9 @@ body {
   color: var(--link-hover-color);
 }
 
+.hamburgers-container {
+  display: flex;
+}
 /* Hamburger Menu (default hidden) */
 .hamburger {
   display: none;
@@ -153,10 +190,6 @@ body {
     color: var(--link-hover-color);
   }
 
-  .nav-links {
-    display: none;
-  }
-
   .header-nav {
     position: absolute;
     top: var(--header-height);
@@ -164,37 +197,33 @@ body {
     width: 100vw;
     background-color: var(--header-background);
     border-top: 1px solid var(--border-color);
-    display: none;
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.4s ease;
     z-index: 100000;
   }
 
   .header-nav.show {
-    display: flex;
-    flex-direction: column;
+    max-height: calc(3.5vh * 4 + 1px * 4); /* enough space for links */
+    opacity: 1;
   }
 
-  .nav-links.show {
-    display: flex;
+  .nav-links {
     flex-direction: column;
     width: 100%;
-    gap: 0;
   }
-
   .nav-links li {
-    width: 100%;
-    text-align: center;
     border-bottom: 1px solid var(--border-color);
-    background-color: var(--header-background);
   }
 
   .nav-links a {
-    width: 100%;
     font-size: 2.15vh;
-    text-decoration: none;
-    color: var(--text-color);
-    flex-shrink: 0;
+    height: 3.5vh;
+    width: 100%;
+    text-align: center;
   }
 }
 

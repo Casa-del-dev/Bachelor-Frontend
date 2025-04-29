@@ -136,8 +136,6 @@ const StartLeft = ({
           </div>
         );
 
-      case "Blocks":
-        return <div>Building Blocks Content</div>;
       default:
         return <div>No content available</div>;
     }
@@ -168,17 +166,6 @@ const StartLeft = ({
             }}
           >
             Problem
-          </div>
-          <div
-            className={`segmented-button ${
-              selected === "Blocks" ? "active" : ""
-            }`}
-            onClick={() => {
-              selectSection("Blocks");
-              setSelected("Blocks");
-            }}
-          >
-            Building <br /> Blocks
           </div>
         </div>
         {/* Render dynamic content based on section */}

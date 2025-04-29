@@ -1,3 +1,21 @@
+:root {
+  --overlay-bg: white;
+  --overlay-text: black;
+  --form-bg: white;
+  --form-text: black;
+  --close-btn-color: black;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode {
+  --overlay-bg: #1e1e1e;
+  --overlay-text: #f5f5f5;
+  --form-bg: #2a2a2a;
+  --form-text: #f5f5f5;
+  --close-btn-color: #f5f5f5;
+  --shadow-color: rgba(255, 255, 255, 0.1);
+}
+
 /* Full-screen overlay */
 .overlay {
   position: fixed;
@@ -15,14 +33,15 @@
 
 /* Modal box */
 .overlay-content {
-  background-color: white;
+  background-color: var(--overlay-bg);
   padding: 2rem;
   border-radius: 10px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 4px 10px var(--shadow-color);
   position: relative;
   animation: fadeIn 0.3s ease-in-out;
+  color: var(--overlay-text);
 }
 
 /* Close button */
@@ -46,21 +65,21 @@
   display: grid;
   gap: 5px;
   align-items: center;
-  color: black;
-  background-color: white;
+  background-color: var(--modal-login-bg);
+  color: var(--form-text);
 }
 
 .form-group label {
   font-weight: bold;
-  color: black;
+  color: var(--form-text);
 }
 
 .form-group input {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: white;
-  color: black;
+  background-color: var(--form-bg);
+  color: var(--form-text);
   width: 100%;
 }
 
@@ -90,7 +109,7 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: black;
+  color: var(--form-text);
 }
 
 .signup-button-container {
@@ -201,6 +220,7 @@
 
   .close-btn {
     font-size: 4vw;
+    color: var(--close-btn-color);
   }
 
   .form-group label {

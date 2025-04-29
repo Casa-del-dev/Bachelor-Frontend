@@ -10,6 +10,59 @@ import Profile from "./Profile";
 export function ProfilePage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [closingLogin, setClosingLogin] = useState(false);
+  const [closingSignUp, setClosingSignUp] = useState(false);
+
+  const loginRef = useRef<HTMLDivElement>(null);
+  const signupRef = useRef<HTMLDivElement>(null);
+
+  const triggerCloseLogin = () => {
+    setClosingLogin(true);
+    setTimeout(() => {
+      setIsLoginModalOpen(false);
+      setClosingLogin(false);
+    }, 300);
+  };
+
+  const triggerCloseSignUp = () => {
+    setClosingSignUp(true);
+    setTimeout(() => {
+      setIsSignUpModalOpen(false);
+      setClosingSignUp(false);
+    }, 300);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isLoginModalOpen) triggerCloseLogin();
+        if (isSignUpModalOpen) triggerCloseSignUp();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isLoginModalOpen, isSignUpModalOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        isLoginModalOpen &&
+        loginRef.current &&
+        !loginRef.current.contains(e.target as Node)
+      ) {
+        triggerCloseLogin();
+      }
+      if (
+        isSignUpModalOpen &&
+        signupRef.current &&
+        !signupRef.current.contains(e.target as Node)
+      ) {
+        triggerCloseSignUp();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isLoginModalOpen, isSignUpModalOpen]);
 
   return (
     <>
@@ -19,10 +72,10 @@ export function ProfilePage() {
       />
 
       {isLoginModalOpen && (
-        <div className="overlay">
-          <div className="overlay-content-login">
+        <div className={`overlay ${closingLogin ? "fade-out" : "fade-in"}`}>
+          <div className="overlay-content-login" ref={loginRef}>
             <Login
-              setIsLoginModalOpen={setIsLoginModalOpen}
+              setIsLoginModalOpen={triggerCloseLogin}
               setIsModalOpen={setIsSignUpModalOpen}
             />
           </div>
@@ -30,10 +83,10 @@ export function ProfilePage() {
       )}
 
       {isSignUpModalOpen && (
-        <div className="overlay">
-          <div className="overlay-content">
+        <div className={`overlay ${closingSignUp ? "fade-out" : "fade-in"}`}>
+          <div className="overlay-content" ref={signupRef}>
             <SignUp
-              setIsModalOpen={setIsSignUpModalOpen}
+              setIsModalOpen={triggerCloseSignUp}
               setIsLoginModalOpen={setIsLoginModalOpen}
             />
           </div>
@@ -48,18 +101,42 @@ export function Header() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  // Dark mode state: init from localStorage
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const [closingHeaderLogin, setClosingHeaderLogin] = useState(false);
+  const [closingHeaderSignUp, setClosingHeaderSignUp] = useState(false);
+  const headerNavRef = useRef<HTMLDivElement>(null);
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const loginModalRef = useRef<HTMLDivElement>(null);
 
   const { isAuthenticated, logout } = useAuth();
 
-  // reset menu on resize
+  const triggerCloseHeaderLogin = () => {
+    setClosingHeaderLogin(true);
+    setTimeout(() => {
+      setIsLoginModalOpen(false);
+      setClosingHeaderLogin(false);
+    }, 300);
+  };
+
+  const triggerCloseHeaderSignUp = () => {
+    setClosingHeaderSignUp(true);
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setClosingHeaderSignUp(false);
+    }, 300);
+  };
+
+  const openLoginModal = () => {
+    setClosingHeaderLogin(false);
+    setIsLoginModalOpen(true);
+  };
+
+  const openSignUpModal = () => {
+    setClosingHeaderSignUp(false);
+    setIsModalOpen(true);
+  };
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768 && menuOpen) {
@@ -67,11 +144,9 @@ export function Header() {
       }
     };
     window.addEventListener("resize", handleResize);
-    handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, [menuOpen]);
 
-  // close profile dropdown when clicking outside or when any modal opens
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -88,30 +163,69 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isModalOpen, isLoginModalOpen]);
 
-  // close sign-up modal when clicking outside it
   useEffect(() => {
     const handleClickOutsideModal = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        setIsModalOpen(false);
+        triggerCloseHeaderSignUp();
       }
     };
     if (isModalOpen) {
       document.addEventListener("mousedown", handleClickOutsideModal);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutsideModal);
     }
     return () =>
       document.removeEventListener("mousedown", handleClickOutsideModal);
   }, [isModalOpen]);
 
-  // apply dark-mode class on body
   useEffect(() => {
-    document.body.classList.toggle("dark-mode", isDarkMode);
-  }, [isDarkMode]);
+    const handleClickOutsideMenu = (e: MouseEvent) => {
+      if (
+        menuOpen &&
+        headerNavRef.current &&
+        !headerNavRef.current.contains(e.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutsideMenu);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutsideMenu);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const handleClickOutsideLogin = (e: MouseEvent) => {
+      if (
+        loginModalRef.current &&
+        !loginModalRef.current.contains(e.target as Node)
+      ) {
+        triggerCloseHeaderLogin();
+      }
+    };
+    if (isLoginModalOpen) {
+      document.addEventListener("mousedown", handleClickOutsideLogin);
+    }
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutsideLogin);
+  }, [isLoginModalOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isLoginModalOpen) triggerCloseHeaderLogin();
+        if (isModalOpen) triggerCloseHeaderSignUp();
+        if (menuOpen) setMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isLoginModalOpen, isModalOpen, menuOpen]);
 
   const toggleProfileDropdown = () => {
     setProfileDropdownOpen((prev) => !prev);
   };
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => {
@@ -122,6 +236,10 @@ export function Header() {
     });
   };
 
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", isDarkMode);
+  }, [isDarkMode]);
+
   return (
     <>
       <header className="header">
@@ -131,9 +249,14 @@ export function Header() {
           </a>
         </div>
 
-        {/* Navigation / Dropdown */}
-        <nav className={`header-nav ${menuOpen ? "show" : ""}`}>
+        <nav
+          ref={headerNavRef}
+          className={`header-nav ${menuOpen ? "show" : ""}`}
+        >
           <ul className={`nav-links ${menuOpen ? "show" : ""}`}>
+            <li className={`only-when-open ${menuOpen ? "visible" : "hidden"}`}>
+              <a href="/">Home</a>
+            </li>
             <li>
               <a href="/problem">Problems</a>
             </li>
@@ -147,27 +270,18 @@ export function Header() {
         </nav>
 
         <div className="container-for-besties">
-          {/* Hamburger + Dark/Light toggle */}
           <div className="hamburgers-container">
+            <div className="darkmode-toggle" onClick={toggleDarkMode}>
+              {isDarkMode ? <HiSun /> : <HiMoon />}
+            </div>
             <div
               className="hamburger"
               onClick={() => setMenuOpen((prev) => !prev)}
             >
               {menuOpen ? <HiX /> : <HiMenu />}
             </div>
-
-            <div
-              className="darkmode-toggle"
-              onClick={toggleDarkMode}
-              title={
-                isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-              }
-            >
-              {isDarkMode ? <HiSun /> : <HiMoon />}
-            </div>
           </div>
 
-          {/* User Profile Icon */}
           <div className="user-profile" ref={profileDropdownRef}>
             <div className="profile-icon" onClick={toggleProfileDropdown}>
               <HiUserCircle />
@@ -184,13 +298,13 @@ export function Header() {
                         Logout
                       </a>
                     ) : (
-                      <a href="#" onClick={() => setIsLoginModalOpen(true)}>
+                      <a href="#" onClick={openLoginModal}>
                         Login
                       </a>
                     )}
                   </li>
                   <li>
-                    <a href="#" onClick={() => setIsModalOpen(true)}>
+                    <a href="#" onClick={openSignUpModal}>
                       Sign Up
                     </a>
                   </li>
@@ -201,23 +315,32 @@ export function Header() {
         </div>
       </header>
 
-      {/* Modals */}
       {isModalOpen && (
-        <div className="overlay">
-          <div className="overlay-content" ref={modalRef}>
+        <div className={`overlay`}>
+          <div
+            className={`overlay-content ${
+              closingHeaderSignUp ? "fade-out" : "fade-in"
+            }`}
+            ref={modalRef}
+          >
             <SignUp
-              setIsModalOpen={setIsModalOpen}
-              setIsLoginModalOpen={setIsLoginModalOpen}
+              setIsModalOpen={triggerCloseHeaderSignUp}
+              setIsLoginModalOpen={openLoginModal}
             />
           </div>
         </div>
       )}
       {isLoginModalOpen && (
-        <div className="overlay">
-          <div className="overlay-content-login">
+        <div className={`overlay`}>
+          <div
+            className={`overlay-content-login ${
+              closingHeaderLogin ? "fade-out" : "fade-in"
+            }`}
+            ref={loginModalRef}
+          >
             <Login
-              setIsLoginModalOpen={setIsLoginModalOpen}
-              setIsModalOpen={setIsModalOpen}
+              setIsLoginModalOpen={triggerCloseHeaderLogin}
+              setIsModalOpen={openSignUpModal}
             />
           </div>
         </div>
