@@ -1,13 +1,13 @@
 :root {
   --main-background: #ffffff;
   --text-color: #000000;
-  --border-color: #000000;
+  --divider-color: #000000;
 }
 
 body.dark-mode {
   --main-background: #121212;
   --text-color: #f0f0f0;
-  --border-color: #f0f0f0;
+  --divider-color: #a2a2a2;
 }
 
 /* Main container */
@@ -36,22 +36,20 @@ body.dark-mode {
 
 /* Divider between sections */
 .divider {
-  width: 5px;
-  background-color: var(--border-color);
+  width: 3px;
+  background-color: var(--divider-color);
   cursor: col-resize;
   user-select: none;
 }
 
 /* Optional: visual hover effect on divider for better UX */
 .divider:hover {
-  background-color: grey;
+  background-color: darkslategray;
 }
 
 /* Smooth transitions when switching themes */
 .container-main,
 .left-column,
-.middle-column,
-.right-column,
-.divider {
-  transition: background-color 0.3s ease, color 0.3s ease;
+.middle-column {
+  transition: all 0.3s ease;
 }

@@ -1,10 +1,10 @@
 :root {
-  --main-background: #ffffff;
+  --second-background: #ffffff;
   --main-text: #000000;
 }
 
 body.dark-mode {
-  --main-background: #121212;
+  --second-background: #2a2a2a;
   --main-text: #f0f0f0;
 }
 
@@ -151,6 +151,8 @@ Check button START
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
 
   background: linear-gradient(145deg, #008000, rgb(35, 140, 35));
   border: 1px solid rgb(3, 88, 10);
@@ -342,7 +344,7 @@ Textarea for starting prompt END
   position: sticky;
   top: 1vh;
   z-index: 10;
-  background-color: #f9f9f9;
+  background-color: var(--second-background);
   padding: 0.5vw 1vw;
   font-size: calc(var(--step-font-size, 1vw) * 1);
   display: flex;
@@ -392,6 +394,7 @@ Textarea for starting prompt END
 .trash-icon {
   width: calc(var(--step-font-size, 1vw) * 1);
   height: calc(var(--step-font-size, 1vw) * 1);
+  color: var(--main-text);
 }
 
 .trash-icon:hover {

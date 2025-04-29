@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import "./PlusbetweenSteps.css";
+import { useEffect, useState } from "react";
 
 interface PlusBetweenStepsProps {
   onClick?: () => void;
@@ -14,6 +15,23 @@ const PlusbetweenSteps: React.FC<PlusBetweenStepsProps> = ({
   plus = true,
   empty = true,
 }) => {
+  const [theme, setTheme] = useState<"light" | "dark">(() =>
+    document.body.classList.contains("dark-mode") ? "dark" : "light"
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setTheme(
+        document.body.classList.contains("dark-mode") ? "dark" : "light"
+      );
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="container-plus-right-start" style={style}>
       {plus && empty && <div className="straightline-left" />}
@@ -28,7 +46,7 @@ const PlusbetweenSteps: React.FC<PlusBetweenStepsProps> = ({
             : "calc(var(--step-font-size, 1vw) * 0.8)",
           border:
             plus && empty
-              ? "1px solid black"
+              ? `1px solid ${theme === "dark" ? "white" : "black"}`
               : !empty
               ? "1px solid #b8b8b8"
               : "",

@@ -1,5 +1,6 @@
 :root {
   --main-background: #ffffff;
+  --main-text-color: black;
 }
 
 body.dark-mode {
@@ -228,7 +229,7 @@ Modal layout END
 ------------------------------- */
 
 .cm-hover-step-line {
-  background-color: rgba(255, 255, 0, 0.8);
+  background-color: rgba(117, 117, 102, 0.8);
 }
 
 /* when no file is selected the text display */

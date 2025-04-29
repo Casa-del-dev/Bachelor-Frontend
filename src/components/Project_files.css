@@ -95,44 +95,6 @@ body.dark-mode {
 /*=============================================
 =            SEGMENTED BUTTONS                =
 =============================================*/
-.button-group {
-  display: flex;
-  overflow: hidden;
-  justify-content: space-evenly;
-  gap: calc((25%) / 5);
-  margin: 0 calc(var(--step-font-size, 1vw) * 0.8);
-  margin-top: 2vh;
-  box-sizing: border-box;
-}
-
-.segmented-button {
-  border: 1px solid var(--seg-btn-border);
-  width: 25%;
-  padding: 10px;
-  cursor: pointer;
-  background-color: var(--seg-btn-bg);
-  border-right: 1px solid var(--seg-btn-border);
-  border-radius: 8px;
-  user-select: none;
-  text-align: center;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(var(--step-font-size, 1vw) * 0.6);
-  height: calc(var(--step-font-size, 1vw) * 1);
-  color: var(--text-color);
-}
-
-.segmented-button:hover {
-  background-color: var(--seg-btn-bg-hover);
-}
-
-.segmented-button.active {
-  background-color: var(--seg-btn-active-bg);
-  border: 1px solid var(--seg-btn-active-border);
-}
 
 /*=============================================
 =            GENERAL CONTENT                  =
@@ -196,34 +158,6 @@ body.dark-mode {
   gap: 0.5vw;
   background-color: var(--main-background);
   color: var(--text-color);
-}
-
-/*=============================================
-=            TITLE DROPDOWN TRIGGER           =
-=============================================*/
-.title-dropdown-trigger {
-  font-size: calc(var(--step-font-size, 1vw) * 1.4);
-  cursor: pointer;
-  padding: 0.4vw 0.8vw;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4vw;
-  user-select: none;
-  font-weight: bold;
-  background-color: var(--title-trigger-bg);
-  border: 1px solid var(--title-trigger-border);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  color: var(--text-color);
-}
-
-.title-dropdown-trigger:hover {
-  background-color: var(--title-trigger-hover-bg);
-}
-
-.title-dropdown-trigger.open {
-  background-color: var(--title-trigger-active-bg);
 }
 
 /*=============================================

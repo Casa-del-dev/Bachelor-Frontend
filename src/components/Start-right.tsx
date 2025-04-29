@@ -78,6 +78,7 @@ function Collapsible({
         // Start with these defaults; they’ll be overwritten by JS.
         maxHeight: "0px",
         overflow: "hidden",
+        color: "black",
       }}
       // Toggle the hint on click (optional if you want that behavior).
       onClick={() => toggleHint(what, stepId)}
@@ -3451,7 +3452,6 @@ Biggest render Tree ever recored END
           {steps.length > 0 && (
             <div className="trash">
               <ShieldCheck
-                color="black"
                 size={"1vw"}
                 strokeWidth={1}
                 cursor="pointer"
@@ -3463,7 +3463,6 @@ Biggest render Tree ever recored END
                 }
               />
               <Trash
-                color="black"
                 size={"1vw"}
                 strokeWidth={1}
                 cursor="pointer"

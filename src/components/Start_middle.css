@@ -17,10 +17,14 @@
 }
 
 .resizer {
-  height: 4px;
-  background: var(--border-color);
+  height: 3px;
+  background: var(--divider-color);
   cursor: ns-resize;
   user-select: none;
+}
+
+.resizer:hover {
+  background: darkslategray;
 }
 
 .bottom-section {

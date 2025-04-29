@@ -336,6 +336,7 @@ const Start: React.FC = () => {
             currentFileName={currentFileName}
             fileTree={fileTree}
             problemId={problemId}
+            stepTree={stepTree}
           />
         </CodeProvider>
       </div>

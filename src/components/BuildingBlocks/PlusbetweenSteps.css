@@ -1,3 +1,13 @@
+:root {
+  --ü-color: #000;
+  --hover-bg: lightgrey;
+}
+
+body.dark-mode {
+  --ü-color: #f0f0f0;
+  --hover-bg: #444;
+}
+
 .container-plus-right-start {
   width: 100%;
   display: grid;
@@ -13,26 +23,21 @@
   opacity: 1;
 }
 
-.straightline-left {
-  grid-area: line1;
+.straightline-left,
+.straightline-right {
   height: 1px;
   width: 100%;
-  background-color: black;
+  background-color: var(--ü-color);
+  transition: background-color 0.3s ease;
 }
 
 .plusbetweensteps {
   grid-area: plus;
   border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 .container-plus-right-start:hover .plusbetweensteps:hover {
   background-color: lightgrey;
   cursor: pointer;
-}
-
-.straightline-right {
-  grid-area: line2;
-  height: 1px;
-  width: 100%;
-  background-color: black;
 }

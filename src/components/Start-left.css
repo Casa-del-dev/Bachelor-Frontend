@@ -85,7 +85,6 @@ body.dark-mode {
   user-select: none;
   text-align: center;
   font-weight: 500;
-  transition: background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -95,6 +94,7 @@ body.dark-mode {
 }
 
 .segmented-button:hover {
+  transition: background-color 0.2s ease;
   background-color: var(--seg-btn-bg-hover);
 }
 
@@ -175,7 +175,6 @@ body.dark-mode {
   cursor: pointer;
   padding: 0.4vw 0.8vw;
   border-radius: 6px;
-  transition: background-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.4vw;
@@ -188,6 +187,8 @@ body.dark-mode {
 }
 
 .title-dropdown-trigger:hover {
+  transition: background-color 0.2s ease;
+
   background-color: var(--dropdown-hover-bg);
 }
 

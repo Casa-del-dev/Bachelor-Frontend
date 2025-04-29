@@ -46,6 +46,7 @@ interface PythonPlaygroundProps {
   currentFileName: string | null;
   fileTree: FileItem[];
   problemId: string;
+  stepTree: any;
 }
 
 export default function PythonPlayground({
@@ -59,6 +60,7 @@ export default function PythonPlayground({
   currentFileName,
   fileTree,
   problemId,
+  stepTree,
 }: PythonPlaygroundProps) {
   const isAuthenticated = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -67,31 +69,30 @@ export default function PythonPlayground({
     return localStorage.getItem("colorMode") === "true";
   });
 
-  const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem("theme") === "dark"
-  );
+  const [isDarkMode, setIsDarkMode] = useState<"dark" | "light" | null>(null);
 
   useEffect(() => {
-    const handler = () => {
-      setIsDarkMode(localStorage.getItem("theme") === "dark");
+    const checkDarkMode = () => {
+      setIsDarkMode(
+        document.body.classList.contains("dark-mode") ? "dark" : "light"
+      );
     };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+
+    checkDarkMode(); // Check once immediately
+    const observer = new MutationObserver(checkDarkMode);
+
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   const selectedProblemName = problemId;
 
-  const StorageKey = `stepselectedSystemProblem_${selectedProblemName}`;
-
   function loadStepsTree(): Step[] {
-    const stored = localStorage.getItem(StorageKey);
-    if (!stored) return [];
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      console.error("Error parsing step tree from local storage:", e);
-      return [];
-    }
+    return stepTree;
   }
 
   const editorExtensions = useMemo(() => {
@@ -102,7 +103,8 @@ export default function PythonPlayground({
     }
 
     return extensions;
-  }, [colorMode, setHoveredStep]);
+    // note: include stepTree here so plugin sees new value
+  }, [colorMode, setHoveredStep, stepTree]);
 
   function findMatchingStepForLine(
     lineText: string,
@@ -455,7 +457,7 @@ export default function PythonPlayground({
             setCodeForFile(currentFile, newCode);
             saveCodeToBackend(newCode);
           }}
-          theme={isDarkMode ? "dark" : "light"}
+          theme={isDarkMode === "dark" ? "dark" : "light"}
           basicSetup={{
             lineNumbers: true,
             foldGutter: true,
