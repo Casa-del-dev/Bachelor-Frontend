@@ -1,4 +1,3 @@
-// Start_middle.tsx
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { FaCog, FaPlay, FaHourglassHalf } from "react-icons/fa";
 import { Terminal } from "xterm";
@@ -53,20 +52,18 @@ export default function ResizableSplitView({
   const waitingForInputRef = useRef(false);
   const cursorPos = useRef(0);
 
-  // Apply current CSS theme into xterm
-  const applyTheme = () => {
+  const PROMPT = "> ";
+
+  const refreshLine = () => {
     if (!term.current) return;
-    const isDark = document.body.classList.contains("dark-mode");
-    term.current.options = {
-      theme: {
-        background: isDark ? "#121212" : "#f1f1f1",
-        foreground: isDark ? "#f0f0f0" : "#000000",
-        cursor: isDark ? "#f0f0f0" : "#000000",
-      },
-    };
+    term.current.write("\x1b[2K\r");
+    term.current.write(PROMPT + inputBuffer.current);
+    const offset = inputBuffer.current.length - cursorPos.current;
+    if (offset > 0) {
+      term.current.write(`\x1b[${offset}D`);
+    }
   };
 
-  /** Setup xterm.js on mount */
   useEffect(() => {
     if (!terminalRef.current || term.current) return;
 
@@ -79,108 +76,129 @@ export default function ResizableSplitView({
         foreground: "#000000",
         cursor: "black",
       },
-      // @ts-ignore: supported in xterm@5.3.0
-      cursorAccentColor: "#f1f1f1",
     });
 
     fitAddon.current = new FitAddon();
     term.current.loadAddon(fitAddon.current);
 
-    // allow browser refresh on Ctrl+R
-    term.current.attachCustomKeyEventHandler((e: KeyboardEvent) => {
+    term.current.attachCustomKeyEventHandler((e) => {
       if (e.ctrlKey && e.key.toLowerCase() === "r") {
         return false;
       }
       return true;
     });
 
-    // open terminal and apply theme
     setTimeout(() => {
       if (term.current && terminalRef.current) {
         term.current.open(terminalRef.current);
         fitAddon.current?.fit();
-        applyTheme();
+        term.current.write(PROMPT);
+        term.current.focus();
       }
     }, 100);
 
-    // handle user input
-    term.current.onData((key) => {
-      if (key === "\r") {
-        term.current?.writeln("");
-        if (socketRef.current?.readyState === WebSocket.OPEN) {
-          const payload = waitingForInputRef.current
-            ? { action: "input_response", value: inputBuffer.current }
-            : { action: "run", code: inputBuffer.current };
-          socketRef.current.send(JSON.stringify(payload));
-          waitingForInputRef.current = false;
-        }
-        inputBuffer.current = "";
-        cursorPos.current = 0;
-      } else if (key === "\u007F") {
-        if (cursorPos.current > 0) {
-          inputBuffer.current =
-            inputBuffer.current.slice(0, cursorPos.current - 1) +
-            inputBuffer.current.slice(cursorPos.current);
-          cursorPos.current--;
-          term.current?.write("\b \b");
-        } else {
-          term.current?.write("\x07");
-        }
-      } else if (key === "\x1B[D") {
-        if (cursorPos.current > 0) {
-          cursorPos.current--;
-          term.current?.write("\x1b[D");
-        } else {
-          term.current?.write("\x07");
-        }
-      } else if (key === "\x1B[C") {
-        if (cursorPos.current < inputBuffer.current.length) {
-          cursorPos.current++;
-          term.current?.write("\x1b[C");
-        } else {
-          term.current?.write("\x07");
-        }
-      } else if (key === "\x1B[A" || key === "\x1B[B") {
-        term.current?.write("\x07");
-      } else {
-        inputBuffer.current =
-          inputBuffer.current.slice(0, cursorPos.current) +
-          key +
-          inputBuffer.current.slice(cursorPos.current);
-        term.current?.write(key);
-        cursorPos.current++;
+    term.current.onKey(({ domEvent }) => {
+      const key = domEvent.key;
+      switch (key) {
+        case "Backspace":
+          if (cursorPos.current > 0) {
+            inputBuffer.current =
+              inputBuffer.current.slice(0, cursorPos.current - 1) +
+              inputBuffer.current.slice(cursorPos.current);
+            cursorPos.current--;
+          } else {
+            term.current?.write("\x07");
+          }
+          break;
+
+        case "Delete":
+          if (cursorPos.current < inputBuffer.current.length) {
+            inputBuffer.current =
+              inputBuffer.current.slice(0, cursorPos.current) +
+              inputBuffer.current.slice(cursorPos.current + 1);
+          } else {
+            term.current?.write("\x07");
+          }
+          break;
+
+        case "ArrowLeft":
+          if (cursorPos.current > 0) {
+            cursorPos.current--;
+          } else {
+            term.current?.write("\x07");
+          }
+          break;
+
+        case "ArrowRight":
+          if (cursorPos.current < inputBuffer.current.length) {
+            cursorPos.current++;
+          } else {
+            term.current?.write("\x07");
+          }
+          break;
+
+        case "Enter":
+          term.current?.write("\r\n");
+          if (socketRef.current?.readyState === WebSocket.OPEN) {
+            const payload = waitingForInputRef.current
+              ? { action: "input_response", value: inputBuffer.current }
+              : { action: "run", code: inputBuffer.current };
+            socketRef.current.send(JSON.stringify(payload));
+            waitingForInputRef.current = false;
+          }
+          inputBuffer.current = "";
+          cursorPos.current = 0;
+          term.current?.write(PROMPT);
+          return;
+
+        default:
+          if (key.length === 1) {
+            inputBuffer.current =
+              inputBuffer.current.slice(0, cursorPos.current) +
+              key +
+              inputBuffer.current.slice(cursorPos.current);
+            cursorPos.current++;
+          } else {
+            return;
+          }
       }
+      refreshLine();
     });
 
-    term.current.writeln("Attempting WebSocket connection...");
+    const ro = new ResizeObserver(() => fitAddon.current?.fit());
+    if (terminalRef.current) ro.observe(terminalRef.current);
 
     return () => {
       term.current?.dispose();
-      term.current = null;
-      fitAddon.current = null;
+      ro.disconnect();
     };
   }, []);
 
-  /** Re-apply theme when <body> class changes */
+  useEffect(() => {
+    fitAddon.current?.fit();
+  }, [topHeight]);
+
   useEffect(() => {
     const obs = new MutationObserver((mutations) => {
       for (const m of mutations) {
-        if (m.attributeName === "class") applyTheme();
+        if (m.attributeName === "class") {
+          if (term.current) {
+            const isDark = document.body.classList.contains("dark-mode");
+            term.current.options = {
+              theme: {
+                background: isDark ? "#121212" : "#f1f1f1",
+                foreground: isDark ? "#f0f0f0" : "#000000",
+                cursor: isDark ? "#f0f0f0" : "#000000",
+              },
+            };
+          }
+        }
       }
     });
     obs.observe(document.body, { attributes: true });
     return () => obs.disconnect();
   }, []);
 
-  /** Fit terminal on resize */
-  useEffect(() => {
-    if (!terminalRef.current || !fitAddon.current) return;
-    const ro = new ResizeObserver(() => fitAddon.current!.fit());
-    ro.observe(terminalRef.current);
-    return () => ro.disconnect();
-  }, [fitAddon.current]);
-
-  /** WebSocket connection */
   useEffect(() => {
     if (!isAuthenticated) return;
     socketRef.current = new WebSocket("wss://python-api.erenhomburg.com/ws");
@@ -205,11 +223,13 @@ export default function ResizableSplitView({
     };
 
     socketRef.current.onclose = () => {
-      term.current?.writeln("\r\n>> ⚠️ WebSocket disconnected.");
+      term.current?.writeln(`\r
+>> ⚠️ WebSocket disconnected.`);
     };
 
     socketRef.current.onerror = (err) => {
-      term.current?.writeln(`\r\n>> ⚠️ WebSocket error: ${err}`);
+      term.current?.writeln(`\r
+>> ⚠️ WebSocket error: ${err}`);
     };
 
     return () => {
@@ -217,7 +237,6 @@ export default function ResizableSplitView({
     };
   }, [isAuthenticated]);
 
-  /** Send code/compile/test to backend */
   const sendCodeToBackend = (action: "run" | "compile" | "test") => {
     if (!isAuthenticated || !socketRef.current) {
       term.current?.writeln(">>⚠️ Not authenticated. Please log in.");
@@ -236,14 +255,14 @@ export default function ResizableSplitView({
     term.current?.focus();
   };
 
-  /** Vertical resizer handlers */
   const handleMouseDown = () => {
     isResizing.current = true;
   };
   const handleMouseMove = (e: MouseEvent) => {
     if (!isResizing.current) return;
     e.preventDefault();
-    const newHeight = ((e.clientY - 40) / window.innerHeight) * 100;
+    // calculate percentage directly from cursor Y
+    const newHeight = (e.clientY / window.innerHeight) * 100;
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());
@@ -253,6 +272,7 @@ export default function ResizableSplitView({
   const handleMouseUp = () => {
     isResizing.current = false;
   };
+
   useEffect(() => {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
