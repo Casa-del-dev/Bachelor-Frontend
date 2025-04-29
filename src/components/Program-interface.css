@@ -1,11 +1,13 @@
 :root {
   --main-background: #ffffff;
   --main-text-color: black;
+  --modal-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 }
 
 body.dark-mode {
   --main-background: #121212;
   --main-text-color: #f5f5f5;
+  --modal-box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
 }
 
 .container-programming-bro {
@@ -88,29 +90,6 @@ Dot animation
 /* -------------------------------
 Modal layout START
 ------------------------------- */
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 10px;
-  max-width: 320px; /* narrower width */
-  width: 90%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
-  text-align: center;
-}
 
 .modal-buttons {
   margin-top: 20px;
@@ -214,12 +193,12 @@ Modal layout START
 }
 
 .modal-content {
-  background: #ffffff;
+  background: var(--main-background);
   padding: 24px;
   border-radius: 10px;
   max-width: 320px;
   width: 90%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  box-shadow: 0 2px 8px var(--modal-box-shadow);
   text-align: center;
   opacity: 0; /* Start hidden */
 }

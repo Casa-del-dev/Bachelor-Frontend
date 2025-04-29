@@ -634,7 +634,7 @@ Overlay for when the user selects to get the Correct Step
 }
 
 .overlay-box {
-  background: white;
+  background: var(--main-background);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
@@ -650,8 +650,9 @@ Overlay for when the user selects to get the Correct Step
 .mini-overlay-save {
   display: flex;
   align-items: center;
+  justify-content: center;
   margin: 0.5rem 0;
-  font-size: 0.7vw;
+  font-size: 10px;
 }
 
 .mini-overlay-save input {
@@ -689,32 +690,66 @@ Overlay for when the user selects to get the Correct Step
   margin-top: 10px;
 }
 
-.overlay-button-yes {
-  background: rgb(0, 175, 44);
+.overlay-button.yes,
+.overlay-button.no {
+  position: relative;
+  overflow: hidden;
   color: white;
   border: none;
   padding: 8px 12px;
   border-radius: 5px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-weight: 600;
+  background: linear-gradient(135deg, #00b894, #00cec9); /* Default gradient */
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.overlay-button-no {
-  background: rgb(190, 46, 27);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.2s;
+.overlay-button.no {
+  background: linear-gradient(
+    135deg,
+    #d63031,
+    #e17055
+  ); /* Different gradient */
 }
 
-.overlay-button-yes:hover {
-  background: rgb(0, 136, 34);
+/* Hover State: Slightly brighten and animate shine */
+.overlay-button.yes:hover,
+.overlay-button.no:hover {
+  transform: scale(1.03);
 }
 
-.overlay-button-no:hover {
-  background: rgb(148, 17, 0);
+.overlay-button.yes::after,
+.overlay-button.no::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-20deg);
+  transition: none;
+  pointer-events: none;
+}
+
+/* Shine animation on hover */
+.overlay-button.yes:hover::after,
+.overlay-button.no:hover::after {
+  animation: shine 0.8s ease forwards;
+}
+
+@keyframes shine {
+  0% {
+    left: -75%;
+  }
+  100% {
+    left: 125%;
+  }
 }
 
 /* ---------------------------------------

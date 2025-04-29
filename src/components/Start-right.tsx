@@ -155,10 +155,10 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
           Save this answer for future
         </label>
         <div className="overlay-buttons">
-          <button className="overlay-button" onClick={onConfirm}>
+          <button className="overlay-button yes" onClick={onConfirm}>
             Yes, Reveal
           </button>
-          <button className="overlay-button" onClick={handleClose}>
+          <button className="overlay-button no" onClick={handleClose}>
             Cancel
           </button>
         </div>
