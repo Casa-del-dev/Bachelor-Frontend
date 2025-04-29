@@ -46,10 +46,3 @@ body.dark-mode {
 .divider:hover {
   background-color: darkslategray;
 }
-
-/* Smooth transitions when switching themes */
-.container-main,
-.left-column,
-.middle-column {
-  transition: all 0.3s ease;
-}

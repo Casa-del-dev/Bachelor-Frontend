@@ -175,10 +175,10 @@ export default function ResizableSplitView({
   /** Fit terminal on resize */
   useEffect(() => {
     if (!terminalRef.current || !fitAddon.current) return;
-    const ro = new ResizeObserver(() => fitAddon.current?.fit());
+    const ro = new ResizeObserver(() => fitAddon.current!.fit());
     ro.observe(terminalRef.current);
     return () => ro.disconnect();
-  }, []);
+  }, [fitAddon.current]);
 
   /** WebSocket connection */
   useEffect(() => {
@@ -247,6 +247,7 @@ export default function ResizableSplitView({
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());
+      fitAddon.current?.fit();
     }
   };
   const handleMouseUp = () => {
