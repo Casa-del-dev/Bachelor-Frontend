@@ -57,6 +57,15 @@ export default function ResizableSplitView({
 
   const PROMPT = "> ";
 
+  function getXtermTheme() {
+    const isDark = document.body.classList.contains("dark-mode");
+    return {
+      background: isDark ? "#121212" : "#f1f1f1",
+      foreground: isDark ? "#f0f0f0" : "#000000",
+      cursor: isDark ? "#f0f0f0" : "#000000",
+    };
+  }
+
   useEffect(() => {
     if (!terminalRef.current || term.current) return;
 
@@ -64,11 +73,7 @@ export default function ResizableSplitView({
       cursorBlink: true,
       cursorStyle: "bar",
       cursorWidth: 10,
-      theme: {
-        background: "#f1f1f1",
-        foreground: "#000000",
-        cursor: "black",
-      },
+      theme: getXtermTheme(),
     });
 
     fitAddon.current = new FitAddon();
@@ -181,9 +186,8 @@ export default function ResizableSplitView({
 
             cursorPos.current++;
 
-            if (nextCol === 1) {
-              // We wrapped onto a new line
-              term.current?.write("\r\n"); // move to beginning of next line
+            if (nextCol === 0) {
+              term.current?.write("\r\n");
             } else {
               term.current?.write("\x1b[C"); // move right normally
             }
@@ -237,7 +241,10 @@ export default function ResizableSplitView({
             // Restore cursor and move to new correct row and col
             term.current?.write("\x1b[u"); // restore
             term.current?.write(`\x1b[${cursorRow};${cursorCol}H`); // move to exact row,col
+
+            refreshCursor();
           }
+          break;
       }
     });
 
