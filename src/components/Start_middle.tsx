@@ -187,7 +187,8 @@ export default function ResizableSplitView({
             cursorPos.current++;
 
             if (nextCol === 0) {
-              term.current?.write("\r\n");
+              // We wrapped onto a new line
+              term.current?.write("\r\n"); // move to beginning of next line
             } else {
               term.current?.write("\x1b[C"); // move right normally
             }
@@ -199,7 +200,9 @@ export default function ResizableSplitView({
           break;
 
         case "Enter":
+          eraseCursorBar();
           term.current?.write("\r\n");
+          previousCursorPos.current = 0;
           if (socketRef.current?.readyState === WebSocket.OPEN) {
             const payload = waitingForInputRef.current
               ? { action: "input_response", value: inputBuffer.current }
@@ -226,21 +229,17 @@ export default function ResizableSplitView({
             const termWidth = terminalCols();
             const afterCursor = inputBuffer.current.slice(cursorPos.current);
 
-            // Save cursor
             term.current?.write("\x1b[s");
 
-            // Write inserted char + after text
             term.current?.write(key + afterCursor);
 
-            // Calculate absolute cursor position
             const absoluteCursorPos = promptLength + cursorPos.current;
             const cursorRow =
               startRow.current + Math.floor(absoluteCursorPos / termWidth);
-            const cursorCol = (absoluteCursorPos % termWidth) + 1; // +1 because terminal columns are 1-based
+            const cursorCol = (absoluteCursorPos % termWidth) + 1;
 
-            // Restore cursor and move to new correct row and col
-            term.current?.write("\x1b[u"); // restore
-            term.current?.write(`\x1b[${cursorRow};${cursorCol}H`); // move to exact row,col
+            term.current?.write("\x1b[u");
+            term.current?.write(`\x1b[${cursorRow};${cursorCol}H`);
 
             refreshCursor();
           }
@@ -287,6 +286,25 @@ export default function ResizableSplitView({
       // Finally, update previousCursorPos
       previousCursorPos.current = cursorPos.current;
     };
+
+    // Erases the old inverted-bar by redrawing its character in normal video
+    function eraseCursorBar() {
+      if (!term.current) return;
+      const promptLength = PROMPT.length;
+      const termWidth = terminalCols();
+
+      // where the old bar was
+      const absOld = promptLength + previousCursorPos.current;
+      const rowOld = startRow.current + Math.floor(absOld / termWidth);
+      const colOld = (absOld % termWidth) + 1; // terminals are 1-based
+
+      // save cursor, jump there, write normal char, restore cursor
+      term.current.write("\x1b[s");
+      term.current.write(`\x1b[${rowOld};${colOld}H`);
+      const under = inputBuffer.current[previousCursorPos.current] || " ";
+      term.current.write("\x1b[27m" + under); // normal video
+      term.current.write("\x1b[u");
+    }
 
     const ro = new ResizeObserver(() => fitAddon.current?.fit());
     if (terminalRef.current) ro.observe(terminalRef.current);
@@ -350,6 +368,13 @@ export default function ResizableSplitView({
           return;
         }
       } catch {}
+
+      //empty response
+      if (!event.data.trim()) {
+        startRow.current++;
+        return;
+      }
+
       const lines = event.data.split(/\r?\n/);
       for (const line of lines) {
         term.current?.writeln(line, () => {
@@ -374,7 +399,7 @@ export default function ResizableSplitView({
 
   const sendCodeToBackend = (action: "run" | "compile" | "test") => {
     if (!isAuthenticated || !socketRef.current) {
-      term.current?.writeln(">>⚠️ Not authenticated. Please log in.");
+      term.current?.writeln("⚠️ Not authenticated. Please log in.");
       return;
     }
     const actionMessage = getActionMessage(action);
