@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { HiMenu, HiX, HiUserCircle, HiMoon, HiSun } from "react-icons/hi";
 import Logo from "../assets/Peachlab.svg";
 import "./Header.css";
@@ -110,6 +110,81 @@ export function Header() {
   const loginModalRef = useRef<HTMLDivElement>(null);
 
   const { isAuthenticated, logout } = useAuth();
+
+  const isHomePage = window.location.pathname === "/";
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const showIndicator = !isHomePage || menuOpen || hoveredIndex !== null;
+
+  /* --------------------------------------------
+  Needed for button animation in header START
+  -------------------------------------------- */
+
+  const navItems = [
+    { name: "Home", href: "/" },
+    { name: "Problems", href: "/problem" },
+    { name: "Start", href: "/start" },
+    { name: "Building Blocks", href: "/bb" },
+  ];
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [indicator, setIndicator] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  });
+
+  const navContainerRef = useRef<HTMLUListElement>(null);
+  const navRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+
+  useEffect(() => {
+    const idx = navItems.findIndex(
+      (item) => item.href === window.location.pathname
+    );
+    if (idx >= 0) setActiveIndex(idx);
+  }, []);
+
+  // only include “Home” when menu is open:
+  const visibleItems = navItems.filter(
+    (item) => item.name !== "Home" || menuOpen
+  );
+
+  // map the filtered list back to their original indexes
+  const visibleOriginalIndexes = navItems
+    .map((_, i) => i)
+    .filter((i) => navItems[i].name !== "Home" || menuOpen);
+
+  const updateIndicator = (idx: number) => {
+    const el = navRefs.current[idx];
+    if (!el || !navContainerRef.current) return;
+    // compute the offsets relative to the UL container
+    const parentRect = navContainerRef.current.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    setIndicator({
+      left: rect.left - parentRect.left - 5,
+      top: rect.top - parentRect.top,
+      width: rect.width + 10,
+      height: rect.height,
+    });
+  };
+
+  // initialize on mount & whenever menu toggles
+  useLayoutEffect(() => {
+    updateIndicator(activeIndex);
+  }, [activeIndex, menuOpen]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      updateIndicator(hoveredIndex ?? activeIndex);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [hoveredIndex, activeIndex]);
+
+  /* --------------------------------------------
+  Needed for button animation in header END
+  -------------------------------------------- */
 
   const triggerCloseHeaderLogin = () => {
     setClosingHeaderLogin(true);
@@ -253,19 +328,51 @@ export function Header() {
           ref={headerNavRef}
           className={`header-nav ${menuOpen ? "show" : ""}`}
         >
-          <ul className={`nav-links ${menuOpen ? "show" : ""}`}>
-            <li className={`only-when-open ${menuOpen ? "visible" : "hidden"}`}>
-              <a href="/">Home</a>
-            </li>
-            <li>
-              <a href="/problem">Problems</a>
-            </li>
-            <li>
-              <a href="/start">Start</a>
-            </li>
-            <li>
-              <a href="/bb">Building Blocks</a>
-            </li>
+          <ul
+            ref={navContainerRef}
+            className={`nav-links ${menuOpen ? "show" : ""}`}
+            onMouseLeave={() => {
+              setHoveredIndex(null);
+              updateIndicator(activeIndex);
+            }}
+          >
+            {/* only render the little box when showIndicator===true */}
+            {showIndicator && (
+              <div
+                className="indicator"
+                style={{
+                  left: indicator.left,
+                  top: indicator.top,
+                  width: indicator.width,
+                  height: indicator.height,
+                }}
+              />
+            )}
+
+            {visibleItems.map((item, visibleIdx) => {
+              const originalIdx = visibleOriginalIndexes[visibleIdx];
+              return (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className={activeIndex === originalIdx ? "active" : ""}
+                    ref={(el) => {
+                      navRefs.current[originalIdx] = el;
+                    }}
+                    onMouseEnter={() => {
+                      setHoveredIndex(originalIdx);
+                      updateIndicator(originalIdx);
+                    }}
+                    onClick={() => {
+                      setHoveredIndex(null);
+                      setActiveIndex(originalIdx);
+                    }}
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
