@@ -138,10 +138,23 @@ export function Header() {
   const navRefs = useRef<Array<HTMLAnchorElement | null>>([]);
 
   useEffect(() => {
-    const idx = navItems.findIndex(
-      (item) => item.href === window.location.pathname
-    );
-    if (idx >= 0) setActiveIndex(idx);
+    const path = window.location.pathname;
+    // strip trailing slash (but keep "/" for homepage)
+    const cleanPath =
+      path.endsWith("/") && path !== "/" ? path.slice(0, -1) : path;
+
+    const idx = navItems.findIndex((item) => {
+      if (item.href === "/") {
+        // only match home on exact "/"
+        return cleanPath === "/";
+      }
+      // match any deeper route under that section
+      return cleanPath.startsWith(item.href);
+    });
+
+    if (idx >= 0) {
+      setActiveIndex(idx);
+    }
   }, []);
 
   // only include “Home” when menu is open:
