@@ -6,6 +6,8 @@ import Welcome_text from "./Welcome_text";
 export default function Welcome() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scrollPauseRef = useRef<number>(0);
+  const lastTouchY = useRef<number | null>(null);
+
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [videoReadybefore, setVideoReadyBefore] = useState(false);
@@ -73,6 +75,46 @@ export default function Welcome() {
 
     if (isUnlocked) return;
 
+    const onTouchStart = (e: TouchEvent) => {
+      lastTouchY.current = e.touches[0].clientY;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (lastTouchY.current === null) return;
+
+      e.preventDefault();
+      const currentY = e.touches[0].clientY;
+      const deltaY = lastTouchY.current - currentY;
+      lastTouchY.current = currentY;
+
+      clearTimeout(scrollPauseRef.current);
+
+      if (deltaY > 0) {
+        video.playbackRate = Math.min(
+          deltaY * SCROLL_PLAY_RATE,
+          MAX_PLAYBACK_RATE
+        );
+        video.play();
+      } else {
+        video.pause();
+        const rewind = Math.min(-deltaY * SCROLL_REWIND_RATE, video.duration);
+        video.currentTime = Math.max(0, video.currentTime - rewind);
+      }
+
+      scrollPauseRef.current = window.setTimeout(() => {
+        video.pause();
+        video.playbackRate = 1;
+      }, 150);
+    };
+
+    const onTouchEnd = () => {
+      lastTouchY.current = null;
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: false });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: false });
+
     const onWheelScroll = (e: WheelEvent) => {
       e.preventDefault();
       clearTimeout(scrollPauseRef.current);
@@ -99,6 +141,9 @@ export default function Welcome() {
 
     return () => {
       window.removeEventListener("wheel", onWheelScroll);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
       clearTimeout(scrollPauseRef.current);
     };
   }, [isUnlocked]);
