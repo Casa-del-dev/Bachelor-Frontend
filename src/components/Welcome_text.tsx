@@ -91,11 +91,19 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
         <h2 className={`welcome-heading ${showDetails ? "slide-in" : ""}`}>
           Welcome to the Step Tree Guide
         </h2>
+        <div className={`description-welcome ${showDetails ? "slide-in" : ""}`}>
+          This page is designed to help beginners develop a structured,
+          solution-oriented mindset... This page is designed to help beginners
+          develop a structured, solution-oriented mindset...This page is
+          designed to help beginners develop a structured, solution-oriented
+          mindset...This page is designed to help beginners develop a
+          structured, solution-oriented mindset...This page is designed to help
+          beginners develop a structured, solution-oriented mindset...This page
+          is designed to help beginners develop a structured, solution-oriented
+          mindset...This page is designed to help beginners develop a
+          structured, solution-oriented mindset...
+        </div>
         <div className={`details-section ${showDetails ? "visible" : ""}`}>
-          <p>
-            This page is designed to help beginners develop a structured,
-            solution-oriented mindset...
-          </p>
           <ol className="welcome-steps">
             <li>Identify the problem and desired outcome.</li>
             <li>Break the solution into logical steps.</li>
