@@ -2,6 +2,7 @@ import "./Welcome_text.css";
 import backgroundImage from "../assets/Welcome_background.webp";
 import backgroundImageWhite from "../assets/Welcome_background_white.png";
 import { useEffect, useState } from "react";
+import { useInView } from "./BuildingBlocks/useInView";
 
 export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [welcomeText, setWelcomeText] = useState(false);
@@ -11,6 +12,12 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   );
   const [showBackground1, setShowBackground1] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+
+  const heading = useInView<HTMLHeadingElement>({
+    threshold: 0.7,
+  });
+  const description = useInView<HTMLDivElement>({ threshold: 0.7 });
+  const steps = useInView<HTMLDivElement>({ threshold: 0.7 });
 
   useEffect(() => {
     const checkDarkMode = () => {
@@ -88,10 +95,20 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
       {/* Detailed Text */}
       <div className="details-wrapper">
         {showBackground1 && <div className="background1-slide"></div>}
-        <h2 className={`welcome-heading ${showDetails ? "slide-in" : ""}`}>
+        <h2
+          ref={heading.ref}
+          className={`welcome-heading ${
+            heading.isIntersecting && showDetails ? "slide-in" : ""
+          }`}
+        >
           Welcome to the Step Tree Guide
         </h2>
-        <div className={`description-welcome ${showDetails ? "slide-in" : ""}`}>
+        <div
+          ref={description.ref}
+          className={`description-welcome ${
+            description.isIntersecting && showDetails ? "slide-in" : ""
+          }`}
+        >
           This page is designed to help beginners develop a structured,
           solution-oriented mindset... This page is designed to help beginners
           develop a structured, solution-oriented mindset...This page is
@@ -103,7 +120,12 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
           mindset...This page is designed to help beginners develop a
           structured, solution-oriented mindset...
         </div>
-        <div className={`details-section ${showDetails ? "visible" : ""}`}>
+        <div
+          ref={steps.ref}
+          className={`details-section ${
+            steps.isIntersecting && showDetails ? "visible" : ""
+          }`}
+        >
           <ol className="welcome-steps">
             <li>Identify the problem and desired outcome.</li>
             <li>Break the solution into logical steps.</li>
