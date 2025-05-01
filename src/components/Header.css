@@ -35,6 +35,9 @@ body.dark-mode {
   padding: 0 2vw;
 }
 
+.logo {
+  outline: none;
+}
 /* Logo */
 .header-left .logo-image {
   display: flex;
@@ -61,7 +64,7 @@ Dropdown when screen to narrow START
 .indicator {
   position: absolute;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 0.5vw;
   transition: all 0.25s ease;
   pointer-events: none;
   box-sizing: border-box;
@@ -89,6 +92,7 @@ Dropdown when screen to narrow START
   color: var(--text-color);
   font-size: 1.5vw;
   text-decoration: none;
+  outline: none;
 }
 
 .only-when-open {
@@ -161,12 +165,13 @@ Dropdown when screen to narrow END
   top: 100%;
   right: 0;
   background-color: var(--profile-dropdown-background);
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  min-width: 120px;
+  border-radius: 0.4vh;
+  box-shadow: 0 0.2vh 1vh rgba(0, 0, 0, 0.1);
+  min-width: 5vh;
   z-index: 1000;
-  margin-top: 5px;
-  margin-right: 5px;
+  margin-top: 0.5vh;
+  margin-right: 0.5vh;
+  font-size: 2.3vh;
 }
 
 .profile-dropdown ul {
@@ -177,7 +182,7 @@ Dropdown when screen to narrow END
 
 .profile-dropdown ul li a {
   display: block;
-  padding: 10px 15px;
+  padding: 1vh 2vh;
   color: var(--text-color);
   text-decoration: none;
   transition: background-color 0.2s;

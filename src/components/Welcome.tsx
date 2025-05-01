@@ -1,131 +1,132 @@
 import { useEffect, useRef, useState } from "react";
 import "./Welcome.css";
 import VideoSrc from "../assets/short_clip.mp4";
-import photo from "../assets/Juppie.jpg";
+import backgroundImage from "../assets/Welcome_background.webp";
+import Welcome_text from "./Welcome_text";
 
 export default function Welcome() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [unlocked, setUnlocked] = useState(false);
-  const scrollPauseTimeout = useRef<number>(0);
+  const scrollPauseRef = useRef<number>(0);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [capturedFrame, setCapturedFrame] = useState<string | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoReadybefore, setVideoReadyBefore] = useState(false);
+  const [videoDone, setVideoDone] = useState(false);
 
-  const [finalImage, setFinalImage] = useState<string | null>(null);
-
-  const MAX_RATE = 6; // maximum playback rate (6× speed)
-  const SCROLL_TO_RATE = 0.04; // how much speed per deltaY when scrolling forward
-  const SCROLL_TO_REWIND = 0.08; // how many seconds to rewind per negative deltaY
+  const MAX_PLAYBACK_RATE = 6;
+  const SCROLL_PLAY_RATE = 0.04;
+  const SCROLL_REWIND_RATE = 0.08;
 
   useEffect(() => {
-    document.body.style.overflow = unlocked ? "auto" : "hidden";
-  }, [unlocked]);
+    document.body.style.overflow = isUnlocked ? "auto" : "hidden";
+  }, [isUnlocked]);
 
-  const onEnded = () => {
-    const vid = videoRef.current;
-    if (!vid) return;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
 
-    // Draw the final frame to canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = vid.videoWidth;
-    canvas.height = vid.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      const dataURL = canvas.toDataURL("image/png");
-      setFinalImage(dataURL);
-      setUnlocked(true);
-    }
+    const onLoadedMetadata = () => {
+      setVideoReadyBefore(true);
+      setTimeout(() => {
+        setVideoReady(true);
+      }, 3000);
+    };
+
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
+    };
+  }, []);
+
+  const handleVideoEnd = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.pause();
+
+    // Ensure we wait for the seek to the final frame
+    const onSeeked = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/png");
+        setCapturedFrame(imageData);
+      }
+
+      setIsUnlocked(true);
+
+      setTimeout(() => {
+        setVideoDone(true);
+      }, 300);
+
+      video.removeEventListener("seeked", onSeeked);
+    };
+
+    video.addEventListener("seeked", onSeeked);
+    video.currentTime = video.duration;
   };
 
   useEffect(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-    const handleWheel = (e: WheelEvent) => {
-      if (unlocked) return;
+    if (isUnlocked) return;
+
+    const onWheelScroll = (e: WheelEvent) => {
       e.preventDefault();
-
-      clearTimeout(scrollPauseTimeout.current);
+      clearTimeout(scrollPauseRef.current);
 
       if (e.deltaY > 0) {
-        // → FORWARD SCROLL: map deltaY to playbackRate
-        // e.deltaY might be ~100 on a fast scroll,
-        // so we scale it down to, say, a max of 5× speed:
-        const rate = Math.min(e.deltaY * SCROLL_TO_RATE, MAX_RATE);
-        vid.playbackRate = rate;
-        vid.play();
+        video.playbackRate = Math.min(
+          e.deltaY * SCROLL_PLAY_RATE,
+          MAX_PLAYBACK_RATE
+        );
+        video.play();
       } else {
-        // ← BACKWARD SCROLL: pause and scrub backwards
-        vid.pause();
-        // map deltaY to a rewind jump (in seconds)
-        const jump = Math.min(-e.deltaY * SCROLL_TO_REWIND, vid.duration);
-        vid.currentTime = Math.max(0, vid.currentTime - jump);
+        video.pause();
+        const rewind = Math.min(-e.deltaY * SCROLL_REWIND_RATE, video.duration);
+        video.currentTime = Math.max(0, video.currentTime - rewind);
       }
 
-      // when scrolling stops for 150ms, pause the video
-      scrollPauseTimeout.current = window.setTimeout(() => {
-        vid.pause();
-        vid.playbackRate = 1;
+      scrollPauseRef.current = window.setTimeout(() => {
+        video.pause();
+        video.playbackRate = 1;
       }, 150);
     };
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("wheel", onWheelScroll, { passive: false });
+
     return () => {
-      window.removeEventListener("wheel", handleWheel);
-      clearTimeout(scrollPauseTimeout.current);
+      window.removeEventListener("wheel", onWheelScroll);
+      clearTimeout(scrollPauseRef.current);
     };
-  }, [unlocked]);
+  }, [isUnlocked]);
 
   return (
-    <div>
-      {/* full-screen video hero */}
-      {!unlocked && (
+    <div className="welcome-root">
+      {!isUnlocked && (
         <video
           ref={videoRef}
-          className="hero-video"
+          className={`welcome-hero ${videoReadybefore ? "fade-in-hero" : ""}`}
           muted
           playsInline
           preload="auto"
           src={VideoSrc}
-          onEnded={onEnded}
-          onError={() => console.error("Video failed to load")}
+          onEnded={handleVideoEnd}
+          onError={() => console.error("Failed to load video")}
         />
       )}
 
-      {unlocked && finalImage && (
-        <img src={finalImage} className="hero-image" alt="Final Frame" />
+      {videoReady && (
+        <main className="welcome-content">
+          <Welcome_text videoDone={videoDone} />
+        </main>
       )}
-
-      <div className="page-content">
-        <div className="container-fluid-welcome">
-          <div className="body-1">
-            <div className="First-div">
-              <img src={photo} alt="Small Thumbnail" />
-              <div className="First-text">Welcome!</div>
-            </div>
-          </div>
-          <div className="body-2">
-            <div className="Second-div">
-              <div className="Second-text">Welcome!</div>
-              <img src={photo} alt="Small Thumbnail" />
-            </div>
-          </div>
-          <div className="body-1">
-            <div className="Third-div">
-              <img src={photo} alt="Small Thumbnail" />
-              <div className="Third-text">Welcome!</div>
-            </div>
-          </div>
-          <div className="body-2">
-            <div className="Fourth-div">
-              <div className="Fourth-text">Welcome!</div>
-              <img src={photo} alt="Small Thumbnail" />
-            </div>
-          </div>
-        </div>
-
-        <div className="container-review">
-          <hr />
-        </div>
-      </div>
     </div>
   );
 }

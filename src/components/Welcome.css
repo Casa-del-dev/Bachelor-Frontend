@@ -1,96 +1,51 @@
-.intro-wrapper {
+.welcome-root {
   position: relative;
-  width: 100vw;
-  overflow: hidden;
-  /* height is set dynamically via JS */
-}
-
-/* pin the video to the viewport while its parent scrolls */
-.hero-video {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.hero-image {
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* 2) Main content below */
-.page-content {
-  position: relative;
-  z-index: 0;
-  background: var(--header-background);
-  color: var(--text-color);
-  width: 100%;
-}
-
-.container-fluid-welcome {
-  width: 100%;
+  overflow: auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
-/* Shared body styles */
-.body-1,
-.body-2 {
-  width: 80vw;
-  font-weight: bold;
-  color: var(--text-color);
-  display: flex;
-  justify-content: flex-start;
-  padding-top: 5%;
-}
-
-.body-2 {
-  justify-content: flex-end;
-}
-
-.First-div,
-.Second-div,
-.Third-div,
-.Fourth-div {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 2vw;
-}
-
-.Second-div,
-.Fourth-div {
-  justify-content: flex-end;
-}
-
-.body-1 img,
-.body-2 img {
-  width: 40%;
-  height: auto;
+.welcome-hero {
+  position: fixed;
+  inset: 0;
+  top: var(--header-height, 0px);
+  width: 100%;
+  height: calc(100vh - var(--header-height, 0px));
   object-fit: cover;
-  border-radius: 8px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10vh);
+  transition: opacity 3s ease, transform 0.8s ease;
 }
 
-.First-text,
-.Second-text,
-.Third-text,
-.Fourth-text {
-  font-size: 2vw;
-  color: var(--text-color);
+.welcome-hero.fade-in-hero {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-/* Review part */
-.container-review hr {
-  width: 90%;
-  border: 1px solid var(--border-color);
+/* After unlock */
+.welcome-hero-static {
+  transform: translateY(0);
+  opacity: 1;
+  position: static;
+  height: calc(100vh - var(--header-height, 0px));
+  z-index: 0;
+  width: unset;
+  pointer-events: auto;
+}
+
+.welcome-hero-static.done {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-60vh);
+}
+
+.welcome-content {
+  position: static;
+  z-index: 0;
+  background: var(--header-background, #fff);
+  color: var(--text-color, #222);
+  font-family: "Segoe UI", Roboto, sans-serif;
+  width: 100%;
+  height: 100%;
 }
