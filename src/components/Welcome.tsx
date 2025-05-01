@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import "./Welcome.css";
 import VideoSrc from "../assets/short_clip.mp4";
-import backgroundImage from "../assets/Welcome_background.webp";
 import Welcome_text from "./Welcome_text";
 
 export default function Welcome() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scrollPauseRef = useRef<number>(0);
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [capturedFrame, setCapturedFrame] = useState<string | null>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [videoReadybefore, setVideoReadyBefore] = useState(false);
   const [videoDone, setVideoDone] = useState(false);
@@ -54,8 +52,6 @@ export default function Welcome() {
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL("image/png");
-        setCapturedFrame(imageData);
       }
 
       setIsUnlocked(true);
