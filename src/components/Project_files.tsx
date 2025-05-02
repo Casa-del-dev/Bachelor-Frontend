@@ -340,8 +340,8 @@ const ProjectFiles = ({
 
   function autoResizeInput() {
     if (inputRef.current) {
-      inputRef.current.style.width = "1ch"; // reset before measuring
-      inputRef.current.style.width = inputRef.current.scrollWidth + "px"; // grow to content
+      inputRef.current.style.width = "3ch"; // reset before measuring
+      inputRef.current.style.width = inputRef.current.scrollWidth + "px";
     }
   }
 

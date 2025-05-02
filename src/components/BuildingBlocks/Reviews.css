@@ -2,9 +2,9 @@ body:not(.dark-mode) {
   /* Light mode colors */
   --background-color-review: #fff;
   --text-color-review: #333;
-  --primary-text-color-review: #dbdbdb;
+  --primary-text-color-review: rgb(211, 211, 211);
   --secondary-text-color-review: #666;
-  --star-color-review: #ccc;
+  --star-color-review: #b9b9b9;
   --star-filled-color-review: gold;
   --box-shadow-review: rgba(0, 0, 0, 0.1);
   --edge-fade-bg-review: rgba(255, 255, 255, 0.4);
@@ -13,8 +13,8 @@ body:not(.dark-mode) {
 body.dark-mode {
   --background-color-review: #333;
   --text-color-review: #fff;
-  --primary-text-color-review: #696969;
-  --secondary-text-color-review: #bbb;
+  --primary-text-color-review: #8a8a8a;
+  --secondary-text-color-review: #cccccc;
   --star-color-review: #666;
   --star-filled-color-review: #ffcc00;
   --box-shadow-review: rgba(0, 0, 0, 0.5);
@@ -90,19 +90,60 @@ body.dark-mode {
 
 .review-box {
   flex: 0 0 auto;
-  min-width: 300px;
+  width: 300px;
+  height: 20vh;
   background: var(--primary-text-color-review);
   color: var(--text-color-review);
   font-size: 1.1rem;
   padding: 1.5rem 2rem;
   border-radius: 10px;
-  clip-path: polygon(0% 5%, 100% 0%, 100% 95%, 0% 100%);
   box-shadow: 0 4px 20px var(--box-shadow-review);
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   transition: filter 0.3s ease;
+}
+
+.five-stars {
+  position: relative;
+  z-index: 0; /* allows pseudo-element stacking */
+
+  border-radius: 12px; /* match the .review-box radius */
+  overflow: hidden; /* contain the glowing border edge */
+}
+
+/* Glowing animated border */
+.five-stars::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -2px; /* extend slightly beyond the box edge */
+  background: linear-gradient(
+    135deg,
+    #ffcc00,
+    #ff0077,
+    #00e1ff,
+    #00ff88,
+    #ffcc00
+  );
+  background-size: 400%;
+  border-radius: inherit;
+  filter: blur(3px);
+  animation: glowingBorder 8s linear infinite;
+}
+
+@keyframes glowingBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .review-username {
@@ -126,7 +167,50 @@ body.dark-mode {
 }
 
 .review-comment {
+  margin-top: 0;
   font-style: italic;
   color: var(--secondary-text-color-review);
   text-align: center;
+  height: 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.review-comment.expanded {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+}
+
+.comment-wrapper {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* button intentionally inherits font color so it blends in */
+.read-more {
+  position: absolute;
+  top: 80%;
+  background: none;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 0.25rem;
+  padding: 0;
+}
+
+.read-more:focus,
+.read-more:focus-visible {
+  outline: none;
 }

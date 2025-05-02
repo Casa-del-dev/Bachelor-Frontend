@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./Reviews.css";
 import { useInView } from "./useInView";
+import TruncatedComment from "./TruncateComment";
 
 const reviews = [
   { username: "JohnDoe", star: 5, comment: "Great app, really intuitive!" },
@@ -9,7 +10,12 @@ const reviews = [
     star: 4,
     comment: "Helped me plan my solution perfectly.",
   },
-  { username: "AlexRay", star: 5, comment: "Super smooth experience. A++" },
+  {
+    username: "AlexRay",
+    star: 5,
+    comment:
+      "Super smooth experience. A+++++++++++++ +++++++++++++++++++++++ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++",
+  },
   {
     username: "ChrisP",
     star: 4,
@@ -74,7 +80,12 @@ const Reviews = ({ condition }: { condition: boolean }) => {
             style={{ transform: `translateX(-${currentPosition}px)` }}
           >
             {activeReviews.map((review, i) => (
-              <div key={`review-${i}`} className="review-box">
+              <div
+                key={`review-${i}`}
+                className={`review-box ${
+                  review.star === 5 ? "five-stars" : ""
+                }`}
+              >
                 <div className="review-username">{review.username}</div>
                 <div className="review-stars">
                   {Array.from({ length: 5 }, (_, index) => (
@@ -86,7 +97,9 @@ const Reviews = ({ condition }: { condition: boolean }) => {
                     </span>
                   ))}
                 </div>
-                <div className="review-comment">{review.comment}</div>
+                <div className="review-comment">
+                  <TruncatedComment text={review.comment} maxLines={2} />
+                </div>
               </div>
             ))}
           </div>

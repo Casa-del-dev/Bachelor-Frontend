@@ -4,6 +4,7 @@ import backgroundImageWhite from "../assets/Welcome_background_white.png";
 import { useEffect, useState } from "react";
 import { useInView } from "./BuildingBlocks/useInView";
 import Reviews from "./BuildingBlocks/Reviews";
+import Team from "./BuildingBlocks/Team";
 
 export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [welcomeText, setWelcomeText] = useState(false);
@@ -15,6 +16,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [showDetails, setShowDetails] = useState(false);
   const [showSlopeContainers, setShowSlopeContainers] = useState(false);
   const [showReviewBoxes, setShowReviewBoxes] = useState(false);
+  const [showTeam, setShowTeam] = useState(false);
 
   const heading = useInView<HTMLHeadingElement>({
     threshold: 0.7,
@@ -65,6 +67,10 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
         setShowReviewBoxes(true);
       }, 2600);
 
+      const timeout7 = setTimeout(() => {
+        setShowTeam(true);
+      }, 3200);
+
       return () => {
         clearTimeout(timeout1);
         clearTimeout(timeout2);
@@ -72,6 +78,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
         clearTimeout(timeout4);
         clearTimeout(timeout5);
         clearTimeout(timeout6);
+        clearTimeout(timeout7);
       };
     }
   }, [videoDone]);
@@ -185,7 +192,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
       </div>
 
       {/* Team Section */}
-      <div className="team-section fade-in">team</div>
+      <Team condition={showReviewBoxes} />
 
       {/* Footer */}
       <div className="footer-section fade-in">footer</div>
