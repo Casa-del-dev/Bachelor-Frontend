@@ -192,7 +192,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
       </div>
 
       {/* Team Section */}
-      <Team condition={showReviewBoxes} />
+      <Team condition={showTeam} />
 
       {/* Footer */}
       <div className="footer-section fade-in">footer</div>

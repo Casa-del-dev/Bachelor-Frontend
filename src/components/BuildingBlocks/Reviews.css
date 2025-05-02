@@ -5,7 +5,7 @@ body:not(.dark-mode) {
   --primary-text-color-review: rgb(211, 211, 211);
   --secondary-text-color-review: #666;
   --star-color-review: #b9b9b9;
-  --star-filled-color-review: gold;
+  --star-filled-color-review: rgb(255, 217, 0);
   --box-shadow-review: rgba(0, 0, 0, 0.1);
   --edge-fade-bg-review: rgba(255, 255, 255, 0.4);
 }
