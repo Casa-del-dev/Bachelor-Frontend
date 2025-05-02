@@ -3,6 +3,7 @@ import backgroundImage from "../assets/Welcome_background.webp";
 import backgroundImageWhite from "../assets/Welcome_background_white.png";
 import { useEffect, useState } from "react";
 import { useInView } from "./BuildingBlocks/useInView";
+import Reviews from "./BuildingBlocks/Reviews";
 
 export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [welcomeText, setWelcomeText] = useState(false);
@@ -12,6 +13,8 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   );
   const [showBackground1, setShowBackground1] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showSlopeContainers, setShowSlopeContainers] = useState(false);
+  const [showReviewBoxes, setShowReviewBoxes] = useState(false);
 
   const heading = useInView<HTMLHeadingElement>({
     threshold: 0.7,
@@ -54,14 +57,32 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
         setShowDetails(true);
       }, 2000);
 
+      const timeout5 = setTimeout(() => {
+        setShowSlopeContainers(true);
+      }, 2000);
+
+      const timeout6 = setTimeout(() => {
+        setShowReviewBoxes(true);
+      }, 2600);
+
       return () => {
         clearTimeout(timeout1);
         clearTimeout(timeout2);
         clearTimeout(timeout3);
         clearTimeout(timeout4);
+        clearTimeout(timeout5);
+        clearTimeout(timeout6);
       };
     }
   }, [videoDone]);
+
+  const stepTexts = [
+    "Identify the problem and desired outcome.",
+    "Break the solution into logical steps.",
+    "Implement each step incrementally.",
+    "Test and verify at each stage.",
+    "Refine and optimize your code.",
+  ];
 
   return (
     <section className="welcome-container">
@@ -127,20 +148,40 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
           }`}
         >
           <ol className="welcome-steps">
-            <li>Identify the problem and desired outcome.</li>
-            <li>Break the solution into logical steps.</li>
-            <li>Implement each step incrementally.</li>
-            <li>Test and verify at each stage.</li>
-            <li>Refine and optimize your code.</li>
+            {stepTexts.map((text, i) => (
+              <li
+                key={i}
+                className={
+                  steps.isIntersecting && showDetails ? "slide-in-right" : ""
+                }
+                style={{ animationDelay: `${i * 0.15}s` }}
+              >
+                {text}
+              </li>
+            ))}
           </ol>
         </div>
       </div>
 
       {/* Review Section */}
-      <div className="review-section fade-in">
-        <div className="review-box">review</div>
-        <div className="review-box">review</div>
-        <div className="review-box">review</div>
+      <div
+        className={`review-section ${
+          showSlopeContainers ? "animate-pseudo" : ""
+        }`}
+      >
+        {showReviewBoxes && (
+          <div className="container-review-slope-top1 animate-top">
+            <div className="review-slope-top1" />
+          </div>
+        )}
+
+        <Reviews condition={showReviewBoxes} />
+
+        {showReviewBoxes && (
+          <div className="container-review-slope-top2 animate-bottom">
+            <div className="review-slope-top2" />
+          </div>
+        )}
       </div>
 
       {/* Team Section */}
