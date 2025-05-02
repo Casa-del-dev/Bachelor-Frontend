@@ -19,7 +19,7 @@ const reviews = [
   { username: "DevFan", star: 3, comment: "6 reviews." },
 ];
 
-const Reviews = ({ condition }: any) => {
+const Reviews = ({ condition }: { condition: boolean }) => {
   const reviewsRef = useInView<HTMLDivElement>({ threshold: 0.7 });
   const trackRef = useRef<HTMLDivElement>(null);
   const [currentPosition, setCurrentPosition] = useState(0);
