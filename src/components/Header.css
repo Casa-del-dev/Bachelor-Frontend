@@ -16,6 +16,28 @@ body {
 
 body.dark-mode {
   --indicator-background: rgba(255, 255, 255, 0.1);
+  --border-color: rgb(255, 255, 255);
+  --header-background: #121212;
+  --text-color: #f0f0f0;
+  --link-hover-color: #bbbbbb;
+  --profile-dropdown-background: #1e1e1e;
+  --profile-dropdown-hover-background: #333;
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+body.video-playing {
+  --header-background: transparent;
+  --border-color: transparent;
+  --indicator-background: transparent;
+  backdrop-filter: none;
+}
+
+body.video-playing.dark-mode {
+  --header-background: transparent;
+  --border-color: transparent;
+  --indicator-background: transparent;
+  backdrop-filter: none;
 }
 
 .header {
@@ -33,6 +55,7 @@ body.dark-mode {
   box-sizing: border-box;
   border-bottom: 1px solid var(--border-color);
   padding: 0 2vw;
+  transition: background-color 0.4s ease, backdrop-filter 0.4s ease;
 }
 
 .logo {
@@ -255,16 +278,4 @@ Dropdown when screen to narrow END
     align-items: center;
     justify-content: center;
   }
-}
-
-/* Dark Mode Theme */
-body.dark-mode {
-  --border-color: rgb(255, 255, 255);
-  --header-background: #121212;
-  --text-color: #f0f0f0;
-  --link-hover-color: #bbbbbb;
-  --profile-dropdown-background: #1e1e1e;
-  --profile-dropdown-hover-background: #333;
-  background-color: #121212;
-  color: #f0f0f0;
 }

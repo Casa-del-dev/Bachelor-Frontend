@@ -1,6 +1,5 @@
 .welcome-root {
   position: relative;
-  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -8,9 +7,9 @@
 .welcome-hero {
   position: fixed;
   inset: 0;
-  top: var(--header-height, 0px);
+  top: 0;
   width: 100%;
-  height: calc(100vh - var(--header-height, 0px));
+  height: 100vh;
   object-fit: cover;
   z-index: 1;
   pointer-events: none;

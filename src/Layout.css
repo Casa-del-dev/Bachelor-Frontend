@@ -1,10 +1,18 @@
+body {
+  --main-top: var(--header-height);
+}
+
+body.video-playing,
+body.dark-mode.video-playing {
+  --main-top: 0;
+}
+
 main {
   position: fixed;
-  top: var(--header-height);
+  top: var(--main-top);
   left: 0;
   width: 100vw;
   height: calc(100vh - var(--header-height));
   background-color: var(--header-background);
   overflow-y: auto;
-  outline: none;
 }

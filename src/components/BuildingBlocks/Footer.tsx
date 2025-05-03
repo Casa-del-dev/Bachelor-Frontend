@@ -5,8 +5,8 @@ const Footer = ({ condition }: { condition: boolean }) => {
     <footer className={`app-footer ${condition ? "faded" : ""}`}>
       <div className="footer-content">
         <p>Bachelor Thesis</p>
-        <p>&copy; {new Date().getFullYear()} PEACH Lab</p>
         <p>ehomburg@ethz.ch</p>
+        <p>&copy; {new Date().getFullYear()} PEACH Lab</p>
       </div>
     </footer>
   );

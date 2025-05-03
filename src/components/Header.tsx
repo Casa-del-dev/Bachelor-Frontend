@@ -145,10 +145,8 @@ export function Header() {
 
     const idx = navItems.findIndex((item) => {
       if (item.href === "/") {
-        // only match home on exact "/"
         return cleanPath === "/";
       }
-      // match any deeper route under that section
       return cleanPath.startsWith(item.href);
     });
 
