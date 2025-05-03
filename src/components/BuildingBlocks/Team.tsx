@@ -22,7 +22,7 @@ const Team = ({ condition }: { condition: boolean }) => {
       name: "Eren Homburg",
       role: "Bachelor Student",
       affiliation: "ETH Zürich",
-      tag: "Programmer",
+      tag: "Developer",
       image: picEren,
     },
     {
@@ -65,7 +65,7 @@ const Team = ({ condition }: { condition: boolean }) => {
               <h3>Eren Homburg</h3>
               <p>Bachelor Student</p>
               <p>ETH Zürich</p>
-              <span className="team-tag">Programmer</span>
+              <span className="team-tag">Developer</span>
             </div>
           </div>
 
