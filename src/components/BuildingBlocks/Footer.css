@@ -1,0 +1,21 @@
+.app-footer {
+  width: 100%;
+  box-sizing: border-box;
+  border-top: 1px solid var(--border-color);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.app-footer.faded {
+  opacity: 1;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: row;
+  gap: calc(100% / 5);
+  justify-content: center;
+  width: 100%;
+  padding: 0 1vw;
+  box-sizing: border-box;
+}

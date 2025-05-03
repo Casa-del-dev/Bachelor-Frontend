@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useInView } from "./BuildingBlocks/useInView";
 import Reviews from "./BuildingBlocks/Reviews";
 import Team from "./BuildingBlocks/Team";
+import Footer from "./BuildingBlocks/Footer";
 
 export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [welcomeText, setWelcomeText] = useState(false);
@@ -17,6 +18,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [showSlopeContainers, setShowSlopeContainers] = useState(false);
   const [showReviewBoxes, setShowReviewBoxes] = useState(false);
   const [showTeam, setShowTeam] = useState(false);
+  const [showFooter, setFooter] = useState(false);
 
   const heading = useInView<HTMLHeadingElement>({
     threshold: 0.7,
@@ -71,6 +73,10 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
         setShowTeam(true);
       }, 3200);
 
+      const timeout8 = setTimeout(() => {
+        setFooter(true);
+      }, 3800);
+
       return () => {
         clearTimeout(timeout1);
         clearTimeout(timeout2);
@@ -79,6 +85,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
         clearTimeout(timeout5);
         clearTimeout(timeout6);
         clearTimeout(timeout7);
+        clearTimeout(timeout8);
       };
     }
   }, [videoDone]);
@@ -119,7 +126,6 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
           </div>
         </div>
       </div>
-
       {/* Detailed Text */}
       <div className="details-wrapper">
         {showBackground1 && <div className="background1-slide"></div>}
@@ -169,7 +175,6 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
           </ol>
         </div>
       </div>
-
       {/* Review Section */}
       <div
         className={`review-section ${
@@ -190,12 +195,10 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
           </div>
         )}
       </div>
-
       {/* Team Section */}
       <Team condition={showTeam} />
-
       {/* Footer */}
-      <div className="footer-section fade-in">footer</div>
+      <Footer condition={showFooter} />
     </section>
   );
 }

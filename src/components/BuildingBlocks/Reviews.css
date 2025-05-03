@@ -29,11 +29,10 @@ body.dark-mode {
   --edge-fade-bg-review: rgba(0, 0, 0, 0.4);
   --five-stars-glowing: linear-gradient(
     135deg,
-    #ffcc00,
-    #ff0077,
-    #00e1ff,
-    #00ff88,
-    #ffcc00
+    #00e1ff 0%,
+    #6a00ff 35%,
+    #ff00f2 65%,
+    #ffcc00 100%
   );
 }
 
