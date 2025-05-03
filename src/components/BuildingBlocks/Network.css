@@ -1,0 +1,14 @@
+.team-background {
+  position: absolute;
+  box-sizing: border-box;
+  top: -100%;
+  left: 0;
+  opacity: 0;
+  transition: top 0.8s ease-out, opacity 0.8s ease-out;
+  z-index: 0;
+}
+
+.team-background.bg-visible {
+  top: 0;
+  opacity: 1;
+}

@@ -8,6 +8,14 @@ body:not(.dark-mode) {
   --star-filled-color-review: rgb(255, 217, 0);
   --box-shadow-review: rgba(0, 0, 0, 0.1);
   --edge-fade-bg-review: rgba(255, 255, 255, 0.4);
+  --five-stars-glowing: linear-gradient(
+    135deg,
+    #ff0077,
+    #ffcc00,
+    #00e1ff,
+    #00ff88,
+    #ffcc00
+  );
 }
 
 body.dark-mode {
@@ -19,6 +27,14 @@ body.dark-mode {
   --star-filled-color-review: #ffcc00;
   --box-shadow-review: rgba(0, 0, 0, 0.5);
   --edge-fade-bg-review: rgba(0, 0, 0, 0.4);
+  --five-stars-glowing: linear-gradient(
+    135deg,
+    #ffcc00,
+    #ff0077,
+    #00e1ff,
+    #00ff88,
+    #ffcc00
+  );
 }
 
 .review-section2 {
@@ -120,14 +136,7 @@ body.dark-mode {
   position: absolute;
   z-index: -1;
   inset: -2px; /* extend slightly beyond the box edge */
-  background: linear-gradient(
-    135deg,
-    #ffcc00,
-    #ff0077,
-    #00e1ff,
-    #00ff88,
-    #ffcc00
-  );
+  background: var(--five-stars-glowing);
   background-size: 400%;
   border-radius: inherit;
   filter: blur(3px);

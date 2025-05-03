@@ -6,30 +6,115 @@
   width: 100%;
   margin-top: -10vh;
   padding: 20vh 5vw;
+  padding-bottom: 8vh;
   box-sizing: border-box;
-}
-
-.team-background {
-  position: absolute;
-  box-sizing: border-box;
-  top: -100%;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url(../../assets/Background3.png) center/cover no-repeat;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: top 0.8s ease-out, opacity 0.8s ease-out;
-  z-index: 0;
-}
-
-.team-background.bg-visible {
-  top: 0;
-  opacity: 1;
 }
 
 .team-content {
   position: relative;
   z-index: 1;
+  text-align: center;
+  opacity: 0;
+}
+
+.MeetOutTeam {
+  font-size: 3rem;
+  margin-top: -3rem;
+  margin-bottom: 3rem;
+}
+
+.team-layout {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20%;
+  margin-top: 30px;
+}
+
+.team-left,
+.team-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  opacity: 0;
+}
+
+@media (min-width: 768px) {
+  .team-left {
+    margin-right: 60px;
+  }
+
+  .team-right {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-layout {
+    flex-direction: column;
+    gap: 120px;
+  }
+}
+
+@keyframes slideTopInTeam {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-top-team {
+  animation: slideTopInTeam 0.6s ease-out forwards;
+}
+
+/* Delay utilities */
+.delay-0 {
+  animation-delay: 0s;
+}
+
+.delay-1 {
+  animation-delay: 0.4s;
+}
+
+.delay-2 {
+  animation-delay: 0.8s;
+}
+
+.team-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.team-card {
+  max-width: 200px;
+  text-align: center;
+}
+
+.team-avatar {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+}
+
+.team-tag {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  background-color: #eee;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: #333;
 }
