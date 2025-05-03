@@ -114,10 +114,21 @@ export function Header() {
   const isHomePage = window.location.pathname === "/";
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const showIndicator = !isHomePage || menuOpen || hoveredIndex !== null;
+  const [showHome, setShowHome] = useState(false);
 
   /* --------------------------------------------
   Needed for button animation in header START
   -------------------------------------------- */
+  useEffect(() => {
+    if (menuOpen) {
+      setShowHome(true);
+    } else {
+      const timeout = setTimeout(() => {
+        setShowHome(false);
+      }, 300); // or whatever delay matches your menu close animation
+      return () => clearTimeout(timeout);
+    }
+  }, [menuOpen]);
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -155,15 +166,14 @@ export function Header() {
     }
   }, []);
 
-  // only include “Home” when menu is open:
   const visibleItems = navItems.filter(
-    (item) => item.name !== "Home" || menuOpen
+    (item) => item.name !== "Home" || showHome
   );
 
   // map the filtered list back to their original indexes
   const visibleOriginalIndexes = navItems
     .map((_, i) => i)
-    .filter((i) => navItems[i].name !== "Home" || menuOpen);
+    .filter((i) => navItems[i].name !== "Home" || showHome);
 
   const updateIndicator = (idx: number) => {
     const el = navRefs.current[idx];

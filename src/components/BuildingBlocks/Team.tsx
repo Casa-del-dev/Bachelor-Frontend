@@ -51,8 +51,9 @@ const Team = ({ condition }: { condition: boolean }) => {
       >
         <div className="MeetOutTeam">Meet Our Team</div>
 
-        <div ref={TeamRef.ref} className="team-layout">
+        <div className="team-layout">
           <div
+            ref={TeamRef.ref}
             className={`team-left ${
               TeamRef.isIntersecting && showBg
                 ? "slide-in-top-team delay-1"
