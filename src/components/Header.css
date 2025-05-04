@@ -192,7 +192,6 @@ Dropdown when screen to narrow END
 /* Dark/Light Toggle */
 .darkmode-toggle {
   font-size: 4vh;
-  margin-left: 1rem;
   display: flex;
   align-items: center;
   cursor: pointer;

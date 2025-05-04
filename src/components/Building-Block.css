@@ -1,10 +1,8 @@
-/* Dedicated scroll container for the BB component */
 .bb-scroll-container {
-  height: 100vh; /* Full viewport height */
-  overflow-y: auto; /* Enables vertical scrolling */
+  height: 100%;
+  overflow-y: auto;
 }
 
-/* This wrapper provides the total scroll space for all steps */
 .bb-wrapper {
   height: 400vh; /* 4 steps × 100vh each; adjust if steps change */
   background: #f3f4f6;

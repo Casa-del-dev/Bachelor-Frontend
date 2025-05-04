@@ -4,8 +4,6 @@
   border-top: 1px solid var(--border-color);
   opacity: 0;
   transition: opacity 0.6s ease;
-  padding: 0 1vw;
-  box-sizing: border-box;
 }
 
 .app-footer.faded {
@@ -15,9 +13,10 @@
 .footer-content {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
+  gap: calc(100% / 7);
   align-items: center;
   width: 100%;
-  padding: 0 1vw;
+  padding: 0 calc(100% / 9);
   box-sizing: border-box;
 }
