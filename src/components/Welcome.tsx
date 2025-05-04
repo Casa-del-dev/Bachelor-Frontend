@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./Welcome.css";
-import VideoSrc from "../assets/short_clip.mp4";
+import VideoSrc from "../assets/VideoClip.mp4";
 import Welcome_text from "./Welcome_text";
 
 export default function Welcome() {
@@ -39,9 +39,11 @@ export default function Welcome() {
     if (videoDone) return;
 
     const onScrollGesture = (e: Event) => {
-      e.preventDefault(); // block any scroll behavior
-      handleVideoEnd(); // jump to video end
-      cleanup(); // detach listeners
+      if (!videoDone && !isUnlocked) {
+        e.preventDefault();
+        setVideoDone(true);
+        cleanup();
+      }
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -83,7 +85,7 @@ export default function Welcome() {
     const onLoaded = () => {
       setVideoReady(true);
     };
-    video.addEventListener("loadedmetadata", onLoaded);
+    video.addEventListener("canplaythrough", onLoaded);
     return () => {
       video.removeEventListener("loadedmetadata", onLoaded);
     };
@@ -96,11 +98,11 @@ export default function Welcome() {
     video.pause();
 
     const onSeeked = () => {
-      const canvas = document.createElement("canvas");
+      /*       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
-      if (ctx) ctx.drawImage(video, 0, 0);
+      if (ctx) ctx.drawImage(video, 0, 0); */
 
       setIsUnlocked(true);
 
@@ -109,7 +111,9 @@ export default function Welcome() {
     };
 
     video.addEventListener("seeked", onSeeked);
-    video.currentTime = video.duration;
+    requestAnimationFrame(() => {
+      video.currentTime = video.duration;
+    });
   };
 
   return (
@@ -122,8 +126,9 @@ export default function Welcome() {
           src={VideoSrc}
           muted
           playsInline
-          autoPlay /* ← autoplay */
+          autoPlay
           preload="auto"
+          onCanPlayThrough={() => setVideoReady(true)}
           onEnded={handleVideoEnd}
           onError={() => console.error("Failed to load video")}
         />
