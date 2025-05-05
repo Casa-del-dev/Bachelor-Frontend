@@ -1,7 +1,7 @@
 import "./Profile.css";
 import { useAuth } from "../AuthContext";
 import { useState } from "react";
-import { FiRefreshCw } from "react-icons/fi"; // Import refresh icon
+import { RotateCcw } from "lucide-react"; // Import refresh icon
 
 interface ProfileProps {
   openLogin: () => void;
@@ -50,13 +50,21 @@ export default function Profile({ openLogin, openSignup }: ProfileProps) {
                     <strong>Generating Step Tree from Code</strong>
                   </p>
                   <div className="button-group-profile">
-                    <button className="option-btn">
+                    <button
+                      className="option-btn"
+                      onClick={dontAskValue ? undefined : () => {}}
+                    >
                       {dontAskValue ? "Skip" : "Don't Skip"}
+                      {dontAskValue && (
+                        <RotateCcw
+                          className="refresh-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearDontAsk();
+                          }}
+                        />
+                      )}
                     </button>
-                    <FiRefreshCw
-                      className="refresh-btn"
-                      onClick={clearDontAsk}
-                    />
                   </div>
                 </div>
 
@@ -65,13 +73,21 @@ export default function Profile({ openLogin, openSignup }: ProfileProps) {
                     <strong>Give Correct Step</strong>
                   </p>
                   <div className="button-group-profile">
-                    <button className="option-btn">
+                    <button
+                      className="option-btn"
+                      onClick={dontAskValue ? undefined : () => {}}
+                    >
                       {savedStepsValue ? "Skip" : "Don't Skip"}
+                      {savedStepsValue && (
+                        <RotateCcw
+                          className="refresh-icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearSavedSteps();
+                          }}
+                        />
+                      )}
                     </button>
-                    <FiRefreshCw
-                      className="refresh-btn"
-                      onClick={clearSavedSteps}
-                    />
                   </div>
                 </div>
               </div>

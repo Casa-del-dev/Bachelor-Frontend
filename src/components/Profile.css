@@ -205,28 +205,34 @@ body.dark-mode {
   border: 1px solid var(--btn-border, var(--border-color));
   padding: 6px 12px;
   border-radius: 6px;
+  font-size: 1.3rem;
+
   font-weight: bold;
   cursor: default;
 }
 
-/* Refresh Icon */
-.refresh-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.4rem;
-  color: var(--link-hover-color);
-  transition: color 0.3s ease, transform 0.3s ease;
+.option-btn:hover {
+  border: 1px solid var(--btn-border, var(--border-color));
 }
 
-.refresh-btn:hover {
-  color: var(--btn-login-bg);
+/* Refresh Icon */
+.refresh-icon {
+  margin-left: 0.5rem;
+  height: 16px;
+  stroke-width: 3px;
+  cursor: pointer;
   transform: rotate(90deg);
+  transition: transform 0.3s ease;
+  color: white;
+}
+
+.refresh-icon:hover {
+  color: white;
+  transform: rotate(-60deg);
 }
 
 /* Button Focus Reset */
-.clear-btn:focus,
 .option-btn:focus,
-.refresh-btn:focus {
+.refresh-icon:focus {
   outline: none;
 }
