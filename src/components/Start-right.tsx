@@ -234,6 +234,8 @@ const StartRight: React.FC<StartRightProps> = ({
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
+  const hasHydrated = useRef(false);
+
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loadingCheck, setLoadingCheck] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -259,14 +261,10 @@ const StartRight: React.FC<StartRightProps> = ({
     setSentPrompt(steps.length > 0);
   }, [steps]);
 
-  // Build a storage key based on the selected problem name.
-
-  // Load saved steps on mount.
   useEffect(() => {
-    try {
+    if (!hasHydrated.current && stepTree.length > 0) {
       setSteps(stepTree);
-    } catch (error) {
-      console.error("Error parsing saved steps:", error);
+      hasHydrated.current = true;
     }
   }, [stepTree]);
 
@@ -646,6 +644,7 @@ Insert Steps Functions START
   // Insert with fade-in
   const insertTopLevelStepAt = (index: number) => {
     const newStep = createBlankStep(true);
+
     updateSteps((prevSteps) => {
       const newSteps = [...prevSteps];
       newSteps.splice(index, 0, newStep);
@@ -1443,6 +1442,7 @@ Editing logic START
                         }}
                         cursor="pointer"
                         strokeWidth={"1.2"}
+                        color={getStepBoxTextColor(step)}
                         className="trash-icon"
                       />
                     </div>
@@ -1763,6 +1763,7 @@ Editing logic START
                       <AnimatedSubsteps
                         substeps={step.children}
                         parentPath={currentPath}
+                        parentId={step.id}
                       />
                     </div>
                   </div>
@@ -2231,7 +2232,7 @@ Editing logic START
   // It applies a folding rotation and stacking effect.
 
   // A single in-memory object to store indices
-  const indicesRef = { current: {} as Record<string, number> };
+  const indicesRef = useRef<Record<string, number>>({});
 
   function getInitialIndex(key: string, defaultValue = 0): number {
     return indicesRef.current[key] ?? defaultValue;
@@ -2244,11 +2245,13 @@ Editing logic START
   function AnimatedSubsteps({
     substeps,
     parentPath,
+    parentId,
   }: {
     substeps: Step[];
     parentPath: number[];
+    parentId: string;
   }) {
-    const indexKey = `animatedSubsteps-${parentPath.join("-")}`;
+    const indexKey = `animatedSubsteps-${parentId}`;
     const [isHoveredTitle, setIsHoveredTitle] = useState(false);
     const [isHoveringTrashTitle, setIsHoveringTrashTitle] = useState(false);
     const handleMouseEnterStep = () => setIsHoveredTitle(true);
@@ -2689,6 +2692,7 @@ Editing logic START
                         handleMouseLeaveStep();
                       }, 400);
                     }}
+                    color={getStepBoxTextColor(substep)}
                     cursor="pointer"
                     strokeWidth={"1.2"}
                     className="trash-icon"
@@ -2852,6 +2856,7 @@ Biggest render Tree ever recored START
                     onClick={() => handleRemoveStep(step.id)}
                     cursor="pointer"
                     strokeWidth={"1.2"}
+                    color={getStepBoxTextColor(step)}
                     className="trash-icon"
                   />
                 </div>
@@ -3091,6 +3096,7 @@ Biggest render Tree ever recored START
                   <AnimatedSubsteps
                     substeps={step.children}
                     parentPath={currentPath}
+                    parentId={step.id}
                   />
                 </div>
               </div>
@@ -3388,13 +3394,13 @@ Biggest render Tree ever recored START
 
       // Push the view and the plus button after it.
       elements.push(
-        <Fragment key={`step-${currentPath.join("-")}`}>
+        <Fragment key={step.id}>
           {view}
           <Fragment
             key={
               parentPath.length === 0
-                ? `plus-top-${index + 1}`
-                : `${parentPath.join("-")}-plus-${index + 1}`
+                ? `plus-top-${step.id}`
+                : `${step.id}-plus-${index + 1}`
             }
           >
             {parentPath.length === 0 ? (

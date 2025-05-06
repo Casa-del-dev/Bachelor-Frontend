@@ -7,7 +7,7 @@ import Problem from "./components/Problem";
 import Problem_details from "./components/Problem_detail";
 import Start from "./components/Start";
 import Redirect from "./components/Redirect";
-import BB from "./components/Building-Block";
+import Abstract from "./components/Abstract";
 import { ProfilePage } from "./components/Header";
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
             <Route path="/start/:id" element={<Start />} />
             {/* This route handles /start without a parameter and redirects */}
             <Route path="/start" element={<Redirect />} />
-            <Route path="/bb" element={<BB />} />
+            <Route path="/abstract" element={<Abstract />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </Layout>

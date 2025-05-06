@@ -134,7 +134,7 @@ export function Header() {
     { name: "Home", href: "/" },
     { name: "Problems", href: "/problem" },
     { name: "Start", href: "/start" },
-    { name: "Building Blocks", href: "/bb" },
+    { name: "Abstract", href: "/abstract" },
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);

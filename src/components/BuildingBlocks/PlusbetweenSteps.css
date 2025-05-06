@@ -9,7 +9,7 @@ body.dark-mode {
 }
 
 .container-plus-right-start {
-  width: 100%;
+  width: 90%;
   display: grid;
   align-items: center;
   grid-template-columns: 1fr auto 1fr;
