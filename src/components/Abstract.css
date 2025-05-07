@@ -1,7 +1,7 @@
 .main-container-abstract {
   display: grid;
   grid-template-areas: "left middle right";
-  grid-template-columns: var(--right-width) auto auto;
+  grid-template-columns: var(--right-width) 0 auto;
   height: 100%;
 }
 
@@ -26,3 +26,62 @@
   height: 100%;
   overflow-y: auto;
 }
+
+.details-abstract-container {
+  grid-area: middle;
+  display: flex;
+}
+
+.map-abstract-container {
+  grid-area: right;
+}
+
+.details-abstract-main {
+  width: 100%;
+}
+
+/* ---------------------------------------------------
+Select problem dropdown START
+--------------------------------------------------- */
+
+.select-problem-abstract {
+  position: relative;
+  width: 140px;
+  font-family: sans-serif;
+}
+
+.dropdown-header {
+  background-color: #e0e0e0;
+  padding: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  text-align: center;
+  user-select: none;
+}
+
+.dropdown-list {
+  background-color: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.arrow {
+  margin-left: 5px;
+}
+
+/* ---------------------------------------------------
+Select problem dropdown END
+--------------------------------------------------- */

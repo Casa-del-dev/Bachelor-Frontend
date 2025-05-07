@@ -1,12 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { useCodeContext } from "../CodeContext";
 import StartRight from "./Start-right";
+import { useCodeContext } from "../CodeContext";
 
 interface AbstractProps {
   maybeStepTree?: Step[];
   maybestartright?: React.ReactNode;
   backToNormal?: any;
+  rightWidth?: number;
+  onRightWidthChange?: (widthPercent: number) => void;
+  rightFontSize?: string;
+  onRightFontSizeChange?: (fs: string) => void;
+  problemId?: string;
+  setProblemId?: (newId: string) => void;
 }
 
 export interface Step {
@@ -42,21 +48,60 @@ const Abstract: React.FC<AbstractProps> = ({
   maybeStepTree,
   maybestartright,
   backToNormal,
+  rightWidth,
+  onRightWidthChange,
+  rightFontSize,
+  onRightFontSizeChange,
+  problemId,
+  setProblemId,
 }) => {
   const [animateToRight, setAnimateToRight] = useState(false);
-  const { problemId, setProblemId } = useCodeContext();
+  const [selectedDetail, _] = useState(false); //for when we select a point or an edge on the graph
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); //dropdown changing problem
+
+  const { problemId: ctxProblemId, setProblemId: ctxSetProblemId } =
+    useCodeContext();
+
+  const activeProblemId = problemId ?? ctxProblemId;
+  const updateProblemId = setProblemId ?? ctxSetProblemId;
+
+  const [localRightWidth, setLocalRightWidth] = useState(30);
+  const [localRightFontSize, setLocalRightFontSize] = useState("1vw");
+
+  const activeRightWidth = rightWidth ?? localRightWidth;
+  const activeRightFontSize = rightFontSize ?? localRightFontSize;
+
+  const activeUpdateRightWidth = onRightWidthChange ?? setLocalRightWidth;
+  const activeUpdateRightFontSize =
+    onRightFontSizeChange ?? setLocalRightFontSize;
+
   const [stepTree, setStepTree] = useState<Step[]>([]);
   const draggingRef = useRef(false);
 
+  const [problemList] = useState([
+    "Problem 1",
+    "Problem 2",
+    "Problem 3",
+    "Problem 4",
+    "Problem 5",
+    "Problem 6",
+    "Problem 7",
+    "Problem 8",
+    "Problem 9",
+  ]);
+
   useEffect(() => {
-    if (maybeStepTree) {
-      setStepTree(maybeStepTree);
-    } else {
-      loadStepTreeFromBackend(problemId).then((loadedTree) => {
-        if (loadedTree) setStepTree(loadedTree);
-      });
+    if (!maybestartright) {
+      //if maybeStepTree we simply wait for it to be updated automatically
+      loadStepTreeFromBackend(activeProblemId)
+        .then((loadedTree) => {
+          if (loadedTree) setStepTree(loadedTree);
+        })
+        .catch((err) =>
+          console.error("Abstract.loadStepTreeFromBackend failed:", err)
+        );
     }
-  }, [maybeStepTree, problemId]);
+  }, [activeProblemId, maybeStepTree]);
 
   async function loadStepTreeFromBackend(
     problemId: string
@@ -105,31 +150,20 @@ All effects to give the right fontsize / width START
     }
   }, []);
 
-  //update the fontsize on drag
-  const [rightFontSize, setRightFontSize] = useState("1vw");
-
   const updateRightFontSize = useCallback(() => {
-    const widthVar = getComputedStyle(document.documentElement)
-      .getPropertyValue("--right-width")
-      .trim()
-      .replace("%", "");
-
-    const rightPercent = parseFloat(widthVar || "30");
-    const rightPx = (rightPercent / 100) * window.innerWidth;
+    const rightPx = (activeRightWidth / 100) * window.innerWidth;
     const fontSize = Math.min(Math.max(rightPx * 0.04, 15), 30);
     const computed = `${fontSize}px`;
 
-    if (computed !== rightFontSize) {
-      setRightFontSize(computed);
+    if (computed !== activeRightFontSize) {
+      activeUpdateRightFontSize(computed);
       localStorage.setItem("rightFontSize", computed);
     }
-  }, [rightFontSize]);
+  }, [activeRightWidth, activeRightFontSize, activeUpdateRightFontSize]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("rightFontSize");
-    if (stored) setRightFontSize(stored);
     updateRightFontSize();
-  }, [updateRightFontSize]);
+  }, [activeRightWidth, updateRightFontSize]);
 
   useEffect(() => {
     window.addEventListener("resize", updateRightFontSize);
@@ -138,46 +172,49 @@ All effects to give the right fontsize / width START
     };
   }, [updateRightFontSize]);
 
+  // 1) declare the ref, seeded with the current width
+  const rightWidthRef = useRef(activeRightWidth);
+
+  // 2) keep it in sync whenever activeRightWidth changes
+  useEffect(() => {
+    rightWidthRef.current = activeRightWidth;
+  }, [activeRightWidth]);
+
   //dragging the seperator
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!draggingRef.current) return;
 
-      const current = getComputedStyle(document.documentElement)
-        .getPropertyValue("--right-width")
-        .trim()
-        .replace("%", "");
-      const currentWidth = parseFloat(current || "30");
       const deltaPercent = (e.movementX / window.innerWidth) * 100;
+      const newWidth = Math.min(
+        Math.max(rightWidthRef.current + deltaPercent, 20),
+        65
+      );
 
-      const newWidth = Math.min(Math.max(currentWidth + deltaPercent, 20), 65); // Clamp
-
-      // Load existing layout or fallback
-      const stored = localStorage.getItem("layoutDimensions");
-      let left = 30;
-      if (stored) {
-        try {
-          left = JSON.parse(stored).left ?? 30;
-        } catch {}
-      }
-
-      const layout = {
-        left,
-        right: newWidth,
-        middle: 100 - left - newWidth,
-      };
-
-      localStorage.setItem("layoutDimensions", JSON.stringify(layout));
-
+      // 1) Instantly update the CSS var for width
       document.documentElement.style.setProperty(
         "--right-width",
         `${newWidth}%`
       );
-      updateRightFontSize();
+
+      // 2) Instantly update the CSS var for font size
+      const px = (newWidth / 100) * window.innerWidth;
+      const fs = `${Math.min(Math.max(px * 0.04, 15), 30)}px`;
+      document.documentElement.style.setProperty("--step-font-size", fs);
+
+      // 3) Keep the ref up-to-date
+      rightWidthRef.current = newWidth;
     };
 
     const handleMouseUp = () => {
       draggingRef.current = false;
+      // Only now tell React (or parent) about the final values
+      activeUpdateRightWidth(rightWidthRef.current);
+      activeUpdateRightFontSize(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--step-font-size"
+        )
+      );
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -186,11 +223,17 @@ All effects to give the right fontsize / width START
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, []);
+  }, [activeUpdateRightWidth, activeUpdateRightFontSize]);
 
   /*   ---------------------------------------------------
 All effects to give the right fontsize / width END
 ----------------------------------------------------- */
+
+  //Select problem id dropdown
+  const handleSelect = (problem: string) => {
+    updateProblemId(problem);
+    setIsDropdownOpen(false);
+  };
 
   return (
     <div
@@ -200,13 +243,16 @@ All effects to give the right fontsize / width END
     >
       <div
         className="right-abstract-container"
-        style={{ ["--step-font-size" as any]: rightFontSize }}
+        style={{
+          ["--step-font-size" as any]: activeRightFontSize,
+          ["--right-width" as any]: `${activeRightWidth}%`,
+        }}
       >
         {maybestartright ? (
           maybestartright
         ) : (
           <StartRight
-            fontSize="rightFontSize"
+            fontSize={activeRightFontSize}
             hoveredStepId={null}
             loading={false}
             setLoading={() => {}}
@@ -229,6 +275,39 @@ All effects to give the right fontsize / width END
             backToNormal();
           }}
         />
+      </div>
+
+      {selectedDetail && (
+        <div className="details-abstract-container">
+          <div className="details-abstract-main">ciao</div>
+          <div className="divider" />
+        </div>
+      )}
+
+      <div className="map-abstract-container">
+        <div className="select-problem-abstract">
+          <div
+            className="dropdown-header"
+            onClick={() => setIsDropdownOpen((prev) => !prev)}
+          >
+            {activeProblemId}
+            <span className="arrow">{isDropdownOpen ? "▲" : "▼"}</span>
+          </div>
+          {isDropdownOpen && (
+            <div className="dropdown-list">
+              {problemList.map((problem) => (
+                <div
+                  key={problem}
+                  className="dropdown-item"
+                  onClick={() => handleSelect(problem)}
+                >
+                  {problem}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        ciao
       </div>
     </div>
   );

@@ -234,7 +234,7 @@ const StartRight: React.FC<StartRightProps> = ({
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
-  const hasHydrated = useRef(false);
+  const skipHydration = useRef(false);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [loadingCheck, setLoadingCheck] = useState(false);
@@ -262,9 +262,10 @@ const StartRight: React.FC<StartRightProps> = ({
   }, [steps]);
 
   useEffect(() => {
-    if (!hasHydrated.current && stepTree.length > 0) {
+    if (skipHydration.current) {
+      skipHydration.current = false;
+    } else if (stepTree.length >= 0) {
       setSteps(stepTree);
-      hasHydrated.current = true;
     }
   }, [stepTree]);
 
@@ -276,6 +277,7 @@ const StartRight: React.FC<StartRightProps> = ({
   }, [steps]);
 
   function updateSteps(updater: Step[] | ((prev: Step[]) => Step[])) {
+    skipHydration.current = true;
     if (typeof updater === "function") {
       setSteps((prev) => {
         const updated = (updater as (prev: Step[]) => Step[])(prev);

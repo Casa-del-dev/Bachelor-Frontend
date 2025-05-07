@@ -659,7 +659,7 @@ const ProjectFiles = ({
                     className="delete-dialog"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <p>Are you sure you want to delete this item?</p>
+                    <p>Are you sure you want to delete this file?</p>
                     <button onClick={() => performDelete(pendingDeleteId)}>
                       Yes
                     </button>
