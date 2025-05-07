@@ -203,31 +203,6 @@ const Start: React.FC = () => {
     }
   }, []);
 
-  // Update layout based on divider dragging
-  const updateLayout = (deltaX: number, divider: "left" | "right") => {
-    const deltaPercent = (deltaX / window.innerWidth) * 100;
-    setLayout((prev) => {
-      let { left, middle, right } = { ...prev };
-
-      if (divider === "left") {
-        left += deltaPercent;
-      } else {
-        right -= deltaPercent;
-      }
-
-      if (left < MIN_LEFT) left = MIN_LEFT;
-      if (right < MIN_RIGHT) right = MIN_RIGHT;
-
-      const maxLeft = 80 - right;
-      const maxRight = 80 - left;
-      if (left >= maxLeft) left = maxLeft;
-      if (right >= maxRight) right = maxRight;
-
-      middle = 100 - (left + right);
-      return { left, middle, right };
-    });
-  };
-
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!draggingLeftDivider.current && !draggingRightDivider.current) return;
