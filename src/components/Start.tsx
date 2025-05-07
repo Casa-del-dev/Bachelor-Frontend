@@ -180,16 +180,6 @@ const Start: React.FC = () => {
     return { left: 30, middle: 50, right: 20 };
   });
 
-  const leftWidthRef = useRef(layout.left);
-  const rightWidthRef = useRef(layout.right);
-
-  useEffect(() => {
-    leftWidthRef.current = layout.left;
-  }, [layout.left]);
-  useEffect(() => {
-    rightWidthRef.current = layout.right;
-  }, [layout.right]);
-
   // Save layout changes to local storage
   useEffect(() => {
     localStorage.setItem("layoutDimensions", JSON.stringify(layout));
@@ -203,75 +193,43 @@ const Start: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      if (!draggingLeftDivider.current && !draggingRightDivider.current) return;
+  // Update layout based on divider dragging
+  const updateLayout = (deltaX: number, divider: "left" | "right") => {
+    const deltaPercent = (deltaX / window.innerWidth) * 100;
+    setLayout((prev) => {
+      let { left, middle, right } = { ...prev };
 
-      // How many percent to move per pixel
-      const deltaPct = (e.movementX / window.innerWidth) * 100;
-
-      if (draggingLeftDivider.current) {
-        // compute & clamp
-        let newLeft = Math.min(
-          Math.max(leftWidthRef.current + deltaPct, MIN_LEFT),
-          100 - rightWidthRef.current - MIN_RIGHT
-        );
-        leftWidthRef.current = newLeft;
-
-        // apply instantly
-        document.documentElement.style.setProperty(
-          "--left-width",
-          `${newLeft}%`
-        );
-        // update its font size
-        const lx = (newLeft / 100) * window.innerWidth;
-        document.documentElement.style.setProperty(
-          "--step-font-size-left",
-          `${Math.min(Math.max(lx * 0.045, 15), 26)}px`
-        );
+      if (divider === "left") {
+        left += deltaPercent;
+      } else {
+        right -= deltaPercent;
       }
 
-      if (draggingRightDivider.current) {
-        let newRight = Math.min(
-          Math.max(rightWidthRef.current - deltaPct, MIN_RIGHT),
-          100 - leftWidthRef.current - MIN_LEFT
-        );
-        rightWidthRef.current = newRight;
+      if (left < MIN_LEFT) left = MIN_LEFT;
+      if (right < MIN_RIGHT) right = MIN_RIGHT;
 
-        document.documentElement.style.setProperty(
-          "--right-width",
-          `${newRight}%`
-        );
-        const rx = (newRight / 100) * window.innerWidth;
-        document.documentElement.style.setProperty(
-          "--step-font-size-right",
-          `${Math.min(Math.max(rx * 0.04, 15), 30)}px`
-        );
-      }
-    };
+      const maxLeft = 80 - right;
+      const maxRight = 80 - left;
+      if (left >= maxLeft) left = maxLeft;
+      if (right >= maxRight) right = maxRight;
 
-    const onMouseUp = () => {
-      if (draggingLeftDivider.current || draggingRightDivider.current) {
-        // commit final values back into React
-        setLayout(() => {
-          return {
-            left: leftWidthRef.current,
-            right: rightWidthRef.current,
-            middle: 100 - leftWidthRef.current - rightWidthRef.current,
-          };
-        });
-      }
-      draggingLeftDivider.current = false;
-      draggingRightDivider.current = false;
-    };
+      middle = 100 - (left + right);
+      return { left, middle, right };
+    });
+  };
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-    return () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [setLayout]);
+  const handleMouseMove = (e: MouseEvent) => {
+    if (draggingLeftDivider.current) {
+      updateLayout(e.movementX, "left");
+    } else if (draggingRightDivider.current) {
+      updateLayout(e.movementX, "right");
+    }
+  };
+
+  const handleMouseUp = () => {
+    draggingLeftDivider.current = false;
+    draggingRightDivider.current = false;
+  };
 
   const startDragLeft = () => {
     draggingLeftDivider.current = true;
@@ -348,6 +306,16 @@ const Start: React.FC = () => {
     }
   }, [updateFontSize]);
 
+  // Global mouse event listeners for divider dragging
+  useEffect(() => {
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
   //animation for abstract part
 
   const [animateRightToLeft, setAnimateRightToLeft] = useState(false);
@@ -398,7 +366,14 @@ const Start: React.FC = () => {
       ) : (
         <div className="container-main">
           {/* Left Column */}
-          <div className="left-column" ref={leftRef}>
+          <div
+            className="left-column"
+            ref={leftRef}
+            style={{
+              width: `${layout.left}%`,
+              ["--step-font-size" as any]: leftFontSize,
+            }}
+          >
             <StartLeft
               codeMap={codeMap}
               setCodeForFile={setCodeForFile}
@@ -415,7 +390,7 @@ const Start: React.FC = () => {
           <div className="divider" onMouseDown={startDragLeft} />
 
           {/* Middle Column */}
-          <div className="middle-column">
+          <div className="middle-column" style={{ width: `${layout.middle}%` }}>
             <CodeProvider>
               <StartMiddle
                 setHoveredStep={setHoveredStep}
@@ -442,7 +417,14 @@ const Start: React.FC = () => {
           />
 
           {/* Right Column */}
-          <div className={`right-column`} ref={rightRef}>
+          <div
+            className={`right-column`}
+            ref={rightRef}
+            style={{
+              ["--step-font-size" as any]: rightFontSize,
+              ["--right-width" as any]: `${layout.right}%`,
+            }}
+          >
             {startRightComponent}
           </div>
           <div className="divider" />

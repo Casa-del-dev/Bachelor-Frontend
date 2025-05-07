@@ -54,6 +54,11 @@ body.dark-mode {
   width: var(--left-width);
   font-size: var(--step-font-size-left);
 }
+
+.container-main .middle-column {
+  flex: 1 1 auto;
+}
+
 .container-main .right-column {
   width: var(--right-width);
   font-size: var(--step-font-size-right);
