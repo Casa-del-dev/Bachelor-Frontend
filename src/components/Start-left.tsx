@@ -116,7 +116,7 @@ const StartLeft = ({
                   {problemKeys.map((key) => (
                     <div
                       key={key}
-                      className="dropdown-item"
+                      className="dropdown-item-left-problem"
                       onClick={() => handleProblemSelect(key)}
                     >
                       {key}

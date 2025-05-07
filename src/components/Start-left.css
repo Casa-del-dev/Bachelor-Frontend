@@ -188,8 +188,7 @@ body.dark-mode {
 
 .title-dropdown-trigger:hover {
   transition: background-color 0.2s ease;
-
-  background-color: var(--dropdown-hover-bg);
+  background-color: var(--seg-btn-active-bg);
 }
 
 .title-dropdown-trigger.open {
@@ -235,7 +234,7 @@ body.dark-mode {
   }
 }
 
-.dropdown-item {
+.dropdown-item-left-problem {
   font-size: 1vw;
   padding: 0.4vw 1vw;
   cursor: pointer;
@@ -245,11 +244,11 @@ body.dark-mode {
   color: var(--text-color);
 }
 
-.dropdown-item:last-child {
+.dropdown-item-left-problem:last-child {
   border-bottom: none;
 }
 
-.dropdown-item:hover {
+.dropdown-item-left-problem:hover {
   background-color: var(--dropdown-hover-bg);
 }
 
