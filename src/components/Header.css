@@ -87,7 +87,7 @@ Dropdown when screen to narrow START
 
 .video-playing .nav-links:not(.show) a[href="/problem"],
 .video-playing .nav-links:not(.show) a[href="/start"],
-.video-playing .nav-links:not(.show) a[href="/bb"] {
+.video-playing .nav-links:not(.show) a[href="/abstract"] {
   display: inline-block;
   padding: 0.3rem 0.15rem;
   border: 1px solid black;
@@ -99,10 +99,10 @@ Dropdown when screen to narrow START
 
 .video-playing .nav-links:not(.show) a[href="/problem"]:hover,
 .video-playing .nav-links:not(.show) a[href="/start"]:hover,
-.video-playing .nav-links:not(.show) a[href="/bb"]:hover,
+.video-playing .nav-links:not(.show) a[href="/abstract"]:hover,
 .video-playing .nav-links:not(.show) a.active[href="/problem"],
 .video-playing .nav-links:not(.show) a.active[href="/start"],
-.video-playing .nav-links:not(.show) a.active[href="/bb"] {
+.video-playing .nav-links:not(.show) a.active[href="/abstract"] {
   box-shadow: 0 2px 6px var(--box-shodow-indicator);
   background-color: rgba(255, 255, 255, 0.9);
   transform: translateY(-3px);

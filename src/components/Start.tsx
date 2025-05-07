@@ -4,6 +4,7 @@ import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
 import { CodeProvider, useCodeContext } from "../CodeContext";
+import Abstract from "./Abstract";
 
 export interface Step {
   id: string; // unique ID for each step
@@ -68,6 +69,8 @@ const Start: React.FC = () => {
     problemId,
     setProblemId,
   } = useCodeContext();
+
+  const [showAbstract, setShowAbstract] = useState(false);
 
   /* --------------------------------------
      API for StepTree START
@@ -207,8 +210,8 @@ const Start: React.FC = () => {
 
       const maxLeft = 80 - right;
       const maxRight = 80 - left;
-      if (left > maxLeft) left = maxLeft;
-      if (right > maxRight) right = maxRight;
+      if (left >= maxLeft) left = maxLeft;
+      if (right >= maxRight) right = maxRight;
 
       middle = 100 - (left + right);
       return { left, middle, right };
@@ -235,6 +238,14 @@ const Start: React.FC = () => {
   const startDragRight = () => {
     draggingRightDivider.current = true;
   };
+
+  //right width
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--right-width",
+      `${layout.right}%`
+    );
+  }, [layout.right]);
 
   // Helper function to update font size
   const updateFontSize = useCallback(() => {
@@ -295,78 +306,114 @@ const Start: React.FC = () => {
     };
   }, []);
 
+  //animation for abstract part
+
+  const [animateRightToLeft, setAnimateRightToLeft] = useState(false);
+
+  const handleRightDoubleClick = () => {
+    setAnimateRightToLeft(!animateRightToLeft);
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowAbstract(animateRightToLeft);
+    }, 650);
+
+    return () => clearTimeout(timeout);
+  }, [animateRightToLeft]);
+
+  // STARTRIGht component
+
+  const startRightComponent = (
+    <StartRight
+      fontSize={rightFontSize}
+      hoveredStepId={hoveredStep ? hoveredStep.id : null}
+      loading={loading}
+      setLoading={setLoading}
+      fromEditor={fromEditor}
+      setFromEditor={setFromEditor}
+      codeMap={codeMap}
+      setCodeForFile={setCodeForFile}
+      currentFile={currentFile}
+      stepTree={stepTree}
+      setStepTree={setStepTree}
+    />
+  );
+
   return (
-    <div className="container-main">
-      {/* Left Column */}
-      <div
-        className="left-column"
-        ref={leftRef}
-        style={{
-          width: `${layout.left}%`,
-          ["--step-font-size" as any]: leftFontSize,
-        }}
-      >
-        <StartLeft
-          codeMap={codeMap}
-          setCodeForFile={setCodeForFile}
-          currentFile={currentFile}
-          setCurrentFile={setCurrentFile}
-          fileTree={fileTree}
-          setFileTree={setFileTree}
-          problemId={problemId}
-          setProblemId={setProblemId}
+    <div className={`slide-wrapper ${animateRightToLeft ? "slide-left" : ""}`}>
+      {showAbstract ? (
+        <Abstract
+          maybestartright={startRightComponent}
+          backToNormal={handleRightDoubleClick}
         />
-      </div>
+      ) : (
+        <div className="container-main">
+          {/* Left Column */}
+          <div
+            className="left-column"
+            ref={leftRef}
+            style={{
+              width: `${layout.left}%`,
+              ["--step-font-size" as any]: leftFontSize,
+            }}
+          >
+            <StartLeft
+              codeMap={codeMap}
+              setCodeForFile={setCodeForFile}
+              currentFile={currentFile}
+              setCurrentFile={setCurrentFile}
+              fileTree={fileTree}
+              setFileTree={setFileTree}
+              problemId={problemId}
+              setProblemId={setProblemId}
+            />
+          </div>
 
-      {/* First Divider */}
-      <div className="divider" onMouseDown={startDragLeft} />
+          {/* First Divider */}
+          <div className="divider" onMouseDown={startDragLeft} />
 
-      {/* Middle Column */}
-      <div className="middle-column" style={{ width: `${layout.middle}%` }}>
-        <CodeProvider>
-          <StartMiddle
-            setHoveredStep={setHoveredStep}
-            loading={loading}
-            setLoading={setLoading}
-            setFromEditor={setFromEditor}
-            codeMap={codeMap}
-            setCodeForFile={setCodeForFile}
-            currentFile={currentFile}
-            test={test}
-            currentFileName={currentFileName}
-            fileTree={fileTree}
-            problemId={problemId}
-            stepTree={stepTree}
+          {/* Middle Column */}
+          <div className="middle-column" style={{ width: `${layout.middle}%` }}>
+            <CodeProvider>
+              <StartMiddle
+                setHoveredStep={setHoveredStep}
+                loading={loading}
+                setLoading={setLoading}
+                setFromEditor={setFromEditor}
+                codeMap={codeMap}
+                setCodeForFile={setCodeForFile}
+                currentFile={currentFile}
+                test={test}
+                currentFileName={currentFileName}
+                fileTree={fileTree}
+                problemId={problemId}
+                stepTree={stepTree}
+              />
+            </CodeProvider>
+          </div>
+
+          {/* Second Divider */}
+          <div
+            className="divider"
+            onDoubleClick={handleRightDoubleClick}
+            onMouseDown={startDragRight}
           />
-        </CodeProvider>
-      </div>
 
-      {/* Second Divider */}
-      <div className="divider" onMouseDown={startDragRight} />
-
-      {/* Right Column */}
-      <div
-        className="right-column"
-        ref={rightRef}
-        style={{
-          width: `${layout.right}%`,
-          ["--step-font-size" as any]: rightFontSize,
-        }}
-      >
-        <StartRight
-          fontSize={rightFontSize}
-          hoveredStepId={hoveredStep ? hoveredStep.id : null}
-          loading={loading}
-          setLoading={setLoading}
-          fromEditor={fromEditor}
-          setFromEditor={setFromEditor}
-          codeMap={codeMap}
-          setCodeForFile={setCodeForFile}
-          currentFile={currentFile}
-          stepTree={stepTree}
-          setStepTree={setStepTree}
-        />
-      </div>
+          {/* Right Column */}
+          <div
+            className={`right-column`}
+            ref={rightRef}
+            style={{
+              ["--step-font-size" as any]: rightFontSize,
+              ["--right-width" as any]: `${layout.right}%`,
+            }}
+          >
+            {startRightComponent}
+          </div>
+          <div className="divider" />
+        </div>
+      )}
     </div>
   );
 };

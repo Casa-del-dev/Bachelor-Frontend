@@ -10,6 +10,22 @@ body.dark-mode {
   --divider-color: #a2a2a2;
 }
 
+.slide-wrapper {
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+
+.container-main {
+  display: flex;
+  width: 100vw;
+  transition: transform 0.6s ease;
+}
+
+.slide-wrapper.slide-left .container-main {
+  transform: translateX(calc(-100vw + var(--right-width)));
+}
+
 /* Main container */
 .container-main {
   display: flex;
@@ -32,6 +48,10 @@ body.dark-mode {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.right-column {
+  width: var(--right-width);
 }
 
 /* Divider between sections */

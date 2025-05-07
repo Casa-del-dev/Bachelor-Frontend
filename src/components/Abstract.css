@@ -1,0 +1,28 @@
+.main-container-abstract {
+  display: grid;
+  grid-template-areas: "left middle right";
+  grid-template-columns: var(--right-width) auto auto;
+  height: 100%;
+}
+
+.slide-right {
+  animation: slideToRight 0.6s ease forwards;
+}
+
+/* Slide to right */
+@keyframes slideToRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100vw - var(--right-width)));
+  }
+}
+
+.right-abstract-container {
+  grid-area: left;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}

@@ -2282,9 +2282,19 @@ Editing logic START
       getInitialIndex(indexKey)
     );
 
+    //For window width doing this (vw)
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    const vw = windowWidth / 100;
+
     const containerHeight = 200; // px
     const cardHeight = containerHeight * 0.05;
-    const vw = window.innerWidth / 100;
     const getStepHeight = (fontSize: string): number => {
       let stepFontSize = 1 * vw;
       if (fontSize.endsWith("px")) {
