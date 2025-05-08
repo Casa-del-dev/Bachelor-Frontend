@@ -364,6 +364,9 @@ const StartRight: React.FC<StartRightProps> = ({
     setLoading(true);
     setLoadingCheck(true);
 
+    const temp = steps;
+    setSteps([]);
+
     if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
 
     try {
@@ -414,6 +417,7 @@ const StartRight: React.FC<StartRightProps> = ({
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
+      setSteps(temp);
       setLoading(false);
       setLoadingCheck(false);
     }
