@@ -272,7 +272,7 @@ Textarea for starting prompt START
   border-radius: 6px;
   resize: none;
   padding: 2vw;
-  color: black;
+  color: var(--main-text);
   box-sizing: border-box;
   font-size: 1vw;
   line-height: 1.4;

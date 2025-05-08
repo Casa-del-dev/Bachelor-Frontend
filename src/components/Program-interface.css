@@ -218,7 +218,7 @@ Modal layout END
   display: flex;
   align-items: center;
   justify-content: center;
-
+  text-align: center;
   font-size: 4vw;
   font-weight: bolder;
   opacity: 0.1;

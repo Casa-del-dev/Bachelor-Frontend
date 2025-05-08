@@ -6,6 +6,7 @@ import SignUp from "./SignUp";
 import Login from "./Login";
 import { useAuth } from "../AuthContext";
 import Profile from "./Profile";
+import WhiteLogo from "../assets/PeachLogoWhite.svg";
 
 export function ProfilePage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -341,7 +342,11 @@ export function Header() {
       <header className="header">
         <div className="header-left">
           <a href="/" className="logo">
-            <img src={Logo} alt="Peachlab Logo" className="logo-image" />
+            {!isDarkMode ? (
+              <img src={Logo} alt="Peachlab Logo" className="logo-image" />
+            ) : (
+              <img src={WhiteLogo} alt="Peachlab Logo" className="logo-image" />
+            )}
           </a>
         </div>
 

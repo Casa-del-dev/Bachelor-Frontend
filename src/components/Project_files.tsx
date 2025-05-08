@@ -2,6 +2,7 @@ import React, { useState, useRef, JSX, useEffect, useMemo } from "react";
 import "./Project_files.css";
 import { useCodeContext } from "../CodeContext";
 import { FolderOpen, Folder, Trash, File, FolderPlus } from "lucide-react";
+import { useAuth } from "../AuthContext";
 
 export interface FileItem {
   id: number;
@@ -38,6 +39,8 @@ const ProjectFiles = ({
   const [hoveredItemId, setHoveredItemId] = useState<number | null>(null);
 
   const { saveTreeToBackend } = useCodeContext();
+
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     setOpenFolders((prev) => {
@@ -692,9 +695,18 @@ const ProjectFiles = ({
           This pseudo-root is only used for display; any actions using parentId = -1 are treated as root (null)
           and is removed before saving to the backend.
         */}
-        {renderTree([
-          { id: -1, name: "Project Files", type: "folder", children: fileTree },
-        ])}
+        {!isAuthenticated ? (
+          <div className="blank-file-selector"></div>
+        ) : (
+          renderTree([
+            {
+              id: -1,
+              name: "Project Files",
+              type: "folder",
+              children: fileTree,
+            },
+          ])
+        )}
       </div>
     </div>
   );

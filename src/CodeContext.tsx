@@ -6,6 +6,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { useAuth } from "./AuthContext";
 
 // Define the FileItem type.
 export interface FileItem {
@@ -52,6 +53,8 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   const [codeMap, setCodeMap] = useState<Record<number, string | null>>({});
   const [test, setTest] = useState<string>("");
   const [fileTree, setFileTree] = useState<FileItem[]>([]);
+
+  const { isAuthenticated } = useAuth();
 
   // Helper to locate a file's name based on its id.
   function findFileNameById(tree: FileItem[], id: number): string | null {
@@ -191,7 +194,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [problemId]);
+  }, [problemId, isAuthenticated]);
 
   // Helper to update the code map.
   const setCodeForFileHandler = (

@@ -5,6 +5,7 @@ import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
 import { CodeProvider, useCodeContext } from "../CodeContext";
 import Abstract from "./Abstract";
+import { useAuth } from "../AuthContext";
 
 export interface Step {
   id: string; // unique ID for each step
@@ -70,6 +71,8 @@ const Start: React.FC = () => {
     setProblemId,
   } = useCodeContext();
 
+  const { isAuthenticated } = useAuth();
+
   const [showAbstract, setShowAbstract] = useState(false);
 
   /* --------------------------------------
@@ -92,7 +95,7 @@ const Start: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, [problemId]);
+  }, [problemId, isAuthenticated]);
 
   async function loadStepTreeFromBackend(
     problemId: string

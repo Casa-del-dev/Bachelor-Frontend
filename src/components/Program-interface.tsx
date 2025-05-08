@@ -62,7 +62,7 @@ export default function PythonPlayground({
   problemId,
   stepTree,
 }: PythonPlaygroundProps) {
-  const isAuthenticated = useAuth();
+  const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [fadeClass, setFadeClass] = useState("");
   const [colorMode, setColorMode] = useState(() => {
@@ -469,25 +469,29 @@ export default function PythonPlayground({
           />
         </div>
       </div>
-      {currentFile !== null &&
-      currentFile !== undefined &&
-      codeMap[currentFile] !== null ? (
-        <CodeMirror
-          className="ILoveEprogg"
-          value={codeMap[currentFile] || ""}
-          extensions={[editorExtensions]}
-          onChange={(newCode) => {
-            setCodeForFile(currentFile, newCode);
-            saveCodeToBackend(newCode);
-          }}
-          theme={isDarkMode === "dark" ? "dark" : "light"}
-          basicSetup={{
-            lineNumbers: true,
-            foldGutter: true,
-          }}
-        />
+      {isAuthenticated ? (
+        currentFile !== null &&
+        currentFile !== undefined &&
+        codeMap[currentFile] !== null ? (
+          <CodeMirror
+            className="ILoveEprogg"
+            value={codeMap[currentFile] || ""}
+            extensions={[editorExtensions]}
+            onChange={(newCode) => {
+              setCodeForFile(currentFile, newCode);
+              saveCodeToBackend(newCode);
+            }}
+            theme={isDarkMode === "dark" ? "dark" : "light"}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+            }}
+          />
+        ) : (
+          <div className="blank-file-selector">Select A File</div>
+        )
       ) : (
-        <div className="blank-file-selector">Select A File</div>
+        <div className="blank-file-selector">Login Needed</div>
       )}
       {showModal && (
         <div
