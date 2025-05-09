@@ -387,8 +387,6 @@ const StartRight: React.FC<StartRightProps> = ({
         throw e;
       }
 
-      console.log("GPT response:", parsedResponse.code);
-
       if (parsedResponse.code) {
         if (typeof parsedResponse.code === "object") {
           Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
