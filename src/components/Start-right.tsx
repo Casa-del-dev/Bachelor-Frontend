@@ -387,17 +387,35 @@ const StartRight: React.FC<StartRightProps> = ({
         throw e;
       }
 
-      if (parsedResponse.code && typeof parsedResponse.code === "object") {
-        Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
-          if (typeof codeValue === "string") {
-            setCodeForFile(Number(fileId), codeValue);
+      console.log("GPT response:", parsedResponse.code);
+
+      if (parsedResponse.code) {
+        if (typeof parsedResponse.code === "object") {
+          Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
+            if (typeof codeValue === "string") {
+              setCodeForFile(Number(fileId), codeValue);
+            } else {
+              console.warn(`Invalid code for fileId ${fileId}:`, codeValue);
+            }
+          });
+        } else if (typeof parsedResponse.code === "string") {
+          // Apply to the currently active file
+          if (currentFile !== null) {
+            setCodeForFile(currentFile, parsedResponse.code);
           } else {
-            console.warn(`Invalid code for file ${fileId}:`, codeValue);
+            console.warn(
+              "Received single code string, but no current file is selected."
+            );
           }
-        });
+        } else {
+          console.warn(
+            "Unexpected type for 'code':",
+            typeof parsedResponse.code
+          );
+        }
       } else {
         console.warn(
-          "GPT response does not contain a valid 'code' object:",
+          "No 'code' field found in parsed response:",
           parsedResponse
         );
       }
