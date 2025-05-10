@@ -975,11 +975,12 @@ Editing logic START
       if (step.status.can_be_further_divided === "can") {
         step.showDetailedHint1 = true;
         console.log(step);
-      }
-      if (saved === true) {
-        revealCorrectStep(path);
       } else {
-        setShowCorrectStepOverlay(path);
+        if (saved === true) {
+          revealCorrectStep(path);
+        } else {
+          setShowCorrectStepOverlay(path);
+        }
       }
       return;
     }
