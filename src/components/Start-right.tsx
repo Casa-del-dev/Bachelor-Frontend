@@ -542,6 +542,8 @@ Checking Code and Tree END
           const stepsArray = transformStepsObject(newStepsData);
 
           updateSteps(stepsArray);
+          setStepTree(stepsArray);
+          setSentPrompt(true);
           setText("");
           setFadeInTree(true);
           setTimeout(() => setFadeInTree(false), 2000);
@@ -960,16 +962,20 @@ Editing logic START
 
   // handleGiveHint
   function handleGiveHint(
+    step: Step,
     path: number[],
     hintNumber: number | null,
     dividableStep: boolean
   ) {
     if (hintNumber === null) return;
 
-    const saved = localStorage.getItem("savedCorrectSteps") === "true"; // freshly check
+    const saved = localStorage.getItem("savedCorrectSteps") === "true";
 
-    // correct step => show overlay or reveal immediately if saved
     if (hintNumber === 1) {
+      if (step.status.can_be_further_divided === "can") {
+        step.showDetailedHint1 = true;
+        console.log(step);
+      }
       if (saved === true) {
         revealCorrectStep(path);
       } else {
@@ -1443,6 +1449,7 @@ Editing logic START
                         color={getStepBoxTextColor(step)}
                         onGiveHint={() =>
                           handleGiveHint(
+                            step,
                             currentPath,
                             getNumberForStep(step),
                             step.status.can_be_further_divided === "can" &&
@@ -2877,6 +2884,7 @@ Biggest render Tree ever recored START
                     color={getStepBoxTextColor(step)}
                     onGiveHint={() =>
                       handleGiveHint(
+                        step,
                         currentPath,
                         hintNumber,
                         step.status.can_be_further_divided === "can" &&

@@ -305,6 +305,9 @@ export default function PythonPlayground({
           Object.entries(parsedResponse.code).forEach(([fileId, codeValue]) => {
             if (typeof codeValue === "string") {
               setCodeForFile(Number(fileId), codeValue);
+              setTimeout(() => {
+                saveCodeToBackend(codeValue);
+              }, 0);
             } else {
               console.warn(`Invalid code for fileId ${fileId}:`, codeValue);
             }
@@ -313,6 +316,9 @@ export default function PythonPlayground({
           // Apply to the currently active file
           if (currentFile !== null) {
             setCodeForFile(currentFile, parsedResponse.code);
+            setTimeout(() => {
+              saveCodeToBackend(parsedResponse.code);
+            }, 0);
           } else {
             console.warn(
               "Received single code string, but no current file is selected."
