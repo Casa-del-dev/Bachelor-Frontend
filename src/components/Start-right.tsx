@@ -423,9 +423,12 @@ const StartRight: React.FC<StartRightProps> = ({
         ? parsedResponse.steps
         : parsedResponse;
 
+      console.log(stepsData);
+
       const stepsArray = transformStepsObject(stepsData);
 
       updateSteps(stepsArray);
+      setStepTree(stepsArray);
       setText("");
       setSentPrompt(true);
       setFadeInTree(true);
@@ -446,6 +449,7 @@ Checking Code and Tree START
   function getStepBoxColor(step: Step): string {
     if (
       step.code !== "" &&
+      step.code !== "// keep as input" &&
       step.status.correctness !== "" &&
       step.status.can_be_further_divided !== ""
     ) {
@@ -467,6 +471,7 @@ Checking Code and Tree START
   function getStepBoxTextColor(step: Step): string {
     if (
       step.code !== "" &&
+      step.code !== "// keep as input" &&
       step.status.correctness !== "" &&
       step.status.can_be_further_divided !== ""
     ) {
@@ -972,7 +977,7 @@ Editing logic START
     const saved = localStorage.getItem("savedCorrectSteps") === "true";
 
     if (hintNumber === 1) {
-      if (step.status.can_be_further_divided === "can") {
+      if (step.status.can_be_further_divided === "can" && !step.correctStep) {
         step.showDetailedHint1 = true;
         console.log(step);
       } else {

@@ -263,9 +263,9 @@ body.dark-mode {
 
 .file-tree {
   padding-top: 2vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 50% 1fr;
 }
 
 .file-tree ul {
@@ -384,6 +384,8 @@ body.dark-mode {
 .tree,
 .tree ul {
   list-style: none;
+  display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 0;
   position: relative;
@@ -419,6 +421,49 @@ body.dark-mode {
 
 .tree ul ul::before {
   left: calc(var(--step-font-size, 1vw) * 0);
+}
+
+/*last testing child*/
+.title-test-fileTree {
+  font-size: calc(var(--step-font-size, 1vw) * 2);
+  font-weight: 600;
+  color: var(--text-color);
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--text-color);
+}
+
+.separate-last-child .tree li:not(.pseudo-root-li)::before {
+  content: none;
+}
+
+.separate-last-child .tree,
+.separate-last-child .tree li:not(.pseudo-root-li) {
+  padding: 0;
+}
+
+.separate-last-child .tree {
+  padding-top: 1rem;
+}
+
+.separate-last-child .title-file-fileTree.file {
+  background: var(--file-selected-bg);
+  color: var(--text-color);
+}
+
+.separate-last-child .title-file-fileTree.file:not(.edit):not(.selected):hover,
+.separate-last-child .title-file-fileTree.file:not(.edit):hover {
+  background: var(--file-selected-hover-bg);
+  border-inline-color: var(--file-selected-border-hover);
+  color: var(--text-color);
+}
+
+.separate-last-child {
+  padding-left: 1rem;
+}
+
+.separate-last-child .controls .icon[title="Delete"] {
+  display: none;
 }
 
 /* Horizontal connectors */

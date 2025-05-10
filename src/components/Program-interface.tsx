@@ -345,7 +345,8 @@ export default function PythonPlayground({
   };
 
   useEffect(() => {
-    // Just to demonstrate dependency
+    if (currentFile && codeMap[currentFile])
+      saveCodeToBackend(codeMap[currentFile]);
   }, [codeMap]);
 
   useEffect(() => {

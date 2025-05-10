@@ -185,7 +185,14 @@ const ProjectFiles = ({
 
     const updatedFiles =
       parentId === null
-        ? [...fileTree, newFile]
+        ? (() => {
+            const count = fileTree.length;
+            // if empty, just add it
+            if (count === 0) return [newFile];
+            const allButLast = fileTree.slice(0, count - 1);
+            const last = fileTree[count - 1];
+            return [...allButLast, newFile, last];
+          })()
         : addItemToFolder(fileTree, parentId, newFile);
 
     // Optimistically update the tree (don't wait for backend yet)
@@ -211,7 +218,14 @@ const ProjectFiles = ({
 
     const updatedFiles =
       parentId === null
-        ? [...fileTree, newFolder]
+        ? (() => {
+            const count = fileTree.length;
+            // if empty, just add it
+            if (count === 0) return [newFolder];
+            const allButLast = fileTree.slice(0, count - 1);
+            const last = fileTree[count - 1];
+            return [...allButLast, newFolder, last];
+          })()
         : addItemToFolder(fileTree, parentId, newFolder);
 
     handleUpdateFiles(updatedFiles);
@@ -691,21 +705,40 @@ const ProjectFiles = ({
     <div className="project-files">
       <div className="file-tree">
         {/*
-          Wrap the fileTree with a pseudo-root node before rendering.
-          This pseudo-root is only used for display; any actions using parentId = -1 are treated as root (null)
-          and is removed before saving to the backend.
-        */}
+    Wrap the fileTree with a pseudo-root node before rendering.
+    This pseudo-root is only used for display; any actions using parentId = -1
+    are treated as root (null) and removed before saving.
+  */}
         {!isAuthenticated ? (
-          <div className="blank-file-selector"></div>
+          <div className="blank-file-selector" />
         ) : (
-          renderTree([
-            {
-              id: -1,
-              name: "Project Files",
-              type: "folder",
-              children: fileTree,
-            },
-          ])
+          (() => {
+            const count = fileTree.length;
+            const allButLast = fileTree.slice(0, Math.max(0, count - 1));
+            const lastChild = count > 0 ? fileTree[count - 1] : null;
+
+            return (
+              <>
+                {/* 1) Render “Project Files” with everything except the last child */}
+                {renderTree([
+                  {
+                    id: -1,
+                    name: "Project Files",
+                    type: "folder",
+                    children: allButLast,
+                  },
+                ])}
+
+                {/* 2) Render the true last child in its own div */}
+                {lastChild && (
+                  <div className="separate-last-child">
+                    <div className="title-test-fileTree">Test File</div>
+                    {renderTree([lastChild])}
+                  </div>
+                )}
+              </>
+            );
+          })()
         )}
       </div>
     </div>
