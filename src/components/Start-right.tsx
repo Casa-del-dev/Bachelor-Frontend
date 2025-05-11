@@ -423,14 +423,10 @@ const StartRight: React.FC<StartRightProps> = ({
         ? parsedResponse.steps
         : parsedResponse;
 
-      console.log(stepsData);
-
       const stepsArray = transformStepsObject(stepsData);
-
-      updateSteps(stepsArray);
-      setStepTree(stepsArray);
       setText("");
       setSentPrompt(true);
+      updateSteps(stepsArray);
       setFadeInTree(true);
       setTimeout(() => setFadeInTree(false), 2000);
     } catch (error) {

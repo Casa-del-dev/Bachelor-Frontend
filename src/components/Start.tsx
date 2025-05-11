@@ -357,7 +357,6 @@ const Start: React.FC = () => {
     <div className={`slide-wrapper ${animateRightToLeft ? "slide-left" : ""}`}>
       {showAbstract ? (
         <Abstract
-          maybestartright={startRightComponent}
           backToNormal={handleRightDoubleClick}
           onRightWidthChange={setRight}
           rightWidth={layout.right}
