@@ -247,16 +247,6 @@ const Start: React.FC = () => {
     );
   }, [layout.right]);
 
-  const setRight = useCallback((newRight: number) => {
-    setLayout(({ left }) => {
-      const right = Math.min(
-        Math.max(newRight, MIN_RIGHT),
-        100 - left - MIN_LEFT
-      );
-      return { left, right, middle: 100 - left - right };
-    });
-  }, []);
-
   // Helper function to update font size
   const updateFontSize = useCallback(() => {
     if (rightRef.current) {
