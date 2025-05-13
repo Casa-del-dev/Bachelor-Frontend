@@ -356,15 +356,7 @@ const Start: React.FC = () => {
   return (
     <div className={`slide-wrapper ${animateRightToLeft ? "slide-left" : ""}`}>
       {showAbstract ? (
-        <Abstract
-          backToNormal={handleRightDoubleClick}
-          onRightWidthChange={setRight}
-          rightWidth={layout.right}
-          rightFontSize={rightFontSize}
-          onRightFontSizeChange={setRightFontSize}
-          problemId={problemId}
-          setProblemId={setProblemId}
-        />
+        <Abstract />
       ) : (
         <div className="container-main">
           {/* Left Column */}

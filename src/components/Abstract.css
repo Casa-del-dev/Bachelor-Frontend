@@ -1,87 +1,284 @@
 .main-container-abstract {
-  display: grid;
-  grid-template-areas: "left middle right";
-  grid-template-columns: var(--right-width) 0 auto;
+  display: flex;
   height: 100%;
-}
-
-.slide-right {
-  animation: slideToRight 0.6s ease forwards;
-}
-
-/* Slide to right */
-@keyframes slideToRight {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(calc(100vw - var(--right-width)));
-  }
+  width: max-content;
+  position: relative;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .right-abstract-container {
-  grid-area: left;
+  background-color: #f0f0f0;
   display: flex;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
+  flex-shrink: 0;
 }
 
-.details-abstract-container {
-  grid-area: middle;
-  display: flex;
+.main-container-abstract.slide-right {
+  transform: translateX(100vw);
+  transition: transform 0.5s ease-in-out;
 }
 
 .map-abstract-container {
-  grid-area: right;
+  flex-grow: 1;
+  padding: 120px;
 }
 
-.details-abstract-main {
-  width: 100%;
+.header-abstract {
+  position: fixed;
+  margin-top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 20px;
+  background-color: var(--dropdown-bg);
+  border: 1px solid var(--dropdown-border);
+  border-radius: 1rem;
+
+  z-index: 999;
 }
 
-/* ---------------------------------------------------
-Select problem dropdown START
---------------------------------------------------- */
+.header-left-abstraction {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: color 0.2s ease;
+  border: 1px solid var(--dropdown-border);
+  background-color: var(--dropdown-bg);
+  padding: 6px 15px;
+  border-radius: 4px;
+}
+
+.header-left-abstraction:hover {
+  background-color: var(--dropdown-hover-bg);
+}
 
 .select-problem-abstract {
   position: relative;
-  width: 140px;
-  font-family: sans-serif;
+  display: inline-block;
+  min-width: 250px;
+  font-family: Arial, sans-serif;
 }
 
-.dropdown-header {
-  background-color: #e0e0e0;
-  padding: 10px;
-  font-weight: bold;
+.dropdown-header-abstract {
+  padding: 6px 15px;
+  border: 1px solid var(--dropdown-border);
+  background-color: var(--dropdown-bg);
   cursor: pointer;
-  border-radius: 6px 6px 0 0;
-  text-align: center;
-  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 4px;
+  color: var(--text-color);
 }
 
-.dropdown-list {
-  background-color: white;
-  border: 1px solid #ccc;
+.dropdown-header-abstract:hover {
+  background-color: var(--dropdown-hover-bg);
+}
+
+.dropdown-header-abstract .dropdown-label {
+  display: inline-block;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.dropdown-header-abstract .dropdown-label.hidden {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.dropdown-header-abstract .arrow {
+  margin-left: 10px;
+  font-size: 0.8em;
+  transition: transform 0.3s ease;
+  transform: rotate(0deg);
+}
+
+.dropdown-header-abstract .arrow.down {
+  transform: rotate(180deg);
+}
+
+.dropdown-list-abstract {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 1px;
+  right: 1px;
   border-top: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow-y: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: var(--dropdown-hover-bg);
+
+  /*used for transition*/
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
 }
 
-.dropdown-item {
-  padding: 10px;
-  text-align: center;
+.dropdown-list-abstract.open {
+  max-height: 100vh;
+}
+
+.dropdown-items-container-ab {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-list-abstract .dropdown-item {
+  padding: 6px 15px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-radius: 4px;
+  font-size: medium;
+  border: 1px solid var(--dropdown-border);
 }
 
-.dropdown-item:hover {
-  background-color: #f5f5f5;
+.dropdown-list-abstract .dropdown-item:hover {
+  background-color: var(--dropdown-hover-bg);
 }
 
-.arrow {
-  margin-left: 5px;
+/* ---------------------------------------
+  render Tree function START
+--------------------------------------- */
+
+.tree-root {
+  display: flex;
+  justify-content: center;
+  height: 100%;
 }
 
-/* ---------------------------------------------------
-Select problem dropdown END
---------------------------------------------------- */
+/* Each step box + connectors */
+.tree-root-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 30px;
+}
+
+.tree-children-ab .branch-items > .tree-root-item:first-child {
+  margin-left: 0;
+}
+
+.tree-children-ab .branch-items > .tree-root-item:last-child {
+  margin-right: 0;
+}
+
+.step-box-ab {
+  position: relative;
+  height: auto;
+}
+
+/* For the parents */
+.tree-root-item:not(:first-child) .step-box-ab::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--margin-var-tree));
+  width: var(--margin-var-tree);
+  height: 2px;
+  background: var(--border-color);
+}
+
+.tree-root-item:not(:last-child) .step-box-ab::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 100%; /* start at the right edge */
+  width: var(--margin-var-tree); /* length of the connector */
+  height: 2px;
+  background: var(--border-color);
+}
+
+/* For the children */
+.tree-children-ab .tree-root-item .step-box-ab::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: var(--border-color);
+}
+
+.tree-children-ab .tree-root-item .step-box-ab::after {
+  display: none;
+}
+
+/* Sub-steps branch */
+.tree-children-ab {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.tree-children-ab::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: var(--border-color);
+}
+
+.branch-line {
+  height: 2px;
+  background: var(--border-color);
+}
+
+.branch-items-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.branch-items {
+  display: flex;
+}
+
+.tree-children-item-ab::before {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 10px;
+  background: var(--border-color);
+  margin: 0 auto 10px; /* sit it above each child */
+}
+
+.tree-children-item-ab {
+  position: relative;
+  margin: 0 20px;
+}
+
+/* Step box styling */
+.tree-node-ab {
+  color: black;
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 6px;
+  padding: 12px 16px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+  width: 15vw;
+  height: 20vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---------------------------------------
+  render Tree function END
+--------------------------------------- */
