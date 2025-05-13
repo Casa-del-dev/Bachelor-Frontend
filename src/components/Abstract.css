@@ -64,7 +64,7 @@
 }
 
 .left-header-container-ab-notIcon {
-  padding: 6px 15px 6px 0.5rem;
+  padding: 6px 15px 6px 7.5px;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -77,7 +77,7 @@
 .container-icons-ab {
   display: flex;
   align-items: center;
-  padding: 6px 0.4rem 6px 15px;
+  padding: 6px 7.5px 6px 15px;
   border-right: 1px solid var(--dropdown-border);
 }
 
