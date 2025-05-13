@@ -45,21 +45,56 @@
   z-index: 999;
 }
 
+.header-left-ab-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .header-left-abstraction {
   cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
-  gap: 1rem;
   transition: color 0.2s ease;
   border: 1px solid var(--dropdown-border);
   background-color: var(--dropdown-bg);
-  padding: 6px 15px;
   border-radius: 4px;
 }
 
-.header-left-abstraction:hover {
+.left-header-container-ab-notIcon {
+  padding: 6px 15px 6px 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.left-header-container-ab-notIcon:hover {
   background-color: var(--dropdown-hover-bg);
+}
+
+.container-icons-ab {
+  display: flex;
+  align-items: center;
+  padding: 6px 0.4rem 6px 15px;
+  border-right: 1px solid var(--dropdown-border);
+}
+
+.X-abstract {
+  color: red;
+}
+
+.X-abstract:hover {
+  color: rgb(211, 0, 0);
+}
+
+.Check-abstract {
+  color: lightgreen;
+}
+
+.Check-abstract:hover {
+  color: rgb(130, 223, 130);
 }
 
 .select-problem-abstract {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { Search } from "lucide-react";
+import { Search, X, Check } from "lucide-react";
+import { useAuth } from "../AuthContext";
 
 export interface Step {
   id: string; // unique ID for each step
@@ -49,10 +50,24 @@ const Abstract: React.FC = ({}) => {
   const [shouldRenderDropdown, setShouldRenderDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
+  const isAuthenticated = useAuth();
+
+  const [toggleAbstraction, setToggleAbstraction] = useState(
+    localStorage.getItem("abstraction") || "false"
+  );
+
   const [animateToRight, setAnimateToRight] = useState(false);
   const mainContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [steps, setSteps] = useState<Step[]>([]);
+
+  useEffect(() => {
+    localStorage.setItem("abstraction", toggleAbstraction);
+  }, [toggleAbstraction]);
+
+  const handleToggleAbstraction = () => {
+    setToggleAbstraction(toggleAbstraction === "true" ? "false" : "true");
+  };
 
   async function loadStepTreeFromBackend(
     problemId: string
@@ -99,25 +114,27 @@ const Abstract: React.FC = ({}) => {
   }, [problemList]); // problemList is stable, but good practice
 
   useEffect(() => {
-    if (problemId) {
-      console.log(`Attempting to load tree for problem: ${problemId}`);
-      loadStepTreeFromBackend(problemId)
-        .then((tree) => {
-          if (tree) {
-            console.log("Successfully loaded tree for", problemId, tree);
-            setSteps(tree);
-          } else {
-            console.log(
-              "No tree data returned or error loading for",
-              problemId
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Error in loadStepTreeFromBackend promise:", error);
-        });
+    if (!isAuthenticated.isAuthenticated) {
+      setSteps([]);
+    } else {
+      if (problemId) {
+        loadStepTreeFromBackend(problemId)
+          .then((tree) => {
+            if (tree) {
+              setSteps(tree);
+            } else {
+              console.log(
+                "No tree data returned or error loading for",
+                problemId
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error in loadStepTreeFromBackend promise:", error);
+          });
+      }
     }
-  }, [problemId]);
+  }, [problemId, isAuthenticated]);
 
   const handleSelectProblem = (selectedProblem: string) => {
     setProblemId(selectedProblem);
@@ -325,11 +342,32 @@ const Abstract: React.FC = ({}) => {
         />
       </div>
       <div className="header-abstract">
-        <div
-          className="header-left-abstraction"
-          onClick={() => console.log("Clicked Abstraction Search")}
-        >
-          Abstraction <Search />
+        <div className="header-left-ab-container">
+          <div
+            className="header-left-abstraction"
+            onClick={() => console.log("Clicked Abstraction Search")}
+          >
+            <div className="container-icons-ab">
+              {toggleAbstraction === "true" ? (
+                <X
+                  className="X-abstract"
+                  style={{ cursor: "pointer" }}
+                  strokeWidth="3px"
+                  onClick={handleToggleAbstraction}
+                />
+              ) : (
+                <Check
+                  className="Check-abstract"
+                  onClick={handleToggleAbstraction}
+                  style={{ cursor: "pointer" }}
+                  strokeWidth="3px"
+                />
+              )}
+            </div>
+            <div className="left-header-container-ab-notIcon">
+              Abstraction <Search />
+            </div>
+          </div>
         </div>
         <div className="select-problem-abstract" ref={dropdownRef}>
           <div className="dropdown-header-abstract" onClick={toggleDropdown}>
