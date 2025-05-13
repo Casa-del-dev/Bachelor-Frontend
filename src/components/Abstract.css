@@ -1,5 +1,5 @@
 .main-container-abstract {
-  display: flex;
+  display: grid;
   height: 100%;
   width: max-content;
   position: relative;
@@ -8,9 +8,14 @@
 }
 
 .right-abstract-container {
-  background-color: #f0f0f0;
+  position: fixed;
+  height: 100%;
   display: flex;
-  flex-shrink: 0;
+  z-index: 100;
+}
+
+.divider.abstract {
+  width: 5px;
 }
 
 .main-container-abstract.slide-right {

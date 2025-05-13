@@ -23,7 +23,7 @@ body.dark-mode {
 }
 
 .slide-wrapper.slide-left .container-main {
-  transform: translateX(calc(-100vw + var(--right-width)));
+  transform: translateX(-100vw);
 }
 
 /* Main container */

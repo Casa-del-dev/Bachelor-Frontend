@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, ReactNode } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Abstract.css";
 import { Search } from "lucide-react";
 
@@ -318,13 +318,12 @@ const Abstract: React.FC = ({}) => {
     >
       <div className="right-abstract-container">
         <div
-          className="divider"
+          className="divider abstract"
           onDoubleClick={() => {
             setAnimateToRight(true);
           }}
         />
       </div>
-
       <div className="header-abstract">
         <div
           className="header-left-abstraction"
