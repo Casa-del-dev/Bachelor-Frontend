@@ -7,6 +7,7 @@ interface PlusBetweenStepsProps {
   style?: React.CSSProperties;
   plus?: boolean;
   empty?: boolean;
+  tooltip?: string;
 }
 
 const PlusbetweenSteps: React.FC<PlusBetweenStepsProps> = ({
@@ -14,6 +15,7 @@ const PlusbetweenSteps: React.FC<PlusBetweenStepsProps> = ({
   style,
   plus = true,
   empty = true,
+  tooltip,
 }) => {
   const [theme, setTheme] = useState<"light" | "dark">(() =>
     document.body.classList.contains("dark-mode") ? "dark" : "light"
@@ -36,24 +38,34 @@ const PlusbetweenSteps: React.FC<PlusBetweenStepsProps> = ({
     <div className="container-plus-right-start" style={style}>
       {plus && empty && <div className="straightline-left" />}
 
-      <Plus
-        style={{
-          width: plus
-            ? "calc(var(--step-font-size, 1vw) * 1.6)"
-            : "calc(var(--step-font-size, 1vw) * 0.8)",
-          height: plus
-            ? "calc(var(--step-font-size, 1vw) * 1.6)"
-            : "calc(var(--step-font-size, 1vw) * 0.8)",
-          border:
-            plus && empty
-              ? `1px solid ${theme === "dark" ? "white" : "black"}`
-              : !empty
-              ? "1px solid #b8b8b8"
-              : "",
+      <div
+        className="container-forplus-hovering-text"
+        data-tooltip={tooltip}
+        onMouseMove={(e) => {
+          // record mouse coords into CSS vars
+          e.currentTarget.style.setProperty("--tooltip-x", `${e.clientX}px`);
+          e.currentTarget.style.setProperty("--tooltip-y", `${e.clientY}px`);
         }}
-        className="plusbetweensteps"
-        onClick={onClick}
-      />
+      >
+        <Plus
+          style={{
+            width: plus
+              ? "calc(var(--step-font-size, 1vw) * 1.6)"
+              : "calc(var(--step-font-size, 1vw) * 0.8)",
+            height: plus
+              ? "calc(var(--step-font-size, 1vw) * 1.6)"
+              : "calc(var(--step-font-size, 1vw) * 0.8)",
+            border:
+              plus && empty
+                ? `1px solid ${theme === "dark" ? "white" : "black"}`
+                : !empty
+                ? "1px solid #b8b8b8"
+                : "",
+          }}
+          className="plusbetweensteps"
+          onClick={onClick}
+        />
+      </div>
 
       {plus && empty && <div className="straightline-right" />}
     </div>

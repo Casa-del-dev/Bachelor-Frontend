@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   ArrowDown,
   Minus,
+  AlignJustify,
   /* Divide, */
 } from "lucide-react";
 import { Step } from "./Start";
@@ -1341,6 +1342,53 @@ Editing logic START
     }, 300);
   };
 
+  //step-box MaxWidth then we change the way we see the icons
+  const [burgerIcon, setBurgerIcon] = useState(false);
+  const [openBurgerFor, setOpenBurgerFor] = useState<string | null>(null);
+  const wrapperRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (openBurgerFor) {
+        const wrapper = wrapperRefs.current[openBurgerFor];
+        if (wrapper && !wrapper.contains(e.target as Node)) {
+          setOpenBurgerFor(null);
+        }
+      }
+    }
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape" && openBurgerFor) {
+        setOpenBurgerFor(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [openBurgerFor]);
+
+  const stepBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!stepBoxRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width;
+        // toggle burgerIcon based on width
+        setBurgerIcon(width <= 403);
+      }
+    });
+
+    observer.observe(stepBoxRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [stepBoxRef]);
+
   // Helper to collect promoted substeps from a (nested) children array.
   // This function returns an array of JSX elements representing the promoted
   // substeps (i.e. those with selected === true) that should be rendered
@@ -1351,14 +1399,11 @@ Editing logic START
     all_step: Step[]
   ): JSX.Element[] {
     let promotedElements: JSX.Element[] = [];
-    let lastPromotedPath: number[] | null = null;
 
     steps.forEach((step, index) => {
       const currentPath = [...parentPath, index];
 
       if (step.selected) {
-        lastPromotedPath = [...currentPath] as number[]; // Save this path
-
         const displayPath = currentPath.map((i) => i + 1).join(".");
         const titleLabel = `Substep ${displayPath}:`;
 
@@ -1370,6 +1415,8 @@ Editing logic START
         const parentStep = getStepAtPath(all_step, parentPath);
         const siblingArray = parentStep ? parentStep.children : all_step;
         const isLastSibling = currentIndex === siblingArray.length - 1;
+        const parentPathOfSubstep = currentPath.slice(0, -1);
+        const indexInParent = currentPath[currentPath.length - 1];
 
         promotedElements.push(
           <Fragment key={`promoted-${currentPath.join("-")}`}>
@@ -1380,15 +1427,17 @@ Editing logic START
             >
               <PlusbetweenSteps
                 key={`external-promoted-plus-top-${currentPath.join("-")}`}
+                tooltip={`Insert step ${parentPathOfSubstep
+                  .map((i) => i + 1)
+                  .join(".")}.${indexInParent + 1}`}
                 onClick={() => {
-                  const parentPathOfSubstep = currentPath.slice(0, -1);
-                  const indexInParent = currentPath[currentPath.length - 1];
                   insertSubStepAtPathFromSelected(
                     parentPathOfSubstep,
                     indexInParent,
                     true
                   );
                 }}
+                style={{ width: `100%` }}
               />
             </div>
 
@@ -1434,49 +1483,130 @@ Editing logic START
                 </div>
                 <div className="step-title">
                   <div className="step-title-inner">{titleLabel}</div>
-                  <div className="icon-container-start-right">
-                    <div className="leftSide-Icons">
-                      <The_muskeltiers
-                        onEditStep={() =>
-                          handleStartEditing(currentPath, step.content)
-                        }
-                        onSplitStep={HandleOnSplitStep(currentPath)}
-                        selected={editingPath}
-                      />
-                    </div>
-                    <div className="trash">
-                      <CustomLightbulb
-                        number={getNumberForStep(step)}
-                        fill={getNumberForStep(step) ? "yellow" : "none"}
-                        color={getStepBoxTextColor(step)}
-                        onGiveHint={() =>
-                          handleGiveHint(
-                            step,
-                            currentPath,
-                            getNumberForStep(step),
-                            step.status.can_be_further_divided === "can" &&
-                              step.status.correctness === "correct"
-                          )
-                        }
-                      />{" "}
-                      <Trash
-                        onClick={() => {
-                          const key = `animatedSubsteps-${parentPath.join(
-                            "-"
-                          )}`;
-                          const currentIndex = getInitialIndex(key);
-                          const lastLabel = getLastLabelNumber(titleLabel);
-
-                          if (currentIndex >= lastLabel)
-                            setInitialIndex(key, currentIndex - 1);
-                          handleRemoveStep(step.id);
+                  <div
+                    className={`icon-container-start-right ${
+                      burgerIcon ? "one" : ""
+                    }`}
+                  >
+                    {burgerIcon ? (
+                      <div
+                        ref={(el) => {
+                          wrapperRefs.current[step.id] = el;
                         }}
-                        cursor="pointer"
-                        strokeWidth={"1.2"}
-                        color={getStepBoxTextColor(step)}
-                        className="trash-icon"
-                      />
-                    </div>
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                        }}
+                      >
+                        <AlignJustify
+                          className="burger-icon-startRight"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenBurgerFor((of) =>
+                              of === step.id ? null : step.id
+                            );
+                          }}
+                        />
+
+                        {openBurgerFor === step.id && (
+                          <div
+                            className="burger-dropdown"
+                            onClick={() => {
+                              setOpenBurgerFor(null);
+                            }}
+                          >
+                            <div className="container-vertical-muskultiers">
+                              <The_muskeltiers
+                                onEditStep={() =>
+                                  handleStartEditing(currentPath, step.content)
+                                }
+                                vertical={burgerIcon ?? true}
+                                onSplitStep={HandleOnSplitStep(currentPath)}
+                                selected={editingPath}
+                              />
+                            </div>
+                            <CustomLightbulb
+                              number={getNumberForStep(step)}
+                              fill={getNumberForStep(step) ? "yellow" : "none"}
+                              color={getStepBoxTextColor(step)}
+                              onGiveHint={() =>
+                                handleGiveHint(
+                                  step,
+                                  currentPath,
+                                  getNumberForStep(step),
+                                  step.status.can_be_further_divided ===
+                                    "can" &&
+                                    step.status.correctness === "correct"
+                                )
+                              }
+                            />
+                            <Trash
+                              onClick={() => {
+                                const key = `animatedSubsteps-${parentPath.join(
+                                  "-"
+                                )}`;
+                                const currentIndex = getInitialIndex(key);
+                                const lastLabel =
+                                  getLastLabelNumber(titleLabel);
+
+                                if (currentIndex >= lastLabel)
+                                  setInitialIndex(key, currentIndex - 1);
+                                handleRemoveStep(step.id);
+                              }}
+                              cursor="pointer"
+                              strokeWidth={"1.2"}
+                              color={getStepBoxTextColor(step)}
+                              className="trash-icon"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="leftSide-Icons">
+                          <The_muskeltiers
+                            onEditStep={() =>
+                              handleStartEditing(currentPath, step.content)
+                            }
+                            onSplitStep={HandleOnSplitStep(currentPath)}
+                            selected={editingPath}
+                          />
+                        </div>
+                        <div className="trash">
+                          <CustomLightbulb
+                            number={getNumberForStep(step)}
+                            fill={getNumberForStep(step) ? "yellow" : "none"}
+                            color={getStepBoxTextColor(step)}
+                            onGiveHint={() =>
+                              handleGiveHint(
+                                step,
+                                currentPath,
+                                getNumberForStep(step),
+                                step.status.can_be_further_divided === "can" &&
+                                  step.status.correctness === "correct"
+                              )
+                            }
+                          />
+                          <Trash
+                            onClick={() => {
+                              const key = `animatedSubsteps-${parentPath.join(
+                                "-"
+                              )}`;
+                              const currentIndex = getInitialIndex(key);
+                              const lastLabel = getLastLabelNumber(titleLabel);
+
+                              if (currentIndex >= lastLabel)
+                                setInitialIndex(key, currentIndex - 1);
+                              handleRemoveStep(step.id);
+                            }}
+                            cursor="pointer"
+                            strokeWidth={"1.2"}
+                            color={getStepBoxTextColor(step)}
+                            className="trash-icon"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -2184,6 +2314,29 @@ Editing logic START
         );
       }
 
+      // ─── INSERT the “plus” immediately *after* the promoted step with conditions ───
+      const parent = currentPath.slice(0, -1);
+      const insertionIndex = currentPath[currentPath.length - 1] + 1;
+
+      if (step.selected && !(index === 0 || !steps[index - 1].selected)) {
+        promotedElements.push(
+          <div
+            className="promotedPlus"
+            key={`promoted-plus-after-${currentPath.join("-")}`}
+          >
+            <PlusbetweenSteps
+              tooltip={`Insert step ${parent.map((i) => i + 1).join(".")}.${
+                insertionIndex + 1
+              }`}
+              onClick={() =>
+                insertSubStepAtPathFromSelected(parent, insertionIndex, true)
+              }
+              style={{ width: `100%` }}
+            />
+          </div>
+        );
+      }
+
       // Recurse
       if (step.children && step.children.length > 0) {
         promotedElements = promotedElements.concat(
@@ -2191,25 +2344,6 @@ Editing logic START
         );
       }
     });
-
-    if (promotedElements.length > 0 && lastPromotedPath !== null) {
-      const safePath: number[] = lastPromotedPath; // Now safePath is guaranteed to be number[]
-      const parentPath = safePath.slice(0, -1);
-      const index = safePath[safePath.length - 1] + 1;
-
-      promotedElements.push(
-        <div
-          className="promotedPlus"
-          key={`final-promoted-plus-${parentPath.join("-")}`}
-        >
-          <PlusbetweenSteps
-            onClick={() => {
-              insertSubStepAtPathFromSelected(parentPath, index, true);
-            }}
-          />
-        </div>
-      );
-    }
 
     return promotedElements;
   }
@@ -2572,6 +2706,43 @@ Editing logic START
         });
     }, [currentIndex, substeps]);
 
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      let startY: number | null = null;
+      const threshold = 30;
+
+      function onTouchStart(e: TouchEvent) {
+        startY = e.touches[0].clientY;
+      }
+      function onTouchMove(e: TouchEvent) {
+        if (startY === null) return;
+        e.preventDefault();
+        const currentY = e.touches[0].clientY;
+        const delta = startY - currentY;
+        if (Math.abs(delta) > threshold) {
+          scrollStep(delta > 0 ? 1 : -1);
+          startY = currentY;
+        }
+      }
+      function onTouchEnd() {
+        startY = null;
+      }
+
+      container.addEventListener("touchstart", onTouchStart, {
+        passive: false,
+      });
+      container.addEventListener("touchmove", onTouchMove, { passive: false });
+      container.addEventListener("touchend", onTouchEnd);
+
+      return () => {
+        container.removeEventListener("touchstart", onTouchStart);
+        container.removeEventListener("touchmove", onTouchMove);
+        container.removeEventListener("touchend", onTouchEnd);
+      };
+    }, [currentIndex, substeps]);
+
     const getZIndex = (i: number): number => {
       if (i === currentIndex) return 2;
       return i < currentIndex ? 1 : 3;
@@ -2770,6 +2941,9 @@ Editing logic START
             top: getBlankTop(currentIndex - 1) + cardHeight + 3,
             margin: "0",
             opacity: "1",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
           }}
           plus={false}
         />
@@ -2785,6 +2959,9 @@ Editing logic START
             margin: "0",
             opacity: "1",
             border: "0",
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
           }}
           plus={false}
         />
@@ -2807,6 +2984,7 @@ Biggest render Tree ever recored START
     if (parentPath.length === 0) {
       elements.push(
         <PlusbetweenSteps
+          tooltip="Insert step 1"
           key={`plus-top-0`}
           onClick={() => insertTopLevelStepAt(0)}
         />
@@ -2814,6 +2992,7 @@ Biggest render Tree ever recored START
     } else {
       elements.push(
         <PlusbetweenSteps
+          tooltip="Insert step ${parentPath + 1}"
           key={`${parentPath.join("-")}-plus-0`}
           onClick={() => insertSubStepAtPath(parentPath, 0, false)}
         />
@@ -2869,39 +3048,128 @@ Biggest render Tree ever recored START
           >
             <div className="step-title">
               <div className="step-title-inner">{titleLabel}</div>
-              <div className="icon-container-start-right">
-                <div className="leftSide-Icons">
-                  <The_muskeltiers
-                    onEditStep={() =>
-                      handleStartEditing(currentPath, step.content)
-                    }
-                    onSplitStep={HandleOnSplitStep(currentPath)}
-                    selected={editingPath}
-                  />
-                </div>
-                <div className="trash">
-                  <CustomLightbulb
-                    number={hintNumber}
-                    fill={hintNumber ? "yellow" : "none"}
-                    color={getStepBoxTextColor(step)}
-                    onGiveHint={() =>
-                      handleGiveHint(
-                        step,
-                        currentPath,
-                        hintNumber,
-                        step.status.can_be_further_divided === "can" &&
-                          step.status.correctness === "correct"
-                      )
-                    }
-                  />{" "}
-                  <Trash
-                    onClick={() => handleRemoveStep(step.id)}
-                    cursor="pointer"
-                    strokeWidth={"1.2"}
-                    color={getStepBoxTextColor(step)}
-                    className="trash-icon"
-                  />
-                </div>
+              <div
+                className={`icon-container-start-right ${
+                  burgerIcon ? "one" : ""
+                }`}
+              >
+                {burgerIcon ? (
+                  <div
+                    ref={(el) => {
+                      wrapperRefs.current[step.id] = el;
+                    }}
+                    style={{
+                      position: "relative",
+                      display: "inline-block",
+                    }}
+                  >
+                    <AlignJustify
+                      className="burger-icon-startRight"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenBurgerFor((of) =>
+                          of === step.id ? null : step.id
+                        );
+                      }}
+                    />
+
+                    {openBurgerFor === step.id && (
+                      <div
+                        className="burger-dropdown"
+                        onClick={() => {
+                          setOpenBurgerFor(null);
+                        }}
+                      >
+                        <div className="container-vertical-muskultiers">
+                          <The_muskeltiers
+                            onEditStep={() =>
+                              handleStartEditing(currentPath, step.content)
+                            }
+                            vertical={burgerIcon ?? true}
+                            onSplitStep={HandleOnSplitStep(currentPath)}
+                            selected={editingPath}
+                          />
+                        </div>
+                        <CustomLightbulb
+                          number={getNumberForStep(step)}
+                          fill={getNumberForStep(step) ? "yellow" : "none"}
+                          color={getStepBoxTextColor(step)}
+                          onGiveHint={() =>
+                            handleGiveHint(
+                              step,
+                              currentPath,
+                              getNumberForStep(step),
+                              step.status.can_be_further_divided === "can" &&
+                                step.status.correctness === "correct"
+                            )
+                          }
+                        />
+                        <Trash
+                          onClick={() => {
+                            const key = `animatedSubsteps-${parentPath.join(
+                              "-"
+                            )}`;
+                            const currentIndex = getInitialIndex(key);
+                            const lastLabel = getLastLabelNumber(titleLabel);
+
+                            if (currentIndex >= lastLabel)
+                              setInitialIndex(key, currentIndex - 1);
+                            handleRemoveStep(step.id);
+                          }}
+                          cursor="pointer"
+                          strokeWidth={"1.2"}
+                          color={getStepBoxTextColor(step)}
+                          className="trash-icon"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="leftSide-Icons">
+                      <The_muskeltiers
+                        onEditStep={() =>
+                          handleStartEditing(currentPath, step.content)
+                        }
+                        onSplitStep={HandleOnSplitStep(currentPath)}
+                        selected={editingPath}
+                      />
+                    </div>
+                    <div className="trash">
+                      <CustomLightbulb
+                        number={hintNumber}
+                        fill={hintNumber ? "yellow" : "none"}
+                        color={getStepBoxTextColor(step)}
+                        onGiveHint={() =>
+                          handleGiveHint(
+                            step,
+                            currentPath,
+                            hintNumber,
+                            step.status.can_be_further_divided === "can" &&
+                              step.status.correctness === "correct"
+                          )
+                        }
+                      />
+                      <Trash
+                        onClick={() => {
+                          const key = `animatedSubsteps-${parentPath.join(
+                            "-"
+                          )}`;
+                          const currentIndex = getInitialIndex(key);
+                          const lastLabel = getLastLabelNumber(titleLabel);
+
+                          if (currentIndex >= lastLabel)
+                            setInitialIndex(key, currentIndex - 1);
+                          handleRemoveStep(step.id);
+                        }}
+                        cursor="pointer"
+                        strokeWidth={"1.2"}
+                        color={getStepBoxTextColor(step)}
+                        className="trash-icon"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -3447,10 +3715,14 @@ Biggest render Tree ever recored START
           >
             {parentPath.length === 0 ? (
               <PlusbetweenSteps
+                tooltip={`Insert step ${index + 2}`}
                 onClick={() => insertTopLevelStepAt(index + 1)}
               />
             ) : (
               <PlusbetweenSteps
+                tooltip={`Insert step ${parentPath
+                  .map((i) => i + 1)
+                  .join(".")}.${index + 2}`}
                 onClick={() =>
                   insertSubStepAtPath(parentPath, index + 1, false)
                 }
@@ -3476,6 +3748,7 @@ Biggest render Tree ever recored START
           elements.push(...promoted);
           elements.push(
             <PlusbetweenSteps
+              tooltip={`Insert step ${currentPath[0] + 1}`}
               key={`external-promoted-plus-after-${currentPath.join("-")}`}
               onClick={() => insertTopLevelStepAt(currentPath[0] + 1)}
             />
@@ -3492,7 +3765,7 @@ Biggest render Tree ever recored END
 ------------------------------------ */
 
   return (
-    <div className="Right-Side-main">
+    <div className="Right-Side-main" ref={stepBoxRef}>
       {hoveredStepId && <div className="hovered-step-indicator"></div>}
       <div className="right-sidecontent-main">
         <div className="right-header-main">

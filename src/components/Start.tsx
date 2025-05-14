@@ -405,7 +405,6 @@ const Start: React.FC = () => {
         >
           {startRightComponent}
         </div>
-        <div className="divider" />
       </div>
     </div>
   );

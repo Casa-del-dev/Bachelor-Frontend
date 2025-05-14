@@ -121,15 +121,19 @@ body.dark-mode {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   width: 100%;
   gap: 1vw;
+  overflow: hidden;
 }
 
 .step-title-inner {
   display: inline-block;
   white-space: nowrap;
   align-items: start;
+  overflow: hidden;
+  flex-shrink: 1;
+  text-overflow: ellipsis;
 }
 
 .button-container {
@@ -380,6 +384,11 @@ Textarea for starting prompt END
   width: 100%;
   justify-content: space-between;
   flex: 1;
+  flex-shrink: 0;
+}
+
+.icon-container-start-right.one {
+  justify-content: flex-end;
 }
 
 .step-box:hover .icon-container-start-right {
@@ -1091,3 +1100,69 @@ Fade In Tree END
 .highlighted-step {
   box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.8) !important;
 }
+
+/* ---------------------------------------
+No space icons layout START
+--------------------------------------- */
+
+.burger-dropdown {
+  position: absolute;
+  top: 24px;
+  right: -6px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* for Safari */
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  overflow: hidden;
+  max-height: 0;
+
+  animation: dropDownLittleLayout 1s ease-out forwards;
+  transform-origin: top right;
+}
+
+.container-vertical-muskultiers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.burger-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.burger-item:hover {
+  background: var(--dropdown-hover-bg);
+}
+
+.burger-icon-startRight {
+  cursor: pointer;
+}
+
+.burger-icon-startRight:hover {
+  color: lightgrey;
+}
+
+@keyframes dropDownLittleLayout {
+  from {
+    max-height: 0;
+  }
+  to {
+    max-height: 100vh;
+  }
+}
+
+/* ---------------------------------------
+No space icons layout END
+--------------------------------------- */

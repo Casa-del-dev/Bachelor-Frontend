@@ -5,6 +5,11 @@
   justify-content: center;
 }
 
+.container-for-triplets.vertical {
+  flex-direction: column;
+  gap: 4px;
+}
+
 .Filetext-tree {
   display: flex;
   align-items: center;
