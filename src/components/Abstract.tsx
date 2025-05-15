@@ -233,115 +233,150 @@ const Abstract: React.FC = ({}) => {
   //Zoom in / zoom out
   useEffect(() => {
     const container = mapContainerRef.current;
-    if (!container) return;
-    const content = zoomContentRef.current!;
+    const content = zoomContentRef.current;
+    if (!container || !content) return;
+
+    // reusable RAF update
     let rafId: number | null = null;
-
-    // drag and pinch state
-    let isDragging = false;
-    const pointers = new Map<number, { x: number; y: number }>();
-    let lastDist: number | null = null;
-    let initialTransform: Transform = { ...transformRef.current };
-
-    container.style.touchAction = "none";
-    container.style.userSelect = "none";
-    content.style.willChange = "transform";
-
-    const applyTransform = () => {
+    const updateTransform = () => {
       const { x, y, scale } = transformRef.current;
-      content.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+      content.style.transform = `translate3d(${x}px,${y}px,0) scale(${scale})`;
       rafId = null;
     };
-    const scheduleTransformUpdate = () => {
-      if (rafId === null) rafId = requestAnimationFrame(applyTransform);
+    const scheduleUpdate = () => {
+      if (rafId == null) rafId = requestAnimationFrame(updateTransform);
     };
 
-    const getDistance = () => {
-      const [p1, p2] = Array.from(pointers.values());
-      return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+    // state
+    const pointers = new Map<number, { x: number; y: number }>();
+    let isDragging = false;
+    let lastDist: number | null = null;
+    let lastVel = { x: 0, y: 0 };
+    let pinchRect: DOMRect | undefined;
+
+    // helpers
+    const clampScale = (s: number) => clamp(s, MIN_ZOOM, MAX_ZOOM);
+    const getPts = () => Array.from(pointers.values());
+    const distance = () => {
+      const [p1, p2] = getPts();
+      return p1 && p2 ? Math.hypot(p1.x - p2.x, p1.y - p2.y) : 0;
     };
-    const getMidpoint = () => {
-      const [p1, p2] = Array.from(pointers.values());
-      return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    const midpoint = () => {
+      const [p1, p2] = getPts();
+      return p1 && p2
+        ? { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }
+        : { x: 0, y: 0 };
     };
 
-    const onPointerDown = (e: PointerEvent) => {
+    // pointer down
+    const onDown = (e: PointerEvent) => {
       container.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pointers.size === 1) {
         isDragging = true;
       } else if (pointers.size === 2) {
         isDragging = false;
-        lastDist = getDistance();
-        initialTransform = { ...transformRef.current };
+        pinchRect = container.getBoundingClientRect();
+        lastDist = distance();
       }
     };
 
-    const onPointerMove = (e: PointerEvent) => {
+    // pointer move
+    const DRAG_SPEED = 0.6;
+    const FRICTION = 0.92;
+    const STOP_EPS = 0.5;
+
+    const onMove = (e: PointerEvent) => {
       if (!pointers.has(e.pointerId)) return;
+      // copy old for velocity
+      const prev = pointers.get(e.pointerId)!;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-      if (pointers.size === 2 && lastDist !== null) {
-        // pinch
-        const newDist = getDistance();
-        const scaleFactor = newDist / lastDist;
-        const newScale = clamp(
-          initialTransform.scale * scaleFactor,
-          MIN_ZOOM,
-          MAX_ZOOM
-        );
-        const midpoint = getMidpoint();
-        const rect = container.getBoundingClientRect();
-        const mx = midpoint.x - rect.left;
-        const my = midpoint.y - rect.top;
-        const dx =
-          mx - (mx - initialTransform.x) * (newScale / initialTransform.scale);
-        const dy =
-          my - (my - initialTransform.y) * (newScale / initialTransform.scale);
-        transformRef.current = { scale: newScale, x: dx, y: dy };
-        scheduleTransformUpdate();
-      } else if (isDragging && pointers.size === 1) {
-        // pan
-        const entry = pointers.entries().next().value;
-        if (!entry) return;
-        const [id, prev] = entry;
+      // PINCH
+      if (pointers.size === 2 && lastDist != null && pinchRect) {
+        const newDist = distance();
+        const rawFactor = newDist / lastDist;
+        const prevTransform = transformRef.current;
+        const rawScale = clampScale(prevTransform.scale * rawFactor);
+
+        // zoom around midpoint
+        const m = midpoint();
+        const mx = m.x - pinchRect.left;
+        const my = m.y - pinchRect.top;
+
+        const rawX =
+          mx - (mx - prevTransform.x) * (rawScale / prevTransform.scale);
+        const rawY =
+          my - (my - prevTransform.y) * (rawScale / prevTransform.scale);
+
+        // apply immediately on scale, but smooth pan a little
+        transformRef.current.scale = rawScale;
+        transformRef.current.x = rawX;
+        transformRef.current.y = rawY;
+
+        scheduleUpdate();
+        lastDist = newDist;
+      }
+      // PAN
+      else if (isDragging && pointers.size === 1) {
         const dx = e.clientX - prev.x;
         const dy = e.clientY - prev.y;
-        pointers.set(id, { x: e.clientX, y: e.clientY });
-        transformRef.current.x += dx;
-        transformRef.current.y += dy;
-        scheduleTransformUpdate();
+        lastVel = { x: dx * DRAG_SPEED, y: dy * DRAG_SPEED };
+        transformRef.current.x += lastVel.x;
+        transformRef.current.y += lastVel.y;
+        scheduleUpdate();
       }
     };
 
-    const onPointerUp = (e: PointerEvent) => {
+    // pointer up → inertia if it was a drag
+    const onUp = (e: PointerEvent) => {
       container.releasePointerCapture(e.pointerId);
       pointers.delete(e.pointerId);
-      if (pointers.size < 2) {
-        lastDist = null;
-        initialTransform = { ...transformRef.current };
+      if (pointers.size === 0 && !isDragging) {
+        // start inertia
+        const step = () => {
+          lastVel.x *= FRICTION;
+          lastVel.y *= FRICTION;
+          transformRef.current.x += lastVel.x;
+          transformRef.current.y += lastVel.y;
+          scheduleUpdate();
+          if (Math.hypot(lastVel.x, lastVel.y) > STOP_EPS) {
+            rafId = requestAnimationFrame(step);
+          } else {
+            setTransform({ ...transformRef.current });
+          }
+        };
+        rafId = requestAnimationFrame(step);
       }
-      if (pointers.size === 0) {
-        isDragging = false;
-        setTransform({ ...transformRef.current });
+      // if still one pointer, switch back to dragging
+      else if (pointers.size === 1) {
+        isDragging = true;
       }
+      // reset pinch state
+      lastDist = null;
     };
 
-    container.addEventListener("pointerdown", onPointerDown);
-    container.addEventListener("pointermove", onPointerMove, {
-      passive: false,
-    });
-    container.addEventListener("pointerup", onPointerUp);
-    container.addEventListener("pointerleave", onPointerUp);
-    container.addEventListener("pointercancel", onPointerUp);
+    // attach
+    container.addEventListener("pointerdown", onDown);
+    container.addEventListener("pointermove", onMove, { passive: false });
+    container.addEventListener("pointerup", onUp);
+    container.addEventListener("pointercancel", onUp);
+    container.addEventListener("pointerleave", onUp);
 
     return () => {
-      container.removeEventListener("pointerdown", onPointerDown);
-      container.removeEventListener("pointermove", onPointerMove);
-      container.removeEventListener("pointerup", onPointerUp);
-      container.removeEventListener("pointerleave", onPointerUp);
-      container.removeEventListener("pointercancel", onPointerUp);
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      [
+        "pointerdown",
+        "pointermove",
+        "pointerup",
+        "pointercancel",
+        "pointerleave",
+      ].forEach((ev) =>
+        container.removeEventListener(
+          ev as any,
+          ev === "pointermove" ? onMove : onUp
+        )
+      );
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -356,7 +391,7 @@ const Abstract: React.FC = ({}) => {
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!container) return;
-
+    const DRAG_SPEED = 0.6;
     const content = zoomContentRef.current!;
     let dragging = false;
     let lastX = 0;
@@ -398,8 +433,8 @@ const Abstract: React.FC = ({}) => {
       lastX = e.clientX;
       lastY = e.clientY;
 
-      transformRef.current.x += dx;
-      transformRef.current.y += dy;
+      transformRef.current.x += dx * DRAG_SPEED;
+      transformRef.current.y += dy * DRAG_SPEED;
       scheduleTransformUpdate();
     };
 
@@ -411,7 +446,6 @@ const Abstract: React.FC = ({}) => {
     };
 
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey) return;
       e.preventDefault();
 
       const rect = container.getBoundingClientRect();
