@@ -52,7 +52,7 @@ body.dark-mode {
   position: fixed;
   top: var(--tooltip-y);
   left: var(--tooltip-x);
-  transform: translate(10px, 10px);
+  transform: translate(15px, 10px);
   background: var(--dropdown-border);
   color: var(--text-color);
   padding: 4px 8px;

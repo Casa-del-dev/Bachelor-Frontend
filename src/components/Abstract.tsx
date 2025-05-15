@@ -33,6 +33,17 @@ export interface Step {
 }
 
 const Abstract: React.FC = ({}) => {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const zoomContentRef = useRef<HTMLDivElement | null>(null);
+
+  const [zoom, setZoom] = useState(1);
+
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
+  const zoomRef = useRef(zoom);
+
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 3;
+
   const problemListItems = [
     "Problem 1",
     "Problem 2",
@@ -206,6 +217,69 @@ const Abstract: React.FC = ({}) => {
       setTimeout(() => setIsDropdownOpen(true), 0);
     }
   };
+
+  // wheel handler for smooth ctrl-zoom on mapContainerRef
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(
+    () => {
+      const sc = mapContainerRef.current;
+      if (!sc) return;
+      // ensure the container can actually scroll
+      sc.style.overflow = "auto";
+      sc.setAttribute("tabindex", "0");
+
+      const onWheel = (e: WheelEvent) => {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+
+        // 1) Dimensions of the viewport
+        const width = sc.clientWidth;
+        const height = sc.clientHeight;
+        const scrollX = sc.scrollLeft;
+        const scrollY = sc.scrollTop;
+
+        // 2) Content-space coordinates of the *visible* center
+        const contentCenterX = scrollX + width / 2;
+        const contentCenterY = scrollY + height / 2;
+
+        // 3) Compute the new zoom level
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        const newZoom = Math.min(
+          Math.max(zoomRef.current * factor, MIN_ZOOM),
+          MAX_ZOOM
+        );
+        if (newZoom === zoomRef.current) return;
+
+        // 4) How that same content-point scales
+        const scale = newZoom / zoomRef.current;
+        const newContentX = contentCenterX * scale;
+        const newContentY = contentCenterY * scale;
+
+        // 5) Scroll so that this content-point remains in the viewport center
+        const newScrollX = newContentX - width / 2;
+        const newScrollY = newContentY - height / 2;
+
+        // 6) Update state and perform the scroll
+        setZoom(newZoom);
+        // pivot around that same center
+        setOrigin({ x: contentCenterX, y: contentCenterY });
+
+        requestAnimationFrame(() =>
+          sc.scrollTo({ left: newScrollX, top: newScrollY, behavior: "auto" })
+        );
+      };
+
+      sc.addEventListener("wheel", onWheel, { passive: false });
+      return () => sc.removeEventListener("wheel", onWheel);
+    },
+    [
+      /* no deps so we attach once */
+    ]
+  );
+
   /* ---------------------------------------
   render Tree function START
 --------------------------------------- */
@@ -347,21 +421,14 @@ const Abstract: React.FC = ({}) => {
             className="header-left-abstraction"
             onClick={() => console.log("Clicked Abstraction Search")}
           >
-            <div className="container-icons-ab">
+            <div
+              className="container-icons-ab"
+              onClick={handleToggleAbstraction}
+            >
               {toggleAbstraction === "true" ? (
-                <X
-                  className="X-abstract"
-                  style={{ cursor: "pointer" }}
-                  strokeWidth="3px"
-                  onClick={handleToggleAbstraction}
-                />
+                <X className="X-abstract" strokeWidth="3px" />
               ) : (
-                <Check
-                  className="Check-abstract"
-                  onClick={handleToggleAbstraction}
-                  style={{ cursor: "pointer" }}
-                  strokeWidth="3px"
-                />
+                <Check className="Check-abstract" strokeWidth="3px" />
               )}
             </div>
             <div className="left-header-container-ab-notIcon">
@@ -398,7 +465,18 @@ const Abstract: React.FC = ({}) => {
           </div>
         </div>
       </div>
-      <div className="map-abstract-container">{renderTree()}</div>
+      <div className="map-abstract-container" ref={mapContainerRef}>
+        <div
+          ref={zoomContentRef}
+          className="zoom-content"
+          style={{
+            transform: `scale(${zoom})`,
+            transformOrigin: `${origin.x}px ${origin.y}px`,
+          }}
+        >
+          {renderTree()}
+        </div>
+      </div>
     </div>
   );
 };
