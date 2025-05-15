@@ -60,6 +60,8 @@ const Abstract: React.FC = ({}) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [shouldRenderDropdown, setShouldRenderDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const rightAbstractRef = useRef<HTMLDivElement>(null);
 
   const isAuthenticated = useAuth();
 
@@ -228,7 +230,6 @@ const Abstract: React.FC = ({}) => {
       const sc = mapContainerRef.current;
       if (!sc) return;
       // ensure the container can actually scroll
-      sc.style.overflow = "auto";
       sc.setAttribute("tabindex", "0");
 
       const onWheel = (e: WheelEvent) => {
@@ -280,6 +281,67 @@ const Abstract: React.FC = ({}) => {
     ]
   );
 
+  //when mouse leftclick down move div
+  useEffect(() => {
+    const sc = mainContainerRef.current;
+    const header = headerRef.current;
+    const rightC = rightAbstractRef.current;
+    if (!sc || !header || !rightC) return;
+
+    let isPressing = false;
+    let hasDragged = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollStartX = 0;
+    let scrollStartY = 0;
+
+    const onPointerDown = (e: PointerEvent) => {
+      // if pointerdown hit header *or* right-container, bail out
+      const tgt = e.target as Node;
+      if (header.contains(tgt) || rightC.contains(tgt)) return;
+
+      isPressing = true;
+      hasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollStartX = sc.scrollLeft;
+      scrollStartY = sc.scrollTop;
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isPressing) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!hasDragged && (dx !== 0 || dy !== 0)) {
+        hasDragged = true;
+        sc.classList.add("grabbing");
+      }
+      if (hasDragged) {
+        sc.scrollLeft = scrollStartX - dx;
+        sc.scrollTop = scrollStartY - dy;
+      }
+    };
+
+    const onPointerUp = (_: PointerEvent) => {
+      if (hasDragged) sc.classList.remove("grabbing");
+      isPressing = false;
+      hasDragged = false;
+    };
+
+    sc.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("pointercancel", onPointerUp);
+
+    return () => {
+      sc.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("pointerup", onPointerUp);
+      document.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, []);
+
   /* ---------------------------------------
   render Tree function START
 --------------------------------------- */
@@ -311,9 +373,55 @@ const Abstract: React.FC = ({}) => {
   const STEP_BOX_WIDTH_PX = stepBoxWidth;
   const CHILD_EXTRA_MARGIN_PX = 60;
 
+  function getPageZoom(): number {
+    return Math.round(window.devicePixelRatio * 100);
+  }
+
+  /**
+   * Linearly interpolate based on predefined points.
+   */
+  function interpolateZoomEffect(percent: number): number {
+    const points = [
+      { percent: 25, value: 4 },
+      { percent: 33, value: 2 },
+      { percent: 50, value: 0 },
+      { percent: 66, value: -1 },
+      { percent: 75, value: -1.3 },
+      { percent: 80, value: -1.4 },
+      { percent: 90, value: -1.8 },
+      { percent: 100, value: 0 },
+      { percent: 110, value: -0.4 },
+      { percent: 125, value: -0.8 },
+      { percent: 150, value: 0 },
+      { percent: 175, value: -0.5 },
+      { percent: 200, value: 0 },
+      { percent: 250, value: 0 },
+    ];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      if (percent >= p1.percent && percent <= p2.percent) {
+        const t = (percent - p1.percent) / (p2.percent - p1.percent);
+        return p1.value + t * (p2.value - p1.value);
+      }
+    }
+
+    // Fallback: clamp to nearest boundary
+    if (percent < points[0].percent) return points[0].value;
+    if (percent > points[points.length - 1].percent)
+      return points[points.length - 1].value;
+
+    return 0; // Should not reach here
+  }
+
   function calculateTreeWidth(node: Step): number {
+    const zoomPercent = getPageZoom();
+    const modifier = interpolateZoomEffect(zoomPercent);
     if (node.children.length === 0) {
-      return STEP_BOX_WIDTH_PX;
+      console.log("modifier", modifier, "zoomPercent", zoomPercent);
+
+      return STEP_BOX_WIDTH_PX + modifier;
     }
 
     const childWidths = node.children.map(calculateTreeWidth);
@@ -330,7 +438,9 @@ const Abstract: React.FC = ({}) => {
   function renderNode(node: Step, indexPath: string) {
     const nodeWidth = calculateTreeWidth(node);
 
-    const connectorOffset = (nodeWidth - STEP_BOX_WIDTH_PX + 60) / 2;
+    const connectorOffset = Math.round(
+      (nodeWidth - STEP_BOX_WIDTH_PX + 60) / 2
+    );
     const offsetWithUnit = `${connectorOffset}px`;
 
     const childCount = node.children.length;
@@ -341,14 +451,15 @@ const Abstract: React.FC = ({}) => {
       const leftChildWidth = calculateTreeWidth(node.children[0]);
       const rightChildWidth = calculateTreeWidth(node.children[childCount - 1]);
 
-      const branchLineLeftOffset = leftChildWidth / 2;
+      const branchLineLeftOffset = Math.ceil(leftChildWidth / 2);
+      const branchLineRightOffset = Math.ceil(rightChildWidth / 2);
+
       const branchLineWidth =
         nodeWidth - leftChildWidth / 2 - rightChildWidth / 2;
-
       branchLineStyle = {
         position: "absolute",
         left: `${branchLineLeftOffset}px`,
-        right: `${rightChildWidth / 2}px`,
+        right: `${branchLineRightOffset}px`,
         width: `${branchLineWidth}px`,
       };
     }
@@ -407,7 +518,7 @@ const Abstract: React.FC = ({}) => {
         animateToRight ? "slide-right" : ""
       }`}
     >
-      <div className="right-abstract-container">
+      <div ref={rightAbstractRef} className="right-abstract-container">
         <div
           className="divider abstract"
           onDoubleClick={() => {
@@ -415,7 +526,7 @@ const Abstract: React.FC = ({}) => {
           }}
         />
       </div>
-      <div className="header-abstract">
+      <div ref={headerRef} className="header-abstract">
         <div className="header-left-ab-container">
           <div
             className="header-left-abstraction"
