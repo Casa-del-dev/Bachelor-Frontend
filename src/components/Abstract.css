@@ -6,6 +6,7 @@
   position: relative;
   align-items: flex-start;
   justify-content: flex-start;
+  overflow: hidden;
 }
 
 .main-container-abstract.grabbing {
@@ -37,7 +38,7 @@
 }
 
 .zoom-content {
-  transition: transform 0.2s ease;
+  transition: transform 0.1s ease;
   transform-origin: 0 0;
   will-change: transform;
 }
