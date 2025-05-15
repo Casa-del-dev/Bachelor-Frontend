@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { Search, X, Check, Scale } from "lucide-react";
+import { Search, X, Check } from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 export interface Step {
