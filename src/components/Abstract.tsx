@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { Search, X, Check } from "lucide-react";
+import { Search, X, Check, Scale } from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 export interface Step {
@@ -239,8 +239,9 @@ const Abstract: React.FC = ({}) => {
     // reusable RAF update
     let rafId: number | null = null;
     const updateTransform = () => {
-      const { x, y, scale } = transformRef.current;
-      content.style.transform = `translate3d(${x}px,${y}px,0) scale(${scale})`;
+      const { x, y } = transformRef.current;
+      // apply translation only:
+      zoomContentRef.current!.style.transform = `translate3d(${x}px,${y}px,0)`;
       rafId = null;
     };
     const scheduleUpdate = () => {
@@ -380,12 +381,25 @@ const Abstract: React.FC = ({}) => {
     };
   }, []);
 
+  useEffect(() => {
+    const el = zoomContentRef.current;
+    if (el) {
+      el.style.setProperty("--scale", transform.scale.toString());
+    }
+  }, [transform.scale]);
+
   //when mouse leftclick down move div grab
   // Mirror React state in a ref
   const transformRef = useRef<Transform>(transform);
   useEffect(() => {
     transformRef.current = transform;
   }, [transform]);
+
+  //so the text is focus after zoom in
+  useEffect(() => {
+    // every time your scale changes, fire a fake resize
+    window.dispatchEvent(new Event("resize"));
+  }, [transform.scale]);
 
   //One big pan+zoom effect—bind once, direct DOM writes
   useEffect(() => {
@@ -614,8 +628,10 @@ const Abstract: React.FC = ({}) => {
       >
         <div className="step-box-ab">
           <div className="tree-node-ab">
-            <strong>Step {indexPath}</strong>
-            <div>{node.content || node.prompt}</div>
+            <div className="tree-node-text">
+              <strong>Step {indexPath}</strong>
+              <div>{node.content || node.prompt}</div>
+            </div>
           </div>
         </div>
 
@@ -727,7 +743,7 @@ const Abstract: React.FC = ({}) => {
           ref={zoomContentRef}
           className="zoom-content"
           style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+            transform: `translate(${transform.x}px, ${transform.y}px) )`,
           }}
         >
           {renderTree()}

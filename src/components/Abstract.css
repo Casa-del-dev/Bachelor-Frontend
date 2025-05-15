@@ -40,7 +40,8 @@
 .zoom-content {
   transition: transform 0.1s ease;
   transform-origin: 0 0;
-  will-change: transform;
+  will-change: transform, font-size;
+  --scale: 1;
 }
 
 .header-abstract {
@@ -328,6 +329,8 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
+  font-size: 1.5rem;
 }
 
 /* ---------------------------------------
