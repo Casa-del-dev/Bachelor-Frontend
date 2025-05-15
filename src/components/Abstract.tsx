@@ -32,17 +32,27 @@ export interface Step {
   selected: boolean;
 }
 
+interface Transform {
+  scale: number;
+  x: number;
+  y: number;
+}
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 3;
+
+function clamp(v: number, min: number, max: number) {
+  return Math.min(Math.max(v, min), max);
+}
+
 const Abstract: React.FC = ({}) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const zoomContentRef = useRef<HTMLDivElement | null>(null);
 
-  const [zoom, setZoom] = useState(1);
-
-  const [origin, setOrigin] = useState({ x: 0, y: 0 });
-  const zoomRef = useRef(zoom);
-
-  const MIN_ZOOM = 0.5;
-  const MAX_ZOOM = 3;
+  const [transform, setTransform] = useState<Transform>({
+    scale: 1,
+    x: 0,
+    y: 0,
+  });
 
   const problemListItems = [
     "Problem 1",
@@ -220,66 +230,58 @@ const Abstract: React.FC = ({}) => {
     }
   };
 
-  // wheel handler for smooth ctrl-zoom on mapContainerRef
   useEffect(() => {
-    zoomRef.current = zoom;
-  }, [zoom]);
+    const c = mapContainerRef.current;
+    if (!c) return;
 
-  useEffect(
-    () => {
-      const sc = mapContainerRef.current;
-      if (!sc) return;
-      // ensure the container can actually scroll
-      sc.setAttribute("tabindex", "0");
+    let last: { x: number; y: number } | null = null;
 
-      const onWheel = (e: WheelEvent) => {
-        if (!e.ctrlKey) return;
-        e.preventDefault();
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return; // or drop this to allow plain-wheel zoom
+      e.preventDefault();
+      const rect = c.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newScale = clamp(transform.scale * factor, MIN_ZOOM, MAX_ZOOM);
 
-        // 1) Dimensions of the viewport
-        const width = sc.clientWidth;
-        const height = sc.clientHeight;
-        const scrollX = sc.scrollLeft;
-        const scrollY = sc.scrollTop;
+      // adjust translate so (px,py) stays fixed under the cursor:
+      const dx = px - (px - transform.x) * (newScale / transform.scale);
+      const dy = py - (py - transform.y) * (newScale / transform.scale);
 
-        // 2) Content-space coordinates of the *visible* center
-        const contentCenterX = scrollX + width / 2;
-        const contentCenterY = scrollY + height / 2;
+      setTransform({ scale: newScale, x: dx, y: dy });
+    };
 
-        // 3) Compute the new zoom level
-        const factor = e.deltaY < 0 ? 1.1 : 0.9;
-        const newZoom = Math.min(
-          Math.max(zoomRef.current * factor, MIN_ZOOM),
-          MAX_ZOOM
-        );
-        if (newZoom === zoomRef.current) return;
+    const onPointerDown = (e: PointerEvent) => {
+      last = { x: e.clientX, y: e.clientY };
+      c.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!last) return;
+      const dx = e.clientX - last.x;
+      const dy = e.clientY - last.y;
+      last = { x: e.clientX, y: e.clientY };
+      setTransform((t) => ({ ...t, x: t.x + dx, y: t.y + dy }));
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      last = null;
+      c.releasePointerCapture(e.pointerId);
+    };
 
-        // 4) How that same content-point scales
-        const scale = newZoom / zoomRef.current;
-        const newContentX = contentCenterX * scale;
-        const newContentY = contentCenterY * scale;
+    c.addEventListener("wheel", onWheel, { passive: false });
+    c.addEventListener("pointerdown", onPointerDown);
+    c.addEventListener("pointermove", onPointerMove);
+    c.addEventListener("pointerup", onPointerUp);
+    c.addEventListener("pointercancel", onPointerUp);
 
-        // 5) Scroll so that this content-point remains in the viewport center
-        const newScrollX = newContentX - width / 2;
-        const newScrollY = newContentY - height / 2;
-
-        // 6) Update state and perform the scroll
-        setZoom(newZoom);
-        // pivot around that same center
-        setOrigin({ x: contentCenterX, y: contentCenterY });
-
-        requestAnimationFrame(() =>
-          sc.scrollTo({ left: newScrollX, top: newScrollY, behavior: "auto" })
-        );
-      };
-
-      sc.addEventListener("wheel", onWheel, { passive: false });
-      return () => sc.removeEventListener("wheel", onWheel);
-    },
-    [
-      /* no deps so we attach once */
-    ]
-  );
+    return () => {
+      c.removeEventListener("wheel", onWheel);
+      c.removeEventListener("pointerdown", onPointerDown);
+      c.removeEventListener("pointermove", onPointerMove);
+      c.removeEventListener("pointerup", onPointerUp);
+      c.removeEventListener("pointercancel", onPointerUp);
+    };
+  }, [transform]);
 
   //when mouse leftclick down move div
   useEffect(() => {
@@ -419,8 +421,6 @@ const Abstract: React.FC = ({}) => {
     const zoomPercent = getPageZoom();
     const modifier = interpolateZoomEffect(zoomPercent);
     if (node.children.length === 0) {
-      console.log("modifier", modifier, "zoomPercent", zoomPercent);
-
       return STEP_BOX_WIDTH_PX + modifier;
     }
 
@@ -518,6 +518,8 @@ const Abstract: React.FC = ({}) => {
         animateToRight ? "slide-right" : ""
       }`}
     >
+      {/* Left line container*/}
+
       <div ref={rightAbstractRef} className="right-abstract-container">
         <div
           className="divider abstract"
@@ -526,6 +528,7 @@ const Abstract: React.FC = ({}) => {
           }}
         />
       </div>
+      {/* Header container*/}
       <div ref={headerRef} className="header-abstract">
         <div className="header-left-ab-container">
           <div
@@ -576,13 +579,13 @@ const Abstract: React.FC = ({}) => {
           </div>
         </div>
       </div>
+      {/* Tree Container container*/}
       <div className="map-abstract-container" ref={mapContainerRef}>
         <div
           ref={zoomContentRef}
           className="zoom-content"
           style={{
-            transform: `scale(${zoom})`,
-            transformOrigin: `${origin.x}px ${origin.y}px`,
+            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           }}
         >
           {renderTree()}
