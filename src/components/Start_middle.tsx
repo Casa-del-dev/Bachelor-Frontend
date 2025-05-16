@@ -200,20 +200,29 @@ export default function ResizableSplitView({
           break;
 
         case "Enter":
+          if (inputBuffer.current.trim() === "") {
+            // User pressed enter without typing anything: print two prompts with an empty line in between
+            term.current?.write("\r\n" + PROMPT + "\r\n" + PROMPT);
+            previousCursorPos.current = 0;
+            inputBuffer.current = "";
+            cursorPos.current = 0;
+            startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 3;
+            return;
+          }
+
           eraseCursorBar();
           term.current?.write("\r\n");
           previousCursorPos.current = 0;
           if (socketRef.current?.readyState === WebSocket.OPEN) {
             const payload = waitingForInputRef.current
               ? { action: "input_response", value: inputBuffer.current }
-              : { action: "run", code: inputBuffer.current };
+              : { action: "enter", code: inputBuffer.current };
             socketRef.current.send(JSON.stringify(payload));
             waitingForInputRef.current = false;
           }
           inputBuffer.current = "";
           cursorPos.current = 0;
-          startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
-          term.current?.write(PROMPT);
+          startRow.current = term.current?.buffer.active.cursorY ?? 0;
           return;
 
         default:
@@ -349,45 +358,71 @@ export default function ResizableSplitView({
     if (!isAuthenticated) return;
     socketRef.current = new WebSocket("wss://python-api.erenhomburg.com/ws");
 
+    // Helper to print ANY text with wrap-tracking:
+    const printWithWrap = (text: string) => {
+      if (!term.current) return 0;
+      const cols = term.current.cols;
+      const lines = text.split("\n");
+      let rows = 0;
+      for (const line of lines) {
+        const full = PROMPT + line;
+        term.current.write(full + "\r\n");
+        rows += Math.ceil(full.length / cols) || 1;
+      }
+      return rows;
+    };
+
     socketRef.current.onopen = () => {
-      term.current?.writeln("✅ Connected to Python backend.", () => {
-        startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
-        term.current?.write(PROMPT);
-      });
+      // 1) Print the welcome message with wrap count:
+      const rows = printWithWrap("✅ Connected to Python backend.");
+      // 2) Print prompt on next line:
+      term.current!.write(PROMPT);
+      // 3) Advance startRow by rows + 1:
+      startRow.current += rows + 1;
     };
 
     socketRef.current.onmessage = (event) => {
+      if (!term.current) return;
+
+      // 1) JSON input_request?
+      let msg: any;
       try {
-        const message = JSON.parse(event.data);
-        if (message.action === "input_request") {
-          term.current?.writeln(message.prompt, () => {
-            startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
-            term.current?.write(PROMPT);
-          });
-          waitingForInputRef.current = true;
-          return;
-        }
+        msg = JSON.parse(event.data);
       } catch {}
-
-      //empty response
-      if (!event.data.trim()) {
-        startRow.current++;
-        return;
-      }
-
-      const lines = event.data.split(/\r?\n/);
-      for (const line of lines) {
-        term.current?.writeln(line, () => {
+      if (msg?.action === "input_request") {
+        term.current.writeln(msg.prompt, () => {
           startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
           term.current?.write(PROMPT);
         });
+        waitingForInputRef.current = true;
+        return;
       }
+
+      // 2) Empty response: just prompt
+      if (!event.data.trim()) {
+        term.current.write("\r\n" + PROMPT);
+        startRow.current = term.current.buffer.active.cursorY;
+        inputBuffer.current = "";
+        cursorPos.current = 0;
+        previousCursorPos.current = 0;
+        return;
+      }
+
+      // 3) Plain-text output with wrap-tracking:
+      const rows = printWithWrap(event.data);
+      // 4) New prompt:
+      term.current.write(PROMPT);
+      startRow.current += rows + 2;
+
+      // 5) Reset input tracking:
+      inputBuffer.current = "";
+      cursorPos.current = 0;
+      previousCursorPos.current = 0;
     };
 
     socketRef.current.onclose = () => {
       term.current?.writeln(`\r⚠️ WebSocket disconnected.`);
     };
-
     socketRef.current.onerror = (err) => {
       term.current?.writeln(`\r⚠️ WebSocket error: ${err}`);
     };
@@ -403,15 +438,26 @@ export default function ResizableSplitView({
       return;
     }
     const actionMessage = getActionMessage(action);
+
+    // 1) clear everything
     term.current?.clear();
-    term.current?.writeln(`${actionMessage}...\r\n`);
+
+    // 2) print your banner *without* embedding any `\n` yourself - writeln already adds one
+    term.current?.writeln(`${actionMessage}...`, () => {
+      // as soon as the banner + its newline have been committed, record that row…
+      startRow.current = (term.current!.buffer.active.cursorY ?? 0) - 1;
+    });
+
+    // 3) fire off the socket
     if (!currentFile) return;
     const code = codeMap[currentFile];
-    if (action === "test") {
-      socketRef.current.send(JSON.stringify({ action, code, tests: test }));
-    } else {
-      socketRef.current.send(JSON.stringify({ action, code }));
-    }
+    socketRef.current.send(
+      JSON.stringify(
+        action === "test" ? { action, code, tests: test } : { action, code }
+      )
+    );
+
+    // 4) keep focus on the terminal
     term.current?.focus();
   };
 

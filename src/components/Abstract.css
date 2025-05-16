@@ -54,8 +54,8 @@
   gap: 5vw;
   align-items: center;
   padding: 9px 15px;
-  background-color: var(--dropdown-bg);
-  border: 1px solid var(--dropdown-border);
+  background-color: var(--seg-btn-bg);
+  border: 1px solid var(--seg-btn-border);
   border-radius: 1rem;
 
   z-index: 999;
