@@ -6,8 +6,12 @@ import "xterm/css/xterm.css";
 import { useAuth } from "../AuthContext";
 import "./Start_middle.css";
 import PythonPlayground from "./Program-interface";
-import { getActionMessage } from "./BuildingBlocks/ActionMessage";
 import { Step } from "./Start";
+import {
+  runCode,
+  compileCode,
+  testCode,
+} from "./BuildingBlocks/PythonCompiler";
 
 interface PythonPlaygroundProps {
   setHoveredStep: (step: Step | null) => void;
@@ -47,13 +51,12 @@ export default function ResizableSplitView({
   const fitAddon = useRef<FitAddon | null>(null);
 
   const { isAuthenticated } = useAuth();
-  const socketRef = useRef<WebSocket | null>(null);
   const inputBuffer = useRef("");
-  const waitingForInputRef = useRef(false);
   const cursorPos = useRef(0);
   const terminalCols = () => term.current?.cols || 80; // default 80
   const startRow = useRef(0); // used to know what row it's writing on
   let previousCursorPos = useRef(0); // needed for making the char under the bar black or white again
+  const hasWrittenInitialPrompt = useRef(false);
 
   const PROMPT = "> ";
 
@@ -74,6 +77,7 @@ export default function ResizableSplitView({
       cursorStyle: "bar",
       cursorWidth: 10,
       theme: getXtermTheme(),
+      convertEol: true,
     });
 
     fitAddon.current = new FitAddon();
@@ -87,9 +91,16 @@ export default function ResizableSplitView({
     });
 
     setTimeout(() => {
-      if (term.current && terminalRef.current) {
+      if (
+        term.current &&
+        terminalRef.current &&
+        !hasWrittenInitialPrompt.current
+      ) {
         term.current.open(terminalRef.current);
         fitAddon.current?.fit();
+        term.current.write(PROMPT);
+        startRow.current = term.current.buffer.active.cursorY;
+        hasWrittenInitialPrompt.current = true;
       }
     }, 300);
 
@@ -199,57 +210,76 @@ export default function ResizableSplitView({
           refreshCursor();
           break;
 
-        case "Enter":
-          if (inputBuffer.current.trim() === "") {
-            // User pressed enter without typing anything: print two prompts with an empty line in between
-            term.current?.write("\r\n" + PROMPT + "\r\n" + PROMPT);
-            previousCursorPos.current = 0;
-            inputBuffer.current = "";
-            cursorPos.current = 0;
-            startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 3;
+        case "Enter": {
+          if (!isAuthenticated) {
+            term.current?.writeln("");
+            term.current?.write(PROMPT);
+            term.current?.write("⚠️ Please log in first.");
+            term.current?.writeln("");
+            term.current?.write(PROMPT);
             return;
           }
-
+          const snippet = inputBuffer.current.trim();
           eraseCursorBar();
-          term.current?.write("\r\n");
-          previousCursorPos.current = 0;
-          if (socketRef.current?.readyState === WebSocket.OPEN) {
-            const payload = waitingForInputRef.current
-              ? { action: "input_response", value: inputBuffer.current }
-              : { action: "enter", code: inputBuffer.current };
-            socketRef.current.send(JSON.stringify(payload));
-            waitingForInputRef.current = false;
+          const isClear = snippet.toLowerCase() === "clear";
+          if (isClear) {
+            // 1) clear viewport
+            term.current?.clear();
+
+            // 3) move cursor to top‐left
+            term.current?.write("\x1b[H");
+            // reset our own input state
+            inputBuffer.current = "";
+            cursorPos.current = 0;
+            previousCursorPos.current = 0;
+            // anchor prompt at the very top
+            startRow.current = term.current!.buffer.active.cursorY;
+            term.current?.write(PROMPT);
+            return;
           }
+          // otherwise fall back to normal newline + prompt logic
+          term.current?.write("\r\n");
           inputBuffer.current = "";
           cursorPos.current = 0;
-          startRow.current = term.current?.buffer.active.cursorY ?? 0;
-          return;
+          previousCursorPos.current = 0;
+          startRow.current = term.current!.buffer.active.cursorY;
 
+          let linesPrinted = 0;
+          runCode(snippet).then((output) => {
+            output.split("\n").forEach((line) => {
+              const lineLength = PROMPT.length + line.length;
+              const lineWraps = Math.ceil(lineLength / terminalCols());
+              linesPrinted += lineWraps > 0 ? lineWraps : 1;
+              term.current?.writeln(`${PROMPT}${line}`);
+            });
+
+            term.current?.write(PROMPT);
+
+            startRow.current =
+              term.current!.buffer.active.cursorY + linesPrinted;
+            cursorPos.current = previousCursorPos.current = 0;
+          });
+          return;
+        }
         default:
           if (key.length === 1) {
+            // custom echo logic only, XTerm stdin disabled
             inputBuffer.current =
               inputBuffer.current.slice(0, cursorPos.current) +
               key +
               inputBuffer.current.slice(cursorPos.current);
-
             cursorPos.current++;
-
             const promptLength = PROMPT.length;
             const termWidth = terminalCols();
             const afterCursor = inputBuffer.current.slice(cursorPos.current);
-
             term.current?.write("\x1b[s");
-
             term.current?.write(key + afterCursor);
-
             const absoluteCursorPos = promptLength + cursorPos.current;
             const cursorRow =
-              startRow.current + Math.floor(absoluteCursorPos / termWidth);
+              startRow.current + Math.floor(absoluteCursorPos / termWidth) + 1;
             const cursorCol = (absoluteCursorPos % termWidth) + 1;
-
             term.current?.write("\x1b[u");
             term.current?.write(`\x1b[${cursorRow};${cursorCol}H`);
-
             refreshCursor();
           }
           break;
@@ -265,12 +295,12 @@ export default function ResizableSplitView({
 
       const absolutePrevPos = promptLength + previousCursorPos.current;
       const prevRow =
-        startRow.current + Math.floor(absolutePrevPos / termWidth);
+        startRow.current + Math.floor(absolutePrevPos / termWidth) + 1;
       const prevCol = (absolutePrevPos % termWidth) + 1;
 
       const absoluteCursorPos = promptLength + cursorPos.current;
       const cursorRow =
-        startRow.current + Math.floor(absoluteCursorPos / termWidth);
+        startRow.current + Math.floor(absoluteCursorPos / termWidth) + 1;
       const cursorCol = (absoluteCursorPos % termWidth) + 1;
 
       // Save terminal cursor
@@ -304,7 +334,7 @@ export default function ResizableSplitView({
 
       // where the old bar was
       const absOld = promptLength + previousCursorPos.current;
-      const rowOld = startRow.current + Math.floor(absOld / termWidth);
+      const rowOld = startRow.current + Math.floor(absOld / termWidth) + 1;
       const colOld = (absOld % termWidth) + 1; // terminals are 1-based
 
       // save cursor, jump there, write normal char, restore cursor
@@ -315,7 +345,14 @@ export default function ResizableSplitView({
       term.current.write("\x1b[u");
     }
 
-    const ro = new ResizeObserver(() => fitAddon.current?.fit());
+    const ro = new ResizeObserver(() => {
+      // 1) recompute fits & reflow text
+      fitAddon.current?.fit();
+      // 2) re-anchor startRow to the current prompt line
+      if (term.current) {
+        startRow.current = term.current.buffer.active.cursorY;
+      }
+    });
     if (terminalRef.current) ro.observe(terminalRef.current);
 
     return () => {
@@ -327,7 +364,7 @@ export default function ResizableSplitView({
       }
       ro.disconnect();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fitAddon.current?.fit();
@@ -354,111 +391,89 @@ export default function ResizableSplitView({
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    socketRef.current = new WebSocket("wss://python-api.erenhomburg.com/ws");
-
-    // Helper to print ANY text with wrap-tracking:
-    const printWithWrap = (text: string) => {
-      if (!term.current) return 0;
-      const cols = term.current.cols;
-      const lines = text.split("\n");
-      let rows = 0;
-      for (const line of lines) {
-        const full = PROMPT + line;
-        term.current.write(full + "\r\n");
-        rows += Math.ceil(full.length / cols) || 1;
-      }
-      return rows;
-    };
-
-    socketRef.current.onopen = () => {
-      // 1) Print the welcome message with wrap count:
-      const rows = printWithWrap("✅ Connected to Python backend.");
-      // 2) Print prompt on next line:
-      term.current!.write(PROMPT);
-      // 3) Advance startRow by rows + 1:
-      startRow.current += rows + 1;
-    };
-
-    socketRef.current.onmessage = (event) => {
-      if (!term.current) return;
-
-      // 1) JSON input_request?
-      let msg: any;
-      try {
-        msg = JSON.parse(event.data);
-      } catch {}
-      if (msg?.action === "input_request") {
-        term.current.writeln(msg.prompt, () => {
-          startRow.current = (term.current?.buffer.active.cursorY ?? 0) + 1;
-          term.current?.write(PROMPT);
-        });
-        waitingForInputRef.current = true;
-        return;
-      }
-
-      // 2) Empty response: just prompt
-      if (!event.data.trim()) {
-        term.current.write("\r\n" + PROMPT);
-        startRow.current = term.current.buffer.active.cursorY;
-        inputBuffer.current = "";
-        cursorPos.current = 0;
-        previousCursorPos.current = 0;
-        return;
-      }
-
-      // 3) Plain-text output with wrap-tracking:
-      const rows = printWithWrap(event.data);
-      // 4) New prompt:
-      term.current.write(PROMPT);
-      startRow.current += rows + 2;
-
-      // 5) Reset input tracking:
-      inputBuffer.current = "";
-      cursorPos.current = 0;
-      previousCursorPos.current = 0;
-    };
-
-    socketRef.current.onclose = () => {
-      term.current?.writeln(`\r⚠️ WebSocket disconnected.`);
-    };
-    socketRef.current.onerror = (err) => {
-      term.current?.writeln(`\r⚠️ WebSocket error: ${err}`);
-    };
-
-    return () => {
-      socketRef.current?.close();
-    };
-  }, [isAuthenticated]);
-
-  const sendCodeToBackend = (action: "run" | "compile" | "test") => {
-    if (!isAuthenticated || !socketRef.current) {
-      term.current?.writeln("⚠️ Not authenticated. Please log in.");
+  const handleRunClick = async () => {
+    if (!isAuthenticated) {
+      term.current?.writeln("⚠️ Please log in first.");
       return;
     }
-    const actionMessage = getActionMessage(action);
 
-    // 1) clear everything
+    if (!currentFile) return;
+    const code = codeMap[currentFile]!;
+
+    // Clear the terminal before running code
+    term.current?.write("\x1b[3J");
     term.current?.clear();
 
-    // 2) print your banner *without* embedding any `\n` yourself - writeln already adds one
-    term.current?.writeln(`${actionMessage}...`, () => {
-      // as soon as the banner + its newline have been committed, record that row…
-      startRow.current = (term.current!.buffer.active.cursorY ?? 0) - 1;
+    term.current?.writeln("🚀 Running code...");
+    const out = await runCode(code);
+    let linesPrinted = 0;
+    out.split("\n").forEach((line) => {
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
+      term.current?.writeln(`${PROMPT}${line}`);
     });
 
-    // 3) fire off the socket
-    if (!currentFile) return;
-    const code = codeMap[currentFile];
-    socketRef.current.send(
-      JSON.stringify(
-        action === "test" ? { action, code, tests: test } : { action, code }
-      )
-    );
+    term.current?.write(PROMPT);
 
-    // 4) keep focus on the terminal
-    term.current?.focus();
+    startRow.current = term.current!.buffer.active.cursorY + linesPrinted;
+    cursorPos.current = previousCursorPos.current = 0;
+  };
+
+  const handleCompileClick = async () => {
+    if (!isAuthenticated) {
+      term.current?.writeln("⚠️ Please log in first.");
+      return;
+    }
+
+    if (!currentFile) return;
+
+    term.current?.write("\x1b[3J");
+    term.current?.clear();
+
+    term.current?.writeln("🔍 Checking syntax...");
+    const out = await compileCode(codeMap[currentFile]!);
+    let linesPrinted = 0;
+    out.split("\n").forEach((line) => {
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
+      term.current?.writeln(`${PROMPT}${line}`);
+    });
+
+    term.current?.write(PROMPT);
+
+    startRow.current = term.current!.buffer.active.cursorY + linesPrinted;
+    cursorPos.current = previousCursorPos.current = 0;
+  };
+
+  const handleTestClick = async () => {
+    if (!isAuthenticated) {
+      term.current?.writeln("⚠️ Please log in first.");
+      return;
+    }
+
+    if (!currentFile) return;
+    const code = codeMap[currentFile]!;
+
+    // Clear the terminal before running code
+    term.current?.write("\x1b[3J");
+    term.current?.clear();
+
+    term.current?.writeln("🧪 Running tests...");
+    const out = await testCode(code, test);
+    let linesPrinted = 0;
+    out.split("\n").forEach((line) => {
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
+      term.current?.writeln(`${PROMPT}${line}`);
+    });
+
+    term.current?.write(PROMPT);
+
+    startRow.current = term.current!.buffer.active.cursorY + linesPrinted;
+    cursorPos.current = previousCursorPos.current = 0;
   };
 
   const handleMouseDown = () => {
@@ -516,17 +531,17 @@ export default function ResizableSplitView({
           <FaPlay
             className="icons-for-terminal"
             size="1.5vw"
-            onClick={() => sendCodeToBackend("run")}
+            onClick={handleRunClick}
           />
           <FaCog
             className="icons-for-terminal"
             size="1.5vw"
-            onClick={() => sendCodeToBackend("compile")}
+            onClick={handleCompileClick}
           />
           <FaHourglassHalf
             className="icons-for-terminal"
             size="1.5vw"
-            onClick={() => sendCodeToBackend("test")}
+            onClick={handleTestClick}
           />
         </div>
         <div className="simple-line" />
