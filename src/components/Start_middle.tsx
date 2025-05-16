@@ -212,41 +212,34 @@ export default function ResizableSplitView({
 
         case "Enter": {
           if (!isAuthenticated) {
-            term.current?.writeln("");
-            term.current?.write(PROMPT);
-            term.current?.write("⚠️ Please log in first.");
-            term.current?.writeln("");
-            term.current?.write(PROMPT);
+            printLinesAndReanchor(["⚠️ Please log in first."]);
             return;
           }
           const snippet = inputBuffer.current.trim();
           eraseCursorBar();
-          const isClear = snippet.toLowerCase() === "clear";
-          if (isClear) {
-            // 1) clear viewport
-            term.current?.clear();
 
-            // 3) move cursor to top‐left
-            term.current?.write("\x1b[H");
-            // reset our own input state
-            inputBuffer.current = "";
-            cursorPos.current = 0;
-            previousCursorPos.current = 0;
-            // anchor prompt at the very top
-            startRow.current = term.current!.buffer.active.cursorY;
-            term.current?.write(PROMPT);
-            return;
-          }
           // otherwise fall back to normal newline + prompt logic
           term.current?.write("\r\n");
           inputBuffer.current = "";
           cursorPos.current = 0;
           previousCursorPos.current = 0;
-          startRow.current = term.current!.buffer.active.cursorY;
+          const baseH = term.current!.buffer.active.cursorY;
+
+          if (!snippet) {
+            term.current?.writeln(PROMPT);
+            term.current?.write(PROMPT);
+            startRow.current = term.current!.buffer.active.cursorY + 2;
+            return;
+          }
 
           let linesPrinted = 0;
           runCode(snippet).then((output) => {
             output.split("\n").forEach((line) => {
+              if (line === "✅ Code ran successfully.") {
+                term.current?.writeln(`${PROMPT}`);
+                linesPrinted++;
+                return;
+              }
               const lineLength = PROMPT.length + line.length;
               const lineWraps = Math.ceil(lineLength / terminalCols());
               linesPrinted += lineWraps > 0 ? lineWraps : 1;
@@ -255,8 +248,7 @@ export default function ResizableSplitView({
 
             term.current?.write(PROMPT);
 
-            startRow.current =
-              term.current!.buffer.active.cursorY + linesPrinted;
+            startRow.current = baseH + linesPrinted + 1;
             cursorPos.current = previousCursorPos.current = 0;
           });
           return;
@@ -326,25 +318,6 @@ export default function ResizableSplitView({
       previousCursorPos.current = cursorPos.current;
     };
 
-    // Erases the old inverted-bar by redrawing its character in normal video
-    function eraseCursorBar() {
-      if (!term.current) return;
-      const promptLength = PROMPT.length;
-      const termWidth = terminalCols();
-
-      // where the old bar was
-      const absOld = promptLength + previousCursorPos.current;
-      const rowOld = startRow.current + Math.floor(absOld / termWidth) + 1;
-      const colOld = (absOld % termWidth) + 1; // terminals are 1-based
-
-      // save cursor, jump there, write normal char, restore cursor
-      term.current.write("\x1b[s");
-      term.current.write(`\x1b[${rowOld};${colOld}H`);
-      const under = inputBuffer.current[previousCursorPos.current] || " ";
-      term.current.write("\x1b[27m" + under); // normal video
-      term.current.write("\x1b[u");
-    }
-
     const ro = new ResizeObserver(() => {
       // 1) recompute fits & reflow text
       fitAddon.current?.fit();
@@ -365,6 +338,52 @@ export default function ResizableSplitView({
       ro.disconnect();
     };
   }, [isAuthenticated]);
+
+  // Erases the old inverted-bar by redrawing its character in normal video
+  function eraseCursorBar() {
+    if (!term.current) return;
+    const promptLength = PROMPT.length;
+    const termWidth = terminalCols();
+
+    // where the old bar was
+    const absOld = promptLength + previousCursorPos.current;
+    const rowOld = startRow.current + Math.floor(absOld / termWidth) + 1;
+    const colOld = (absOld % termWidth) + 1; // terminals are 1-based
+
+    // save cursor, jump there, write normal char, restore cursor
+    term.current.write("\x1b[s");
+    term.current.write(`\x1b[${rowOld};${colOld}H`);
+    const under = inputBuffer.current[previousCursorPos.current] || " ";
+    term.current.write("\x1b[27m" + under); // normal video
+    term.current.write("\x1b[u");
+  }
+
+  function printLinesAndReanchor(lines: string[]) {
+    const t = term.current!;
+    const baseRow = t.buffer.active.cursorY;
+    t.writeln("");
+
+    eraseCursorBar();
+
+    let rowsMoved = 0;
+    for (const line of lines) {
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      // writeln() will move you down `wraps` lines for the wrapped text
+      // AND 1 more line for the trailing "\r\n"
+      rowsMoved += wraps + 1;
+      t.writeln(`${PROMPT}${line}`);
+    }
+
+    // now draw the prompt (no newline, so nothing extra here)
+    t.write(PROMPT);
+
+    inputBuffer.current = "";
+
+    // re-anchor startRow exactly to where that prompt lives:
+    startRow.current = baseRow + rowsMoved;
+    cursorPos.current = previousCursorPos.current = 0;
+  }
 
   useEffect(() => {
     fitAddon.current?.fit();
@@ -393,7 +412,7 @@ export default function ResizableSplitView({
 
   const handleRunClick = async () => {
     if (!isAuthenticated) {
-      term.current?.writeln("⚠️ Please log in first.");
+      printLinesAndReanchor(["⚠️ Please log in first."]);
       return;
     }
 
@@ -422,7 +441,7 @@ export default function ResizableSplitView({
 
   const handleCompileClick = async () => {
     if (!isAuthenticated) {
-      term.current?.writeln("⚠️ Please log in first.");
+      printLinesAndReanchor(["⚠️ Please log in first."]);
       return;
     }
 
@@ -449,7 +468,7 @@ export default function ResizableSplitView({
 
   const handleTestClick = async () => {
     if (!isAuthenticated) {
-      term.current?.writeln("⚠️ Please log in first.");
+      printLinesAndReanchor(["⚠️ Please log in first."]);
       return;
     }
 
