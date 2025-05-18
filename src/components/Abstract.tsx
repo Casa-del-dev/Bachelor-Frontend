@@ -1,7 +1,87 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { Search, X, Check } from "lucide-react";
+import { Search, X, Check, Pen, Trash } from "lucide-react";
 import { useAuth } from "../AuthContext";
+import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
+
+// ======================
+// CORRECT STEP OVERLAY
+// ======================
+interface CorrectStepOverlayProps {
+  onClose: () => void;
+  onConfirm: () => void;
+  saveChecked: boolean;
+  setSaveChecked: (val: boolean) => void;
+}
+
+const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
+  onClose,
+  onConfirm,
+  saveChecked,
+  setSaveChecked,
+}) => {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const [fadeState, setFadeState] = useState("fade-in-correctStep"); // Initial fade-in
+
+  // Handle fade-out before closing
+  const handleClose = () => {
+    setFadeState("fade-out-correctStep");
+    setTimeout(() => onClose(), 300); // Delay removal after fade-out
+  };
+
+  // Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        overlayRef.current &&
+        !overlayRef.current.contains(event.target as Node)
+      ) {
+        handleClose(); // Trigger fade-out
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div className={`fullscreen-overlay ${fadeState}`}>
+      <div className="overlay-box" ref={overlayRef}>
+        <h3>Are you sure you want to reveal the correct step?</h3>
+        <label className="mini-overlay-save">
+          <input
+            type="checkbox"
+            checked={saveChecked}
+            onChange={() => setSaveChecked(!saveChecked)}
+          />
+          Save this answer for future
+        </label>
+        <div className="overlay-buttons">
+          <button className="overlay-button yes" onClick={onConfirm}>
+            Yes, Reveal
+          </button>
+          <button className="overlay-button no" onClick={handleClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export interface Step {
   id: string; // unique ID for each step
@@ -47,6 +127,7 @@ function clamp(v: number, min: number, max: number) {
 const Abstract: React.FC = ({}) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const zoomContentRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [transform, setTransform] = useState<Transform>({
     scale: 1,
@@ -125,6 +206,35 @@ const Abstract: React.FC = ({}) => {
     }
   }
 
+  const saveStepTree = useCallback(
+    async (newTree: Step[]) => {
+      if (!problemId) return;
+
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      try {
+        const res = await fetch(
+          `https://bachelor-backend.erenhomburg.workers.dev/problem/v2/saveStepTree?id=${encodeURIComponent(
+            problemId
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ problemId: problemId, stepTree: newTree }),
+          }
+        );
+        if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      } catch (err) {
+        console.error("Error in saveStepTree:", err);
+      }
+    },
+    [problemId]
+  );
+
   useEffect(() => {
     const savedProblem = localStorage.getItem("selectedProblem");
     if (savedProblem && problemList.includes(savedProblem)) {
@@ -167,31 +277,6 @@ const Abstract: React.FC = ({}) => {
   };
 
   useEffect(() => {
-    const container = mainContainerRef.current;
-    if (animateToRight && container) {
-      const handleAnimationEnd = (event: AnimationEvent) => {
-        if (event.target === container) {
-          // Ensure it's the main container's animation
-          window.location.href = "/start";
-        }
-      };
-      container.addEventListener("animationend", handleAnimationEnd);
-      const animationDuration = 300; // Must match CSS animation duration
-      const fallbackTimeout = setTimeout(() => {
-        console.warn(
-          "Animationend fallback: Navigating to /start after timeout."
-        );
-        window.location.href = "/start";
-      }, animationDuration + 100);
-
-      return () => {
-        clearTimeout(fallbackTimeout);
-        container.removeEventListener("animationend", handleAnimationEnd);
-      };
-    }
-  }, [animateToRight]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -230,157 +315,6 @@ const Abstract: React.FC = ({}) => {
     }
   };
 
-  //Zoom in / zoom out
-  useEffect(() => {
-    const container = mapContainerRef.current;
-    const content = zoomContentRef.current;
-    if (!container || !content) return;
-
-    // reusable RAF update
-    let rafId: number | null = null;
-    const updateTransform = () => {
-      const { x, y } = transformRef.current;
-      // apply translation only:
-      zoomContentRef.current!.style.transform = `translate3d(${x}px,${y}px,0)`;
-      rafId = null;
-    };
-    const scheduleUpdate = () => {
-      if (rafId == null) rafId = requestAnimationFrame(updateTransform);
-    };
-
-    // state
-    const pointers = new Map<number, { x: number; y: number }>();
-    let isDragging = false;
-    let lastDist: number | null = null;
-    let lastVel = { x: 0, y: 0 };
-    let pinchRect: DOMRect | undefined;
-
-    // helpers
-    const clampScale = (s: number) => clamp(s, MIN_ZOOM, MAX_ZOOM);
-    const getPts = () => Array.from(pointers.values());
-    const distance = () => {
-      const [p1, p2] = getPts();
-      return p1 && p2 ? Math.hypot(p1.x - p2.x, p1.y - p2.y) : 0;
-    };
-    const midpoint = () => {
-      const [p1, p2] = getPts();
-      return p1 && p2
-        ? { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }
-        : { x: 0, y: 0 };
-    };
-
-    // pointer down
-    const onDown = (e: PointerEvent) => {
-      container.setPointerCapture(e.pointerId);
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 1) {
-        isDragging = true;
-      } else if (pointers.size === 2) {
-        isDragging = false;
-        pinchRect = container.getBoundingClientRect();
-        lastDist = distance();
-      }
-    };
-
-    // pointer move
-    const DRAG_SPEED = 0.6;
-    const FRICTION = 0.92;
-    const STOP_EPS = 0.5;
-
-    const onMove = (e: PointerEvent) => {
-      if (!pointers.has(e.pointerId)) return;
-      // copy old for velocity
-      const prev = pointers.get(e.pointerId)!;
-      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      // PINCH
-      if (pointers.size === 2 && lastDist != null && pinchRect) {
-        const newDist = distance();
-        const rawFactor = newDist / lastDist;
-        const prevTransform = transformRef.current;
-        const rawScale = clampScale(prevTransform.scale * rawFactor);
-
-        // zoom around midpoint
-        const m = midpoint();
-        const mx = m.x - pinchRect.left;
-        const my = m.y - pinchRect.top;
-
-        const rawX =
-          mx - (mx - prevTransform.x) * (rawScale / prevTransform.scale);
-        const rawY =
-          my - (my - prevTransform.y) * (rawScale / prevTransform.scale);
-
-        // apply immediately on scale, but smooth pan a little
-        transformRef.current.scale = rawScale;
-        transformRef.current.x = rawX;
-        transformRef.current.y = rawY;
-
-        scheduleUpdate();
-        lastDist = newDist;
-      }
-      // PAN
-      else if (isDragging && pointers.size === 1) {
-        const dx = e.clientX - prev.x;
-        const dy = e.clientY - prev.y;
-        lastVel = { x: dx * DRAG_SPEED, y: dy * DRAG_SPEED };
-        transformRef.current.x += lastVel.x;
-        transformRef.current.y += lastVel.y;
-        scheduleUpdate();
-      }
-    };
-
-    // pointer up → inertia if it was a drag
-    const onUp = (e: PointerEvent) => {
-      container.releasePointerCapture(e.pointerId);
-      pointers.delete(e.pointerId);
-      if (pointers.size === 0 && !isDragging) {
-        // start inertia
-        const step = () => {
-          lastVel.x *= FRICTION;
-          lastVel.y *= FRICTION;
-          transformRef.current.x += lastVel.x;
-          transformRef.current.y += lastVel.y;
-          scheduleUpdate();
-          if (Math.hypot(lastVel.x, lastVel.y) > STOP_EPS) {
-            rafId = requestAnimationFrame(step);
-          } else {
-            setTransform({ ...transformRef.current });
-          }
-        };
-        rafId = requestAnimationFrame(step);
-      }
-      // if still one pointer, switch back to dragging
-      else if (pointers.size === 1) {
-        isDragging = true;
-      }
-      // reset pinch state
-      lastDist = null;
-    };
-
-    // attach
-    container.addEventListener("pointerdown", onDown);
-    container.addEventListener("pointermove", onMove, { passive: false });
-    container.addEventListener("pointerup", onUp);
-    container.addEventListener("pointercancel", onUp);
-    container.addEventListener("pointerleave", onUp);
-
-    return () => {
-      [
-        "pointerdown",
-        "pointermove",
-        "pointerup",
-        "pointercancel",
-        "pointerleave",
-      ].forEach((ev) =>
-        container.removeEventListener(
-          ev as any,
-          ev === "pointermove" ? onMove : onUp
-        )
-      );
-      if (rafId) cancelAnimationFrame(rafId);
-    };
-  }, []);
-
   useEffect(() => {
     const el = zoomContentRef.current;
     if (el) {
@@ -395,7 +329,7 @@ const Abstract: React.FC = ({}) => {
     transformRef.current = transform;
   }, [transform]);
 
-  //so the text is focus after zoom in
+  //such that the text is focus after zoom in
   useEffect(() => {
     // every time your scale changes, fire a fake resize
     window.dispatchEvent(new Event("resize"));
@@ -403,109 +337,117 @@ const Abstract: React.FC = ({}) => {
 
   //One big pan+zoom effect—bind once, direct DOM writes
   useEffect(() => {
-    const container = mapContainerRef.current;
-    if (!container) return;
-    const DRAG_SPEED = 0.6;
+    const container = mapContainerRef.current!;
     const content = zoomContentRef.current!;
+    const DRAG_SPEED = 1.4;
+    const DRAG_THRESHOLD = 5;
+
+    let dragReady = false;
     let dragging = false;
-    let lastX = 0;
-    let lastY = 0;
+    let startX = 0,
+      startY = 0;
+    let lastX = 0,
+      lastY = 0;
     let rafId: number | null = null;
 
-    // Optimization hints
     container.style.touchAction = "none";
     container.style.userSelect = "none";
     content.style.willChange = "transform";
 
     function applyTransform() {
       const { x, y, scale } = transformRef.current;
-      content.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+      content.style.transform = `translate3d(${x}px,${y}px,0) scale(${scale})`;
       rafId = null;
     }
-
-    function scheduleTransformUpdate() {
-      if (rafId === null) {
-        rafId = requestAnimationFrame(applyTransform);
-      }
+    function scheduleUpdate() {
+      if (rafId == null) rafId = requestAnimationFrame(applyTransform);
     }
 
     const onPointerDown = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      container.setPointerCapture(e.pointerId);
-      container.style.cursor = "grabbing";
+      dragReady = true;
+      startX = lastX = e.clientX;
+      startY = lastY = e.clientY;
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      if (!dragging) return;
+      if (!dragReady) return;
 
-      // Simple screen-space movement
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
 
-      lastX = e.clientX;
-      lastY = e.clientY;
+      if (!dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+        dragging = true;
+        container.setPointerCapture(e.pointerId);
+        container.style.cursor = "grabbing";
+      }
 
-      transformRef.current.x += dx * DRAG_SPEED;
-      transformRef.current.y += dy * DRAG_SPEED;
-      scheduleTransformUpdate();
+      if (dragging) {
+        const moveX = e.clientX - lastX;
+        const moveY = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        transformRef.current.x += moveX * DRAG_SPEED;
+        transformRef.current.y += moveY * DRAG_SPEED;
+        scheduleUpdate();
+      }
     };
 
     const onPointerUp = (e: PointerEvent) => {
-      dragging = false;
-      container.releasePointerCapture(e.pointerId);
-      container.style.cursor = "grab";
-      setTransform({ ...transformRef.current });
+      dragReady = false;
+      if (dragging) {
+        dragging = false;
+        container.releasePointerCapture(e.pointerId);
+        container.style.cursor = "default";
+        setTransform({ ...transformRef.current });
+      }
     };
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-
       const rect = container.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const factor = e.deltaY < 0 ? 1.1 : 0.9;
-
       const old = transformRef.current;
       const newScale = clamp(old.scale * factor, MIN_ZOOM, MAX_ZOOM);
-
-      // Adjust transform to keep content under mouse fixed
       transformRef.current.x = mx - (mx - old.x) * (newScale / old.scale);
       transformRef.current.y = my - (my - old.y) * (newScale / old.scale);
       transformRef.current.scale = newScale;
-
-      scheduleTransformUpdate();
+      scheduleUpdate();
       setTransform({ ...transformRef.current });
     };
 
-    // Add event listeners
     container.addEventListener("pointerdown", onPointerDown);
     container.addEventListener("pointermove", onPointerMove, {
       passive: false,
     });
     container.addEventListener("pointerup", onPointerUp);
-    container.addEventListener("pointerleave", onPointerUp);
     container.addEventListener("pointercancel", onPointerUp);
+    container.addEventListener("pointerleave", onPointerUp);
     container.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
-      // Cleanup
       container.removeEventListener("pointerdown", onPointerDown);
       container.removeEventListener("pointermove", onPointerMove);
       container.removeEventListener("pointerup", onPointerUp);
-      container.removeEventListener("pointerleave", onPointerUp);
       container.removeEventListener("pointercancel", onPointerUp);
+      container.removeEventListener("pointerleave", onPointerUp);
       container.removeEventListener("wheel", onWheel);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
+
+  const handleDividerDblClick = () => {
+    setAnimateToRight(true);
+    setTimeout(() => {
+      window.location.href = "/start";
+    }, 500);
+  };
   /* ---------------------------------------
   render Tree function START
 --------------------------------------- */
   function calculateStepBoxWidthPx() {
-    const vw = window.innerWidth * 0.15;
-    return vw + 36;
+    return 300 + 36;
   }
 
   const [stepBoxWidth, setStepBoxWidth] = useState(calculateStepBoxWidthPx());
@@ -516,15 +458,20 @@ const Abstract: React.FC = ({}) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const initialCentering = useRef(true);
+
   //Start the view from center
   useEffect(() => {
-    const firstItem = document.querySelector(".map-abstract-container");
-    if (firstItem) {
-      firstItem.scrollIntoView({
-        behavior: "auto",
-        inline: "center",
-        block: "nearest",
-      });
+    if (initialCentering.current && steps.length > 0) {
+      const firstItem = document.querySelector(".map-abstract-container");
+      if (firstItem) {
+        firstItem.scrollIntoView({
+          behavior: "auto",
+          inline: "center",
+          block: "nearest",
+        });
+      }
+      initialCentering.current = false;
     }
   }, [steps]);
 
@@ -588,11 +535,422 @@ const Abstract: React.FC = ({}) => {
     return totalChildWidth;
   }
 
+  /* COLORING AND BORDER START */
+
+  function getBackgroundColor(step: Step): string {
+    if (
+      step.status.correctness === "" &&
+      step.status.can_be_further_divided === ""
+    )
+      return "#ffffff";
+    if (
+      step.status.can_be_further_divided === "can" &&
+      step.status.correctness === "correct"
+    )
+      return "#add8e6";
+    if (step.status.correctness === "correct") return "#60e660";
+    if (step.status.correctness === "incorrect") return "#ff6363";
+    return "#ffffff";
+  }
+
+  function getStepBoxColor(step: Step): string {
+    if (
+      step.code !== "" &&
+      step.code !== "// keep as input" &&
+      step.status.correctness !== "" &&
+      step.status.can_be_further_divided !== ""
+    ) {
+      if (
+        step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+      ) {
+        return "#add8e6";
+      }
+      if (step.status.correctness === "incorrect") {
+        return "#ff6363";
+      }
+      return "#008000";
+    }
+
+    return getBackgroundColor(step);
+  }
+
+  function getStepBoxTextColor(step: Step): string {
+    if (
+      step.code !== "" &&
+      step.code !== "// keep as input" &&
+      step.status.correctness !== "" &&
+      step.status.can_be_further_divided !== ""
+    ) {
+      if (
+        step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+      ) {
+        return "black";
+      }
+      if (step.status.correctness === "incorrect") {
+        return "black";
+      }
+      return "white";
+    }
+
+    return "black";
+  }
+
+  function getBorder(step: Step): string {
+    if (step.status.correctness === "missing") return "dashed";
+    return "solid";
+  }
+
+  /* COLORING AND BORDER END */
+
+  /* EDITING FUNCTIONALITIES START */
+
+  const [editingPath, setEditingPath] = useState<number[] | null>(null);
+  const [tempContent, setTempContent] = useState("");
+
+  //disable pan zoom handler
+  const editingRef = useRef(false);
+  useEffect(() => {
+    editingRef.current = editingPath !== null;
+  }, [editingPath]);
+
+  // focus on the right step
+  useEffect(() => {
+    if (editingPath && mapContainerRef.current) {
+      const id = editingPath.join("-");
+      const el = mapContainerRef.current.querySelector<HTMLElement>(
+        `#step-${id}`
+      );
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "start",
+        });
+      }
+    }
+  }, [editingPath]);
+
+  //focus on right step after clicking edit
+  useEffect(() => {
+    if (editingPath && textareaRef.current) {
+      textareaRef.current.focus({ preventScroll: true });
+      const len = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(len, len);
+    }
+  }, [editingPath]);
+
+  // 2) Your handlers (you already have these—just include them inside Abstract):
+  function handleStartEditing(path: number[], initialValue: string) {
+    const isSame =
+      editingPath &&
+      editingPath.length === path.length &&
+      editingPath.every((v, i) => v === path[i]);
+
+    console.log(isSame);
+
+    if (isSame) {
+      setEditingPath(null);
+      setTempContent("");
+    } else {
+      setEditingPath(path);
+      setTempContent(initialValue);
+    }
+  }
+
+  function handleBlur() {
+    setTimeout(() => {
+      if (editingPath !== null) {
+        // 1) build the new tree
+        setSteps((prev) => {
+          const updatedTree = updateStepContentAtPath(
+            prev,
+            editingPath,
+            tempContent
+          );
+          // 2) save to server
+          saveStepTree(updatedTree);
+          // 3) return for React state
+          return updatedTree;
+        });
+        // 4) exit editing mode
+        setEditingPath(null);
+        setTempContent("");
+      }
+    }, 100);
+  }
+
+  function updateStepContentAtPath(
+    steps: Step[],
+    path: number[],
+    newContent: string
+  ): Step[] {
+    const updatedSteps = steps.map((step) => ({ ...step }));
+    let current = updatedSteps;
+    for (let i = 0; i < path.length; i++) {
+      const idx = path[i];
+      if (i === path.length - 1) {
+        current[idx] = { ...current[idx], content: newContent };
+        current[idx].status.correctness = "";
+        current[idx].status.can_be_further_divided = "";
+        current[idx].code = "";
+      } else {
+        current[idx] = {
+          ...current[idx],
+          children: current[idx].children.map((child) => ({ ...child })),
+        };
+        current = current[idx].children;
+      }
+    }
+    return updatedSteps;
+  }
+
+  /* EDITING FUNCTIONALITIES END */
+
+  /* ICON FUNCTIONS START */
+
+  function getNumberForStep(step: Step): number | null {
+    if (step.general_hint && !step.showGeneralHint1)
+      return step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+        ? 2
+        : 3;
+    else if (step.detailed_hint && !step.showDetailedHint1)
+      return step.status.can_be_further_divided === "can" &&
+        step.status.correctness === "correct"
+        ? 1
+        : 2;
+    else if (step.correctStep && !step.showCorrectStep1) return 1;
+    return null;
+  }
+
+  const [justUnlockedHintId, setJustUnlockedHintId] = useState<string | null>(
+    null
+  );
+  const [showCorrectStepOverlay, setShowCorrectStepOverlay] = useState<
+    number[] | null
+  >(null);
+  const [saveCorrectStep, setSaveCorrectStep] = useState(false);
+
+  function handleGiveHint(
+    step: Step,
+    path: number[],
+    hintNumber: number | null,
+    dividableStep: boolean
+  ) {
+    if (hintNumber === null) return;
+
+    const saved = localStorage.getItem("savedCorrectSteps") === "true";
+
+    if (hintNumber === 1) {
+      if (step.status.can_be_further_divided === "can" && !step.correctStep) {
+        step.showDetailedHint1 = true;
+        console.log(step);
+      } else {
+        if (saved === true) {
+          revealCorrectStep(path);
+        } else {
+          setShowCorrectStepOverlay(path);
+        }
+      }
+      return;
+    }
+
+    // otherwise, general/detailed hints
+    updateSteps((prevSteps) => {
+      const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
+      let current = newSteps;
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]].children;
+      }
+      const stepIndex = path[path.length - 1];
+      const step = current[stepIndex];
+      if (hintNumber === 3 || (dividableStep && hintNumber === 2))
+        step.showGeneralHint1 = true;
+      else if (hintNumber === 2 || (dividableStep && hintNumber === 1))
+        step.showDetailedHint1 = true;
+      return newSteps;
+    });
+
+    const stepId = `step-${path.join("-")}-${hintNumber}`;
+    setJustUnlockedHintId(stepId);
+    setTimeout(() => {
+      setJustUnlockedHintId(null);
+    }, 300);
+  }
+
+  function revealCorrectStep(path: number[]) {
+    updateSteps((prevSteps) => {
+      const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
+      let current = newSteps;
+      for (let i = 0; i < path.length - 1; i++) {
+        current = current[path[i]].children;
+      }
+      const stepIndex = path[path.length - 1];
+      current[stepIndex].showCorrectStep1 = true;
+      current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
+      return newSteps;
+    });
+    const stepId = `step-${path.join("-")}-correct`;
+    setJustUnlockedHintId(stepId);
+    setTimeout(() => {
+      setJustUnlockedHintId(null);
+    }, 300);
+  }
+
+  function updateSteps(updater: Step[] | ((prev: Step[]) => Step[])) {
+    setSteps((prev) => {
+      const updated = typeof updater === "function" ? updater(prev) : updater;
+      saveStepTree(updated); // Save the freshly updated tree
+      return updated;
+    });
+  }
+
+  function handleGiveCorrectStep(checked: string) {
+    if (!showCorrectStepOverlay) return;
+    // reveal correct
+    revealCorrectStep(showCorrectStepOverlay);
+
+    // save?
+    if (checked === "true") {
+      localStorage.setItem("savedCorrectSteps", "true");
+    }
+
+    // done
+    setTimeout(() => {
+      setShowCorrectStepOverlay(null);
+      setSaveCorrectStep(false);
+    }, 300);
+  }
+
+  const hintKeys = {
+    general: "showGeneralHint2",
+    detailed: "showDetailedHint2",
+  } as const;
+
+  function toggleHint(type: "general" | "detailed", stepId: string) {
+    const key = hintKeys[type];
+
+    function updateStepHints(steps: Step[]): Step[] {
+      return steps.map((step) => {
+        if (step.id === stepId) {
+          return {
+            ...step,
+            [key]: !step[key],
+          };
+        } else if (step.children && step.children.length > 0) {
+          return {
+            ...step,
+            children: updateStepHints(step.children),
+          };
+        } else {
+          return step;
+        }
+      });
+    }
+
+    updateSteps((prevSteps) => updateStepHints(prevSteps));
+  }
+
+  function Collapsible({
+    isOpen,
+    children,
+    id,
+    toggleHint,
+    stepId,
+    what,
+  }: {
+    isOpen: boolean;
+    children: React.ReactNode;
+    id?: string;
+    toggleHint: (type: "general" | "detailed", stepId: string) => void;
+    stepId: string;
+    what: "general" | "detailed";
+  }) {
+    const ref = useRef<HTMLDivElement | null>(null);
+
+    return (
+      <div
+        ref={ref}
+        id={id}
+        className={`hint-block-ab ${isOpen ? "open" : ""}`}
+        onClick={() => toggleHint(what, stepId)}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  const indicesRef = useRef<Record<string, number>>({});
+
+  function getInitialIndex(key: string, defaultValue = 0): number {
+    return indicesRef.current[key] ?? defaultValue;
+  }
+
+  function setInitialIndex(key: string, index: number): void {
+    indicesRef.current[key] = index;
+  }
+
+  function getLastLabelNumber(label: string): number {
+    const parts = label.replace("Substep ", "").split(".");
+    return parseInt(parts[parts.length - 1], 10);
+  }
+
+  const handleRemoveStep = (id: string) => {
+    updateSteps((prevSteps) =>
+      prevSteps.map((step) => markStepAndChildrenAsDeleting(step, id))
+    );
+
+    setTimeout(() => {
+      updateSteps((prevSteps) => {
+        const newSteps = removeStepById(prevSteps, id);
+        console.log(newSteps);
+        saveStepTree(newSteps);
+        return newSteps;
+      });
+    }, 300);
+  };
+
+  function markStepAndChildrenAsDeleting(step: Step, id: string): Step {
+    if (step.id === id) {
+      return {
+        ...step,
+        isDeleting: true,
+        children: step.children.map((child) => ({
+          ...child,
+          isDeleting: true,
+        })),
+      };
+    }
+    return {
+      ...step,
+      children: step.children.map((child) =>
+        markStepAndChildrenAsDeleting(child, id)
+      ),
+    };
+  }
+
+  function removeStepById(steps: Step[], id: string): Step[] {
+    return steps.reduce<Step[]>((acc, step) => {
+      if (step.id === id) return acc; // skip
+      const newStep = { ...step };
+      if (newStep.children && newStep.children.length > 0) {
+        newStep.children = removeStepById(newStep.children, id);
+      }
+      acc.push(newStep);
+      return acc;
+    }, []);
+  }
+
+  /* ICON FUNCTIONS END */
+
   /**
    * Recursively renders a node and its children
    */
-  function renderNode(node: Step, indexPath: string) {
+  function renderNode(node: Step, indexPath: string, path: number[]) {
     const nodeWidth = calculateTreeWidth(node);
+    const elementId = `step-${path.join("-")}`;
 
     const connectorOffset = Math.round(
       (nodeWidth - STEP_BOX_WIDTH_PX + 60) / 2
@@ -623,17 +981,178 @@ const Abstract: React.FC = ({}) => {
     return (
       <div
         key={node.id}
-        className="tree-root-item"
+        id={elementId}
+        className={`tree-root-item ${node.isDeleting ? "deleting" : ""}`}
         style={{ "--margin-var-tree": offsetWithUnit } as React.CSSProperties}
       >
         <div className="step-box-ab">
-          <div className="tree-node-ab">
+          <div
+            className="tree-node-ab"
+            style={{
+              border: "2px " + getBorder(node) + " black",
+              backgroundColor: getStepBoxColor(node),
+              color: getStepBoxTextColor(node),
+            }}
+          >
             <div className="tree-node-text">
-              <strong>Step {indexPath}</strong>
-              <div>{node.content || node.prompt}</div>
+              <div className="title-icon-tree-ab">
+                <strong>Step {indexPath}</strong>
+                <div className="icon-container">
+                  <div className="leftSide-Icons">
+                    <Pen
+                      className="Filetext-tree"
+                      strokeWidth="1.2"
+                      onClick={() => {
+                        handleStartEditing(path, node.content);
+                      }}
+                      style={{ fill: editingPath ? "lightgray" : "" }}
+                    />
+                  </div>
+                  <div className="trash">
+                    <CustomLightbulb
+                      number={getNumberForStep(node)}
+                      fill={getNumberForStep(node) ? "yellow" : "none"}
+                      color={getStepBoxTextColor(node)}
+                      onGiveHint={() =>
+                        handleGiveHint(
+                          node,
+                          path,
+                          getNumberForStep(node),
+                          node.status.can_be_further_divided === "can" &&
+                            node.status.correctness === "correct"
+                        )
+                      }
+                    />
+                    <Trash
+                      onClick={() => {
+                        const key = `animatedSubsteps-${path.join("-")}`;
+                        const currentIndex = getInitialIndex(key);
+                        const lastLabel = getLastLabelNumber(
+                          `Step ${path.join(".")}:`
+                        );
+
+                        if (currentIndex >= lastLabel)
+                          setInitialIndex(key, currentIndex - 1);
+                        handleRemoveStep(node.id);
+                      }}
+                      cursor="pointer"
+                      strokeWidth={"1.2"}
+                      color={getStepBoxTextColor(node)}
+                      className="trash-icon"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="cluster-abstraction"></div>
+              {editingPath &&
+              editingPath.length === path.length &&
+              editingPath.every((v, i) => v === path[i]) ? (
+                // in-place textarea when editing
+                <textarea
+                  ref={textareaRef}
+                  autoFocus
+                  className="inline-edit-textarea-editing ab"
+                  style={{ color: getStepBoxTextColor(node) }}
+                  rows={3}
+                  value={tempContent}
+                  onChange={(e) => setTempContent(e.target.value)}
+                  onBlur={handleBlur}
+                />
+              ) : (
+                // otherwise plain text that you can double-click
+                <div
+                  className={`step-content-ab ${
+                    node.showCorrectStep1 ? "step-content-ab-hinted" : ""
+                  }`}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    handleStartEditing(path, node.content);
+                  }}
+                >
+                  {node.content}
+                </div>
+              )}{" "}
             </div>
           </div>
         </div>
+        <>
+          {node.detailed_hint && node.showDetailedHint1 && (
+            <Collapsible
+              isOpen={node.showDetailedHint2}
+              id={`hint-detailed-${node.id}`}
+              toggleHint={toggleHint}
+              stepId={node.id}
+              what={"detailed"}
+            >
+              {/* Show fade-in if we just unlocked it */}
+              <div
+                className={
+                  "hint-inner " +
+                  (node.showDetailedHint2 ? "extended " : "fade-out-hint") +
+                  (justUnlockedHintId === `step-${path.join("-")}-2`
+                    ? "fade-in-hint "
+                    : "")
+                }
+              >
+                {node.showDetailedHint2 ? (
+                  <>
+                    <strong>Detailed Hint:</strong>
+                    <span className="hint-content-ab">
+                      {node.detailed_hint}
+                    </span>
+                  </>
+                ) : (
+                  <div className="not-extented-hint">
+                    <strong>Detailed Hint:</strong>
+                    <span
+                      className="hint-content-ab"
+                      style={{ visibility: "hidden" }}
+                    >
+                      {node.detailed_hint}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Collapsible>
+          )}
+
+          {node.general_hint && node.showGeneralHint1 && (
+            <Collapsible
+              isOpen={node.showGeneralHint2}
+              id={`hint-general-${node.id}`}
+              toggleHint={toggleHint}
+              stepId={node.id}
+              what={"general"}
+            >
+              <div
+                className={
+                  "hint-inner " +
+                  (node.showGeneralHint2 ? "extended " : "") +
+                  (justUnlockedHintId === `step-${path.join("-")}-3`
+                    ? "fade-in-hint "
+                    : "")
+                }
+              >
+                {node.showGeneralHint2 ? (
+                  <>
+                    <strong>General Hint:</strong>
+                    <span className="hint-content-ab">{node.general_hint}</span>
+                  </>
+                ) : (
+                  <div className="not-extented-hint">
+                    <strong>General Hint</strong>
+                    <span
+                      className="hint-content-ab"
+                      style={{ visibility: "hidden" }}
+                    >
+                      {node.general_hint}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Collapsible>
+          )}
+        </>
 
         {node.children.length > 0 && (
           <div className="tree-children-ab" style={{ position: "relative" }}>
@@ -644,7 +1163,7 @@ const Abstract: React.FC = ({}) => {
             <div className="branch-items-container">
               <div className="branch-items">
                 {node.children.map((child, j) =>
-                  renderNode(child, `${indexPath}.${j + 1}`)
+                  renderNode(child, `${indexPath}.${j + 1}`, [...path, j])
                 )}
               </div>
             </div>
@@ -660,7 +1179,7 @@ const Abstract: React.FC = ({}) => {
   function renderTree() {
     return (
       <div className="tree-root">
-        {steps.map((node, i) => renderNode(node, `${i + 1}`))}
+        {steps.map((node, i) => renderNode(node, `${i + 1}`, [i]))}
       </div>
     );
   }
@@ -683,6 +1202,7 @@ const Abstract: React.FC = ({}) => {
           className="divider abstract"
           onDoubleClick={() => {
             setAnimateToRight(true);
+            handleDividerDblClick();
           }}
         />
       </div>
@@ -739,16 +1259,19 @@ const Abstract: React.FC = ({}) => {
       </div>
       {/* Tree Container container*/}
       <div className="map-abstract-container" ref={mapContainerRef}>
-        <div
-          ref={zoomContentRef}
-          className="zoom-content"
-          style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) )`,
-          }}
-        >
+        <div ref={zoomContentRef} className="zoom-content">
           {renderTree()}
         </div>
       </div>
+      {/* ========== FULLSCREEN OVERLAY ========== */}
+      {showCorrectStepOverlay && (
+        <CorrectStepOverlay
+          onClose={() => setShowCorrectStepOverlay(null)}
+          onConfirm={() => handleGiveCorrectStep(saveCorrectStep.toString())}
+          saveChecked={saveCorrectStep}
+          setSaveChecked={setSaveCorrectStep}
+        />
+      )}
     </div>
   );
 };

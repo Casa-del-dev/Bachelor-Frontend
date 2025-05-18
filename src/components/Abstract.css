@@ -9,10 +9,6 @@
   overflow: hidden;
 }
 
-.main-container-abstract.grabbing {
-  cursor: grabbing;
-}
-
 .right-abstract-container {
   position: fixed;
   height: 100%;
@@ -38,7 +34,6 @@
 }
 
 .zoom-content {
-  transition: transform 0.1s ease;
   transform-origin: 0 0;
   will-change: transform, font-size;
   --scale: 1;
@@ -212,6 +207,15 @@
   flex-direction: column;
   align-items: center;
   margin: 0 30px;
+
+  scroll-margin-block-start: 30vh;
+  scroll-margin-block-end: 30vh;
+}
+
+.tree-root-item.deleting {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .tree-children-ab .branch-items > .tree-root-item:first-child {
@@ -323,16 +327,118 @@
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 
-  width: 15vw;
-  height: 20vh;
+  width: 300px;
+  height: 350px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: start;
+  align-items: start;
+  gap: 20px;
 
-  font-size: 1.5rem;
+  font-size: 1rem;
+}
+
+.tree-node-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+  gap: 20px;
+  width: 100%;
+}
+
+.step-content-ab {
+  text-align: start;
+  width: 100%;
+}
+
+.step-content-ab-hinted {
+  color: red;
+  font-weight: 1000;
+  animation: fadeInHintContent 0.5s ease-in forwards;
+}
+
+@keyframes fadeInForCorrectHint {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fade-in-correctStep {
+  animation: fadeInForCorrectHint 0.3s ease-in-out forwards;
 }
 
 /* ---------------------------------------
   render Tree function END
 --------------------------------------- */
+
+/* -------EDITING--------- */
+.inline-edit-textarea-editing.ab {
+  font-size: 1rem;
+  width: calc(100% - 2vw);
+}
+
+.title-icon-tree-ab {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.icon-container {
+  display: flex;
+}
+
+/*Hint block animation*/
+.hint-block-ab {
+  background-color: white;
+  border: 1px solid black;
+  color: black;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+
+  /* your transition */
+  transition: max-height 0.4s ease, margin-top 0.4s ease;
+
+  /* initial collapsed state */
+  max-height: 0;
+  margin-top: -15px;
+
+  /* sizing once: */
+  width: 300px;
+  padding: 16px;
+  font-size: 1rem;
+  will-change: max-height, margin-top;
+}
+
+.hint-block-ab.open {
+  /* big enough that it’ll always contain your content */
+  max-height: 1000px;
+  margin-top: 15px;
+}
+
+.hint-block-ab:nth-child(1) {
+  z-index: 23;
+}
+.hint-block-ab:nth-child(2) {
+  z-index: 22;
+}
+.hint-block-ab:nth-child(3) {
+  z-index: 21;
+}
+
+.hint-block-ab:hover {
+  background-color: lightgrey;
+  z-index: 25;
+}
+
+.hint-content-ab {
+  display: block;
+  font-weight: normal;
+  font-size: 1rem;
+}

@@ -485,7 +485,6 @@ Textarea for starting prompt END
 .inline-edit-textarea-editing {
   resize: none;
   background-color: transparent;
-  color: black;
   display: inline-block;
   overflow-x: hidden;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

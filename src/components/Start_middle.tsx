@@ -336,6 +336,8 @@ export default function ResizableSplitView({
         terminalRef.current.innerHTML = "";
       }
       ro.disconnect();
+
+      hasWrittenInitialPrompt.current = false;
     };
   }, [isAuthenticated]);
 

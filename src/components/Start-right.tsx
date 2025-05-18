@@ -1616,6 +1616,7 @@ Editing logic START
                   <textarea
                     autoFocus
                     className="inline-edit-textarea-editing"
+                    style={{ color: getStepBoxTextColor(step) }}
                     rows={3}
                     value={tempContent}
                     onChange={(e) => setTempContent(e.target.value)}
@@ -3177,6 +3178,7 @@ Biggest render Tree ever recored START
               <textarea
                 autoFocus
                 className="inline-edit-textarea-editing"
+                style={{ color: getStepBoxTextColor(step) }}
                 rows={3}
                 value={tempContent}
                 onChange={(e) => setTempContent(e.target.value)}
