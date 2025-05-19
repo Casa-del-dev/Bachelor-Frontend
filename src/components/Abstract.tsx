@@ -156,6 +156,9 @@ const Abstract: React.FC = ({}) => {
   const headerRef = useRef<HTMLDivElement>(null);
   const rightAbstractRef = useRef<HTMLDivElement>(null);
 
+  //used for adding step drag and drop
+  const [draggingNew, setDraggingNew] = useState(false);
+
   const isAuthenticated = useAuth();
 
   const [toggleAbstraction, setToggleAbstraction] = useState(
@@ -339,6 +342,8 @@ const Abstract: React.FC = ({}) => {
 
   //One big pan+zoom effect—bind once, direct DOM writes
   useEffect(() => {
+    if (draggingNew) return;
+
     const container = mapContainerRef.current!;
     const content = zoomContentRef.current!;
     const DRAG_SPEED = 1.4;
@@ -437,7 +442,7 @@ const Abstract: React.FC = ({}) => {
       container.removeEventListener("wheel", onWheel);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [draggingNew]);
 
   const handleDividerDblClick = () => {
     setAnimateToRight(true);
@@ -934,7 +939,7 @@ const Abstract: React.FC = ({}) => {
   /*------------------------------*/
   /* DRAG AND DROP FUNCTIONS START*/
   /*------------------------------*/
-  const [draggingNew, setDraggingNew] = useState(false);
+
   const [blankStep, setBlankStep] = useState<Step | null>(null);
   interface InsertTarget {
     index: number;
@@ -962,8 +967,10 @@ const Abstract: React.FC = ({}) => {
   }
   const snapPointsRef = useRef<SnapPoint[]>([]);
 
-  function startNewStepDrag(e: React.MouseEvent) {
+  function startNewStepDrag(e: React.PointerEvent) {
     e.preventDefault();
+
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
 
     // grab every actual .tree-node-ab (not the container)
     const boxes = Array.from(
@@ -994,8 +1001,8 @@ const Abstract: React.FC = ({}) => {
     setDraggingNew(true);
     setGhostPos({ x: e.clientX, y: e.clientY });
 
-    document.addEventListener("mousemove", onDrag);
-    document.addEventListener("mouseup", onDrop);
+    document.addEventListener("pointermove", onDrag);
+    document.addEventListener("pointerup", onDrop);
     document.addEventListener("keydown", onKeyDown);
   }
 
@@ -1005,7 +1012,7 @@ const Abstract: React.FC = ({}) => {
     stepsRef.current = steps;
   }, [steps]);
 
-  const onDrag = useCallback((e: MouseEvent) => {
+  const onDrag = useCallback((e: PointerEvent) => {
     setGhostPos({ x: e.clientX, y: e.clientY });
 
     // 1) Try “add first child to a leaf” under ANY node with no children
@@ -1138,9 +1145,9 @@ const Abstract: React.FC = ({}) => {
     }
   }, []);
 
-  const onDrop = (e: MouseEvent) => {
-    document.removeEventListener("mousemove", onDrag);
-    document.removeEventListener("mouseup", onDrop);
+  const onDrop = (e: PointerEvent) => {
+    document.removeEventListener("pointermove", onDrag);
+    document.removeEventListener("pointerup", onDrop);
     document.removeEventListener("keydown", onKeyDown);
     setDraggingNew(false);
     setGhostPos(null);
@@ -1184,8 +1191,8 @@ const Abstract: React.FC = ({}) => {
   }, []);
 
   function cleanupDrag() {
-    document.removeEventListener("mousemove", onDrag);
-    document.removeEventListener("mouseup", onDrop);
+    document.removeEventListener("pointermove", onDrag);
+    document.removeEventListener("pointerup", onDrop);
     document.removeEventListener("keydown", onKeyDown);
     blankStepRef.current = null;
     insertTargetRef.current = null;
@@ -1542,7 +1549,8 @@ const Abstract: React.FC = ({}) => {
         <div className="container-plus-ab">
           <SquarePlus
             className="square-plus-ab"
-            onMouseDown={startNewStepDrag}
+            onPointerDown={startNewStepDrag}
+            style={{ touchAction: "none" }}
           />
         </div>
       </div>
