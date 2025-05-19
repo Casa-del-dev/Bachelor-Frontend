@@ -1170,9 +1170,10 @@ const Abstract: React.FC = ({}) => {
       const realStep = { ...rest, isNewlyInserted: true, selected: false };
 
       // pick siblings array (root or child)
-      let siblings = newTree;
-      if (target.path.length) {
-        siblings = siblings[target.path[0]].children;
+      // pick siblings array (root or child), by walking the entire path
+      let siblings: Step[] = newTree;
+      for (const idx of target.path) {
+        siblings = siblings[idx].children;
       }
 
       // splice in at the computed index
