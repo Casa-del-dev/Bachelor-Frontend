@@ -883,22 +883,6 @@ const Abstract: React.FC = ({}) => {
       </div>
     );
   }
-
-  const indicesRef = useRef<Record<string, number>>({});
-
-  function getInitialIndex(key: string, defaultValue = 0): number {
-    return indicesRef.current[key] ?? defaultValue;
-  }
-
-  function setInitialIndex(key: string, index: number): void {
-    indicesRef.current[key] = index;
-  }
-
-  function getLastLabelNumber(label: string): number {
-    const parts = label.replace("Substep ", "").split(".");
-    return parseInt(parts[parts.length - 1], 10);
-  }
-
   const handleRemoveStep = (id: string) => {
     updateSteps((prevSteps) =>
       prevSteps.map((step) => markStepAndChildrenAsDeleting(step, id))
