@@ -45,6 +45,33 @@
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
+  gap: 50px;
+  z-index: 999;
+}
+
+.square-plus-ab {
+  color: var(--text-color);
+}
+
+.square-plus-ab:hover {
+  color: rgb(141, 141, 141);
+  cursor: pointer;
+}
+
+.container-plus-ab {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 16px 16px;
+  background-color: var(--seg-btn-bg);
+  border: 1px solid var(--seg-btn-border);
+  border-radius: 1rem;
+}
+
+.header-text-abstract {
+  display: flex;
   justify-content: space-between;
   gap: 5vw;
   align-items: center;
@@ -52,8 +79,6 @@
   background-color: var(--seg-btn-bg);
   border: 1px solid var(--seg-btn-border);
   border-radius: 1rem;
-
-  z-index: 999;
 }
 
 .header-left-ab-container {
@@ -441,4 +466,25 @@
   display: block;
   font-weight: normal;
   font-size: 1rem;
+}
+
+.not-extented-hint.ab {
+  margin-top: -5px;
+}
+
+/* ------------------------------------------------------------
+INSERTING STEPS INTO THE TREE
+------------------------------------------------------------ */
+
+.insert-gap {
+  transition: background-color 0.2s;
+  border: 2px dashed #888;
+}
+.insert-gap:hover {
+  background-color: #bbb;
+}
+
+.ghost-step .tree-node-ab {
+  opacity: 0.8;
+  pointer-events: none;
 }

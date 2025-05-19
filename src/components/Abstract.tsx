@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { Search, X, Check, Pen, Trash } from "lucide-react";
+import { Search, X, Check, Pen, Trash, SquarePlus } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 
@@ -108,6 +108,8 @@ export interface Step {
   isNewlyInserted: boolean;
   isexpanded: boolean;
   isHyperExpanded: boolean;
+
+  isGhost?: boolean;
 
   selected: boolean;
 }
@@ -945,31 +947,343 @@ const Abstract: React.FC = ({}) => {
 
   /* ICON FUNCTIONS END */
 
+  /*------------------------------*/
+  /* DRAG AND DROP FUNCTIONS START*/
+  /*------------------------------*/
+  const [draggingNew, setDraggingNew] = useState(false);
+  const [blankStep, setBlankStep] = useState<Step | null>(null);
+  interface InsertTarget {
+    index: number;
+    path: number[];
+    /** the X‐coordinate of the slot midpoint or right edge */
+    dropX?: number;
+  }
+  const [insertTarget, setInsertTarget] = useState<InsertTarget | null>(null);
+  const insertTargetRef = useRef<InsertTarget | null>(null);
+  const blankStepRef = useRef<Step | null>(null);
+  const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(
+    null
+  );
+
+  const SNAP_THRESHOLD = 200;
+  const VERTICAL_THRESHOLD = SNAP_THRESHOLD;
+
+  interface SnapPoint {
+    path: number[]; // zero-based path into your tree
+    left: number; // left edge x
+    right: number; // right edge x
+    mid: number; // center x
+    top: number; // top y
+    bottom: number; // bottom y
+  }
+  const snapPointsRef = useRef<SnapPoint[]>([]);
+
+  function startNewStepDrag(e: React.MouseEvent) {
+    e.preventDefault();
+
+    // grab every actual .tree-node-ab (not the container)
+    const boxes = Array.from(
+      document.querySelectorAll<HTMLElement>(".tree-node-ab")
+    );
+
+    snapPointsRef.current = boxes.map((box) => {
+      // derive its path by parsing the parent .tree-root-item’s id="step-…-…"
+      const container = box.closest(".tree-root-item") as HTMLElement;
+      const id = container.id.replace(/^step-/, "");
+      const path = id.split("-").map((n) => parseInt(n, 10));
+
+      const r = box.getBoundingClientRect();
+      return {
+        path,
+        left: r.left,
+        right: r.right,
+        mid: r.left + r.width / 2,
+        top: r.top,
+        bottom: r.bottom,
+      };
+    });
+
+    // insert our ghost placeholder into state
+    const newBlank = createBlankStep(true);
+    blankStepRef.current = newBlank;
+    setBlankStep(newBlank);
+    setDraggingNew(true);
+    setGhostPos({ x: e.clientX, y: e.clientY });
+
+    document.addEventListener("mousemove", onDrag);
+    document.addEventListener("mouseup", onDrop);
+    document.addEventListener("keydown", onKeyDown);
+  }
+
+  //to add child to childless nodes
+  const stepsRef = useRef<Step[]>(steps);
+  useEffect(() => {
+    stepsRef.current = steps;
+  }, [steps]);
+
+  const onDrag = useCallback((e: MouseEvent) => {
+    setGhostPos({ x: e.clientX, y: e.clientY });
+
+    // 1) Try “add first child to a leaf” under ANY node with no children
+    for (const pt of snapPointsRef.current) {
+      // walk down the tree to find that node
+      let nodeList = stepsRef.current;
+      let node: Step | undefined;
+      for (const idx of pt.path) {
+        node = nodeList[idx];
+        nodeList = node!.children;
+      }
+      // if it’s a leaf...
+      if (
+        node &&
+        node.children.length === 0 &&
+        // vertically just below
+        e.clientY > pt.bottom &&
+        e.clientY < pt.bottom + VERTICAL_THRESHOLD &&
+        // within ±25px of its midpoint
+        Math.abs(e.clientX - pt.mid) <= 25
+      ) {
+        const leafTarget: InsertTarget = {
+          path: [...pt.path],
+          index: 0, // first child slot
+          dropX: pt.mid, // for your horizontal-threshold check
+        };
+        insertTargetRef.current = leafTarget;
+        setInsertTarget(leafTarget);
+        return; // skip everything else
+      }
+    }
+
+    // 2) FALL BACK to your existing sibling/root hit-test
+    type Hit = { target: InsertTarget; dist2: number };
+    const hits: Hit[] = [];
+
+    for (const pt of snapPointsRef.current) {
+      const isChild = pt.path.length > 1;
+
+      // vertical eligibility
+      let vertOK: boolean;
+      if (isChild) {
+        const under =
+          e.clientY > pt.bottom && e.clientY < pt.bottom + VERTICAL_THRESHOLD;
+        const overlap =
+          e.clientY >= pt.top - VERTICAL_THRESHOLD &&
+          e.clientY <= pt.bottom + VERTICAL_THRESHOLD;
+        vertOK = under || overlap;
+      } else {
+        vertOK =
+          e.clientY >= pt.top - VERTICAL_THRESHOLD &&
+          e.clientY <= pt.bottom + VERTICAL_THRESHOLD;
+      }
+      if (!vertOK) continue;
+
+      // build the three “slots” (center, right‐edge, left‐edge)
+      const slots: {
+        x: number;
+        y: number;
+        build: (dropX: number) => InsertTarget;
+      }[] = [];
+
+      if (isChild) {
+        const parentPath = pt.path.slice(0, -1);
+        const idx = pt.path[pt.path.length - 1];
+        slots.push(
+          {
+            x: pt.mid,
+            y: pt.bottom,
+            build: (dropX) => ({ path: parentPath, index: idx, dropX }),
+          },
+          {
+            x: pt.right,
+            y: pt.bottom,
+            build: (dropX) => ({ path: parentPath, index: idx + 1, dropX }),
+          },
+          {
+            x: pt.left,
+            y: pt.bottom,
+            build: (dropX) => ({ path: parentPath, index: idx, dropX }),
+          }
+        );
+      } else {
+        const rootIdx = pt.path[0];
+        const slotY = (pt.top + pt.bottom) / 2;
+        slots.push(
+          {
+            x: pt.mid,
+            y: slotY,
+            build: (dropX) => ({ path: [], index: rootIdx, dropX }),
+          },
+          {
+            x: pt.right,
+            y: slotY,
+            build: (dropX) => ({ path: [], index: rootIdx + 1, dropX }),
+          },
+          {
+            x: pt.left,
+            y: slotY,
+            build: (dropX) => ({ path: [], index: rootIdx, dropX }),
+          }
+        );
+      }
+
+      // for each slot, if within thresholds, record its squared distance
+      for (const { x, y, build } of slots) {
+        const dx = e.clientX - x;
+        const dy = e.clientY - y;
+        if (
+          Math.abs(dx) <= SNAP_THRESHOLD &&
+          Math.abs(dy) <= VERTICAL_THRESHOLD
+        ) {
+          hits.push({
+            target: build(x),
+            dist2: dx * dx + dy * dy,
+          });
+        }
+      }
+    }
+
+    // 3) of all hits, pick the closest
+    if (hits.length > 0) {
+      hits.sort((a, b) => a.dist2 - b.dist2);
+      const found = hits[0].target;
+      insertTargetRef.current = found;
+      setInsertTarget(found);
+    } else {
+      insertTargetRef.current = null;
+      setInsertTarget(null);
+    }
+  }, []);
+
+  const onDrop = (e: MouseEvent) => {
+    document.removeEventListener("mousemove", onDrag);
+    document.removeEventListener("mouseup", onDrop);
+    document.removeEventListener("keydown", onKeyDown);
+    setDraggingNew(false);
+    setGhostPos(null);
+
+    const blank = blankStepRef.current;
+    const target = insertTargetRef.current;
+    if (!blank || !target) return cleanupDrag();
+
+    // if it’s a root‐mode drop, cancel when too far sideways
+    if (
+      target.dropX != null &&
+      Math.abs(e.clientX - target.dropX) > SNAP_THRESHOLD
+    ) {
+      return cleanupDrag();
+    }
+
+    setSteps((prev) => {
+      const newTree = JSON.parse(JSON.stringify(prev)) as Step[];
+      const { isGhost, ...rest } = blank!;
+      const realStep = { ...rest, isNewlyInserted: true, selected: false };
+
+      // pick siblings array (root or child)
+      let siblings = newTree;
+      if (target.path.length) {
+        siblings = siblings[target.path[0]].children;
+      }
+
+      // splice in at the computed index
+      const idx = target.index ?? siblings.length;
+      siblings.splice(idx, 0, realStep);
+
+      saveStepTree(newTree);
+      return newTree;
+    });
+
+    cleanupDrag();
+  };
+
+  const onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") cleanupDrag();
+  }, []);
+
+  function cleanupDrag() {
+    document.removeEventListener("mousemove", onDrag);
+    document.removeEventListener("mouseup", onDrop);
+    document.removeEventListener("keydown", onKeyDown);
+    blankStepRef.current = null;
+    insertTargetRef.current = null;
+    setDraggingNew(false);
+    setBlankStep(null);
+    setInsertTarget(null);
+  }
+
+  function createBlankStep(Selected: boolean): Step {
+    return {
+      id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      code: "",
+      content: "New Step",
+      correctStep: "",
+      prompt: "",
+      status: { correctness: "", can_be_further_divided: "" },
+      general_hint: "",
+      detailed_hint: "",
+      hasparent: false,
+      children: [],
+      isDeleting: false,
+      showGeneralHint1: false,
+      showDetailedHint1: false,
+      showCorrectStep1: false,
+      showGeneralHint2: false,
+      showDetailedHint2: false,
+      isNewlyInserted: true,
+      isexpanded: true,
+      isHyperExpanded: false,
+      isGhost: true,
+      selected: Selected,
+    };
+  }
+
+  function getPreviewSteps(): Step[] {
+    if (!draggingNew || !insertTarget || !blankStep) return steps;
+
+    // deep-clone only once
+    const treeCopy = JSON.parse(JSON.stringify(steps)) as Step[];
+
+    // if inserting at root level:
+    if (insertTarget.path.length === 0) {
+      treeCopy.splice(insertTarget.index, 0, blankStep);
+      return treeCopy;
+    }
+
+    // otherwise drill into the right children array
+    let siblings = treeCopy;
+    for (const p of insertTarget.path) {
+      siblings = siblings[p].children;
+    }
+    siblings.splice(insertTarget.index, 0, blankStep);
+    return treeCopy;
+  }
+  /*------------------------------*/
+  /* DRAG AND DROP FUNCTIONS END  */
+  /*------------------------------*/
+
   /**
    * Recursively renders a node and its children
    */
   function renderNode(node: Step, indexPath: string, path: number[]) {
     const nodeWidth = calculateTreeWidth(node);
     const elementId = `step-${path.join("-")}`;
+    const isGhost = node.isGhost ?? false;
 
     const connectorOffset = Math.round(
-      (nodeWidth - STEP_BOX_WIDTH_PX + 60) / 2
+      (nodeWidth - STEP_BOX_WIDTH_PX + CHILD_EXTRA_MARGIN_PX) / 2
     );
     const offsetWithUnit = `${connectorOffset}px`;
 
     const childCount = node.children.length;
-
-    let branchLineStyle = undefined;
+    let branchLineStyle: React.CSSProperties | undefined;
 
     if (childCount > 0) {
       const leftChildWidth = calculateTreeWidth(node.children[0]);
       const rightChildWidth = calculateTreeWidth(node.children[childCount - 1]);
-
       const branchLineLeftOffset = Math.ceil(leftChildWidth / 2);
       const branchLineRightOffset = Math.ceil(rightChildWidth / 2);
-
       const branchLineWidth =
         nodeWidth - leftChildWidth / 2 - rightChildWidth / 2;
+
       branchLineStyle = {
         position: "absolute",
         left: `${branchLineLeftOffset}px`,
@@ -982,14 +1296,16 @@ const Abstract: React.FC = ({}) => {
       <div
         key={node.id}
         id={elementId}
-        className={`tree-root-item ${node.isDeleting ? "deleting" : ""}`}
+        className={`tree-root-item ${node.isDeleting ? "deleting" : ""} ${
+          isGhost ? "ghost-step" : ""
+        }`}
         style={{ "--margin-var-tree": offsetWithUnit } as React.CSSProperties}
       >
         <div className="step-box-ab">
           <div
             className="tree-node-ab"
             style={{
-              border: "2px " + getBorder(node) + " black",
+              border: `2px ${getBorder(node)} black`,
               backgroundColor: getStepBoxColor(node),
               color: getStepBoxTextColor(node),
             }}
@@ -1001,11 +1317,9 @@ const Abstract: React.FC = ({}) => {
                   <div className="leftSide-Icons">
                     <Pen
                       className="Filetext-tree"
-                      strokeWidth="1.2"
-                      onClick={() => {
-                        handleStartEditing(path, node.content);
-                      }}
-                      style={{ fill: editingPath ? "lightgray" : "" }}
+                      strokeWidth={1.2}
+                      onClick={() => handleStartEditing(path, node.content)}
+                      style={{ fill: editingPath ? "lightgray" : undefined }}
                     />
                   </div>
                   <div className="trash">
@@ -1024,30 +1338,19 @@ const Abstract: React.FC = ({}) => {
                       }
                     />
                     <Trash
-                      onClick={() => {
-                        const key = `animatedSubsteps-${path.join("-")}`;
-                        const currentIndex = getInitialIndex(key);
-                        const lastLabel = getLastLabelNumber(
-                          `Step ${path.join(".")}:`
-                        );
-
-                        if (currentIndex >= lastLabel)
-                          setInitialIndex(key, currentIndex - 1);
-                        handleRemoveStep(node.id);
-                      }}
                       cursor="pointer"
-                      strokeWidth={"1.2"}
+                      strokeWidth={1.2}
                       color={getStepBoxTextColor(node)}
+                      onClick={() => handleRemoveStep(node.id)}
                       className="trash-icon"
                     />
                   </div>
                 </div>
               </div>
-              <div className="cluster-abstraction"></div>
+
               {editingPath &&
               editingPath.length === path.length &&
               editingPath.every((v, i) => v === path[i]) ? (
-                // in-place textarea when editing
                 <textarea
                   ref={textareaRef}
                   autoFocus
@@ -1059,7 +1362,6 @@ const Abstract: React.FC = ({}) => {
                   onBlur={handleBlur}
                 />
               ) : (
-                // otherwise plain text that you can double-click
                 <div
                   className={`step-content-ab ${
                     node.showCorrectStep1 ? "step-content-ab-hinted" : ""
@@ -1071,95 +1373,88 @@ const Abstract: React.FC = ({}) => {
                 >
                   {node.content}
                 </div>
-              )}{" "}
+              )}
             </div>
           </div>
         </div>
-        <>
-          {node.detailed_hint && node.showDetailedHint1 && (
-            <Collapsible
-              isOpen={node.showDetailedHint2}
-              id={`hint-detailed-${node.id}`}
-              toggleHint={toggleHint}
-              stepId={node.id}
-              what={"detailed"}
-            >
-              {/* Show fade-in if we just unlocked it */}
-              <div
-                className={
-                  "hint-inner " +
-                  (node.showDetailedHint2 ? "extended " : "fade-out-hint") +
-                  (justUnlockedHintId === `step-${path.join("-")}-2`
-                    ? "fade-in-hint "
-                    : "")
-                }
-              >
-                {node.showDetailedHint2 ? (
-                  <>
-                    <strong>Detailed Hint:</strong>
-                    <span className="hint-content-ab">
-                      {node.detailed_hint}
-                    </span>
-                  </>
-                ) : (
-                  <div className="not-extented-hint">
-                    <strong>Detailed Hint:</strong>
-                    <span
-                      className="hint-content-ab"
-                      style={{ visibility: "hidden" }}
-                    >
-                      {node.detailed_hint}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Collapsible>
-          )}
 
-          {node.general_hint && node.showGeneralHint1 && (
-            <Collapsible
-              isOpen={node.showGeneralHint2}
-              id={`hint-general-${node.id}`}
-              toggleHint={toggleHint}
-              stepId={node.id}
-              what={"general"}
-            >
-              <div
-                className={
-                  "hint-inner " +
-                  (node.showGeneralHint2 ? "extended " : "") +
-                  (justUnlockedHintId === `step-${path.join("-")}-3`
-                    ? "fade-in-hint "
-                    : "")
-                }
-              >
-                {node.showGeneralHint2 ? (
-                  <>
-                    <strong>General Hint:</strong>
-                    <span className="hint-content-ab">{node.general_hint}</span>
-                  </>
-                ) : (
-                  <div className="not-extented-hint">
-                    <strong>General Hint</strong>
-                    <span
-                      className="hint-content-ab"
-                      style={{ visibility: "hidden" }}
-                    >
-                      {node.general_hint}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Collapsible>
-          )}
-        </>
-
-        {node.children.length > 0 && (
-          <div className="tree-children-ab" style={{ position: "relative" }}>
+        {node.detailed_hint && node.showDetailedHint1 && (
+          <Collapsible
+            isOpen={node.showDetailedHint2}
+            id={`hint-detailed-${node.id}`}
+            toggleHint={toggleHint}
+            stepId={node.id}
+            what="detailed"
+          >
             <div
-              className="branch-line"
-              style={branchLineStyle as React.CSSProperties}
-            />
+              className={`hint-inner ${
+                node.showDetailedHint2 ? "extended" : "fade-out-hint"
+              } ${
+                justUnlockedHintId === `step-${path.join("-")}-2`
+                  ? "fade-in-hint"
+                  : ""
+              }`}
+            >
+              {node.showDetailedHint2 ? (
+                <>
+                  <strong>Detailed Hint:</strong>{" "}
+                  <span className="hint-content-ab">{node.detailed_hint}</span>
+                </>
+              ) : (
+                <div className="not-extented-hint ab">
+                  <strong>Detailed Hint:</strong>{" "}
+                  <span
+                    className="hint-content-ab"
+                    style={{ visibility: "hidden" }}
+                  >
+                    {node.detailed_hint}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Collapsible>
+        )}
+
+        {node.general_hint && node.showGeneralHint1 && (
+          <Collapsible
+            isOpen={node.showGeneralHint2}
+            id={`hint-general-${node.id}`}
+            toggleHint={toggleHint}
+            stepId={node.id}
+            what="general"
+          >
+            <div
+              className={`hint-inner ${
+                node.showGeneralHint2 ? "extended" : ""
+              } ${
+                justUnlockedHintId === `step-${path.join("-")}-3`
+                  ? "fade-in-hint"
+                  : ""
+              }`}
+            >
+              {node.showGeneralHint2 ? (
+                <>
+                  <strong>General Hint:</strong>{" "}
+                  <span className="hint-content-ab">{node.general_hint}</span>
+                </>
+              ) : (
+                <div className="not-extented-hint ab">
+                  <strong>General Hint:</strong>{" "}
+                  <span
+                    className="hint-content-ab"
+                    style={{ visibility: "hidden" }}
+                  >
+                    {node.general_hint}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Collapsible>
+        )}
+
+        {childCount > 0 && (
+          <div className="tree-children-ab" style={{ position: "relative" }}>
+            <div className="branch-line" style={branchLineStyle} />
             <div className="branch-items-container">
               <div className="branch-items">
                 {node.children.map((child, j) =>
@@ -1176,10 +1471,10 @@ const Abstract: React.FC = ({}) => {
   /**
    * Entry point rendering the whole tree
    */
-  function renderTree() {
+  function renderTree(tree = steps) {
     return (
       <div className="tree-root">
-        {steps.map((node, i) => renderNode(node, `${i + 1}`, [i]))}
+        {tree.map((node, i) => renderNode(node, `${i + 1}`, [i]))}
       </div>
     );
   }
@@ -1207,60 +1502,112 @@ const Abstract: React.FC = ({}) => {
         />
       </div>
       {/* Header container*/}
-      <div ref={headerRef} className="header-abstract">
-        <div className="header-left-ab-container">
-          <div
-            className="header-left-abstraction"
-            onClick={() => console.log("Clicked Abstraction Search")}
-          >
+      <div className="header-abstract">
+        <div ref={headerRef} className="header-text-abstract">
+          <div className="header-left-ab-container">
             <div
-              className="container-icons-ab"
-              onClick={handleToggleAbstraction}
+              className="header-left-abstraction"
+              onClick={() => console.log("Clicked Abstraction Search")}
             >
-              {toggleAbstraction === "true" ? (
-                <X className="X-abstract" strokeWidth="3px" />
-              ) : (
-                <Check className="Check-abstract" strokeWidth="3px" />
-              )}
+              <div
+                className="container-icons-ab"
+                onClick={handleToggleAbstraction}
+              >
+                {toggleAbstraction === "true" ? (
+                  <X className="X-abstract" strokeWidth="3px" />
+                ) : (
+                  <Check className="Check-abstract" strokeWidth="3px" />
+                )}
+              </div>
+              <div className="left-header-container-ab-notIcon">
+                Abstraction <Search />
+              </div>
             </div>
-            <div className="left-header-container-ab-notIcon">
-              Abstraction <Search />
+          </div>
+          <div className="select-problem-abstract" ref={dropdownRef}>
+            <div className="dropdown-header-abstract" onClick={toggleDropdown}>
+              <span
+                className={`dropdown-label ${isDropdownOpen ? "hidden" : ""}`}
+              >
+                {problemId}
+              </span>
+              <span className={`arrow ${isDropdownOpen ? "up" : "down"}`}>
+                {"▲"}
+              </span>
+            </div>
+            <div
+              className={`dropdown-list-abstract ${
+                isDropdownOpen ? "open" : ""
+              }`}
+              style={{ display: shouldRenderDropdown ? "block" : "none" }}
+            >
+              <div className="dropdown-items-container-ab">
+                {problemList.map((problem) => (
+                  <div
+                    key={problem}
+                    className="dropdown-item"
+                    onClick={() => handleSelectProblem(problem)}
+                  >
+                    {problem}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-        <div className="select-problem-abstract" ref={dropdownRef}>
-          <div className="dropdown-header-abstract" onClick={toggleDropdown}>
-            <span
-              className={`dropdown-label ${isDropdownOpen ? "hidden" : ""}`}
-            >
-              {problemId}
-            </span>
-            <span className={`arrow ${isDropdownOpen ? "up" : "down"}`}>
-              {"▲"}
-            </span>
-          </div>
-          <div
-            className={`dropdown-list-abstract ${isDropdownOpen ? "open" : ""}`}
-            style={{ display: shouldRenderDropdown ? "block" : "none" }}
-          >
-            <div className="dropdown-items-container-ab">
-              {problemList.map((problem) => (
-                <div
-                  key={problem}
-                  className="dropdown-item"
-                  onClick={() => handleSelectProblem(problem)}
-                >
-                  {problem}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="container-plus-ab">
+          <SquarePlus
+            className="square-plus-ab"
+            onMouseDown={startNewStepDrag}
+          />
         </div>
       </div>
       {/* Tree Container container*/}
+      {draggingNew && ghostPos && (
+        <div
+          style={{
+            position: "fixed",
+            top: ghostPos.y - 12, // roughly half the icon’s height
+            left: ghostPos.x - 12, // roughly half the icon’s width
+            pointerEvents: "none",
+            opacity: 0.8,
+            zIndex: 9999,
+          }}
+        >
+          <div style={{ position: "relative", width: 24, height: 24 }}>
+            {/* your normal plus */}
+            <SquarePlus size={24} />
+
+            {/* overlay a small check or cross */}
+            {insertTarget ? (
+              <Check
+                size={10}
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  background: "green",
+                  borderRadius: "50%",
+                }}
+              />
+            ) : (
+              <X
+                size={10}
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  background: "red",
+                  borderRadius: "50%",
+                }}
+              />
+            )}
+          </div>
+        </div>
+      )}
       <div className="map-abstract-container" ref={mapContainerRef}>
-        <div ref={zoomContentRef} className="zoom-content">
-          {renderTree()}
+        <div className="zoom-content" ref={zoomContentRef}>
+          {renderTree(getPreviewSteps())}
         </div>
       </div>
       {/* ========== FULLSCREEN OVERLAY ========== */}
