@@ -6,10 +6,7 @@ interface LoginProps {
   setIsModalOpen: (open: boolean) => void;
 }
 
-export default function Login({
-  setIsLoginModalOpen,
-  setIsModalOpen,
-}: LoginProps) {
+export default function Login({ setIsLoginModalOpen }: LoginProps) {
   return (
     <div className="login-container">
       <div className="login-card">
