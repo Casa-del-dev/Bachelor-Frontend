@@ -9,6 +9,7 @@ import Start from "./components/Start";
 import Redirect from "./components/Redirect";
 import Abstract from "./components/Abstract";
 import { ProfilePage } from "./components/Header";
+import GitHubCallback from "./GitHubComponent";
 
 function App() {
   const [selectedProblem, _] = useState<string>("");
@@ -18,6 +19,8 @@ function App() {
       <CodeProvider>
         <Layout>
           <Routes>
+            <Route path="/github/callback" element={<GitHubCallback />} />
+
             <Route path="/" element={<Welcome />} />
             <Route path="/problem" element={<Problem />} />
             <Route
