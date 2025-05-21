@@ -344,7 +344,7 @@ const Abstract: React.FC = ({}) => {
   useEffect(() => {
     if (draggingNew) return;
 
-    const container = mapContainerRef.current!;
+    const container = mainContainerRef.current!;
     const content = zoomContentRef.current!;
     const DRAG_SPEED = 1.4;
     const DRAG_THRESHOLD = 5;
@@ -972,6 +972,31 @@ const Abstract: React.FC = ({}) => {
 
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
 
+    if (stepsRef.current.length === 0) {
+      // 1) create & show the blank
+      const newBlank = createBlankStep(true);
+      blankStepRef.current = newBlank;
+      setBlankStep(newBlank);
+      setDraggingNew(true);
+
+      // 2) position ghost under the mouse immediately
+      setGhostPos({ x: e.clientX, y: e.clientY });
+
+      // 3) listen for move + up + escape
+      document.addEventListener("pointermove", onDrag);
+      document.addEventListener("pointerup", onDrop);
+      document.addEventListener("keydown", onKeyDown);
+
+      // 4) our “insert at root index 0” target
+      const emptyTarget = { path: [], index: 0, dropX: e.clientX };
+      insertTargetRef.current = emptyTarget;
+      setInsertTarget(emptyTarget);
+
+      return;
+    }
+
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+
     // grab every actual .tree-node-ab (not the container)
     const boxes = Array.from(
       document.querySelectorAll<HTMLElement>(".tree-node-ab")
@@ -1151,6 +1176,29 @@ const Abstract: React.FC = ({}) => {
     document.removeEventListener("keydown", onKeyDown);
     setDraggingNew(false);
     setGhostPos(null);
+
+    if (
+      stepsRef.current.length === 0 &&
+      blankStepRef.current &&
+      insertTargetRef.current
+    ) {
+      // grab the blank step, strip isGhost
+      const blank = blankStepRef.current;
+      const { isGhost, ...rest } = blank;
+
+      // insert exactly that rest (no ghost flag)
+      const realStep = {
+        ...rest,
+        isNewlyInserted: true,
+        selected: false,
+      };
+
+      // set + save
+      setSteps([realStep]);
+      saveStepTree([realStep]);
+
+      return cleanupDrag();
+    }
 
     const blank = blankStepRef.current;
     const target = insertTargetRef.current;

@@ -1,9 +1,9 @@
 import { HiX } from "react-icons/hi";
 import "./Login.css";
+import { FaGithub } from "react-icons/fa";
 
 interface LoginProps {
   setIsLoginModalOpen: (open: boolean) => void;
-  setIsModalOpen: (open: boolean) => void;
 }
 
 export default function Login({ setIsLoginModalOpen }: LoginProps) {
@@ -16,14 +16,18 @@ export default function Login({ setIsLoginModalOpen }: LoginProps) {
 
         <div className="login-button-container">
           <button
-            className="login-button"
+            className="github-login-button"
             onClick={() => {
-              window.location.href =
-                "https://bachelor-api.erenhomburg.com/auth/v1/github/login";
+              const origin = window.location.origin;
+              const state = encodeURIComponent(window.location.href);
+              const redirectUri = encodeURIComponent(
+                `${origin}/github/callback`
+              );
+              window.location.href = `https://bachelor-api.erenhomburg.com/auth/v1/github/login?state=${state}&redirect_uri=${redirectUri}`;
             }}
-            style={{ fontSize: "10px" }}
           >
-            Login with GitHub
+            <FaGithub className="github-icon" />
+            Sign in with GitHub
           </button>
         </div>
       </div>

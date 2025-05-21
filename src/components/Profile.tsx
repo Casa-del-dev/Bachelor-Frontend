@@ -5,10 +5,9 @@ import { RotateCcw } from "lucide-react"; // Import refresh icon
 
 interface ProfileProps {
   openLogin: () => void;
-  openSignup: () => void;
 }
 
-export default function Profile({ openLogin, openSignup }: ProfileProps) {
+export default function Profile({ openLogin }: ProfileProps) {
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
   const { logout } = useAuth();
@@ -41,7 +40,9 @@ export default function Profile({ openLogin, openSignup }: ProfileProps) {
                   <span>{username.charAt(0).toUpperCase()}</span>
                 </div>
                 <h2>{username}</h2>
-                <p className="email">{email || "No email available"}</p>
+                <p className="email">
+                  {email === "null" ? "No email available" : email}
+                </p>
               </div>
 
               <div className="localstorage-section">
@@ -100,14 +101,9 @@ export default function Profile({ openLogin, openSignup }: ProfileProps) {
         ) : (
           <>
             <h2>Welcome!</h2>
-            <p className="login-hint">
-              Log in or sign up to view your profile.
-            </p>
+            <p className="login-hint">Log in to view your profile.</p>
             <button className="auth-btn login" onClick={openLogin}>
               Log In
-            </button>
-            <button className="auth-btn signup" onClick={openSignup}>
-              Sign Up
             </button>
           </>
         )}
