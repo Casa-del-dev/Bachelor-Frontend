@@ -1040,6 +1040,10 @@ const Abstract: React.FC = ({}) => {
   const onDrag = useCallback((e: PointerEvent) => {
     setGhostPos({ x: e.clientX, y: e.clientY });
 
+    if (stepsRef.current.length === 0) {
+      return;
+    }
+
     // 1) Try “add first child to a leaf” under ANY node with no children
     for (const pt of snapPointsRef.current) {
       // walk down the tree to find that node
