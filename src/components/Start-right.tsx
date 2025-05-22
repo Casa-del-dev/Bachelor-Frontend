@@ -911,8 +911,8 @@ Editing logic START
         return 2;
       }
     } else if (step.detailed_hint && step.correctStep) {
-      if (step.detailed_hint) {
-        if (step.detailed_hint && step.showCorrectStep1) {
+      if (step.showDetailedHint1) {
+        if (step.showDetailedHint1 && step.showCorrectStep1) {
           return null;
         } else {
           return 1;
@@ -921,8 +921,8 @@ Editing logic START
         return 2;
       }
     } else if (step.general_hint && step.detailed_hint) {
-      if (step.general_hint) {
-        if (step.general_hint && step.detailed_hint) {
+      if (step.showGeneralHint1) {
+        if (step.showGeneralHint1 && step.showDetailedHint1) {
           return null;
         } else {
           return 1;
