@@ -32,7 +32,7 @@
   grid-template-columns: 5vw 1px 1fr;
   grid-template-areas: "Left Separator Right";
   width: 100%;
-  background-color: var(--main-background);
+  /*  background-color: var(--main-background); */
   color: var(--text-color);
 }
 
@@ -47,7 +47,8 @@
   gap: 20%;
   align-items: center;
   overflow: hidden;
-  background-color: var(--header-background);
+  /*   background-color: var(--header-background);
+ */
   color: var(--text-color);
 }
 
@@ -108,7 +109,8 @@
 
 .xterm-screen {
   width: 100% !important;
-  background-color: var(--header-background);
+  /*   background-color: var(--header-background);
+ */
   word-break: break-all;
   overflow-x: hidden;
   color: var(--text-color);
@@ -116,5 +118,6 @@
 
 .xterm .xterm-viewport {
   overflow: hidden;
-  background-color: var(--header-background) !important;
+  /*   background-color: var(--header-background);
+ */
 }

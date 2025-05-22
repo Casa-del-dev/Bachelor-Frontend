@@ -63,7 +63,7 @@ export default function ResizableSplitView({
   function getXtermTheme() {
     const isDark = document.body.classList.contains("dark-mode");
     return {
-      background: isDark ? "#121212" : "#f1f1f1",
+      background: isDark ? "#121212" : "#fff",
       foreground: isDark ? "#f0f0f0" : "#000000",
       cursor: isDark ? "#f0f0f0" : "#000000",
     };

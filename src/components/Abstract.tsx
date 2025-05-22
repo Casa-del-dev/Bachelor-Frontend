@@ -718,17 +718,62 @@ const Abstract: React.FC = ({}) => {
   /* ICON FUNCTIONS START */
 
   function getNumberForStep(step: Step): number | null {
-    if (step.general_hint && !step.showGeneralHint1)
-      return step.status.can_be_further_divided === "can" &&
-        step.status.correctness === "correct"
-        ? 2
-        : 3;
-    else if (step.detailed_hint && !step.showDetailedHint1)
-      return step.status.can_be_further_divided === "can" &&
-        step.status.correctness === "correct"
-        ? 1
-        : 2;
-    else if (step.correctStep && !step.showCorrectStep1) return 1;
+    if (step.general_hint && step.detailed_hint && step.correctStep) {
+      if (step.showGeneralHint1) {
+        if (step.showGeneralHint1 && step.showDetailedHint1) {
+          if (
+            step.showGeneralHint1 &&
+            step.showDetailedHint1 &&
+            step.showCorrectStep1
+          ) {
+            return null;
+          } else {
+            return 1;
+          }
+        } else {
+          return 2;
+        }
+      } else {
+        return 3;
+      }
+    } else if (step.general_hint && step.correctStep) {
+      if (step.showGeneralHint1) {
+        if (step.showGeneralHint1 && step.showCorrectStep1) {
+          return null;
+        } else {
+          return 1;
+        }
+      } else {
+        return 2;
+      }
+    } else if (step.detailed_hint && step.correctStep) {
+      if (step.detailed_hint) {
+        if (step.detailed_hint && step.showCorrectStep1) {
+          return null;
+        } else {
+          return 1;
+        }
+      } else {
+        return 2;
+      }
+    } else if (step.general_hint && step.detailed_hint) {
+      if (step.general_hint) {
+        if (step.general_hint && step.detailed_hint) {
+          return null;
+        } else {
+          return 1;
+        }
+      } else {
+        return 2;
+      }
+    } else if (step.correctStep) {
+      if (step.showCorrectStep1) {
+        return null;
+      } else {
+        return 1;
+      }
+    }
+
     return null;
   }
 
@@ -1376,8 +1421,7 @@ const Abstract: React.FC = ({}) => {
                           node,
                           path,
                           getNumberForStep(node),
-                          node.status.can_be_further_divided === "can" &&
-                            node.status.correctness === "correct"
+                          false
                         )
                       }
                     />

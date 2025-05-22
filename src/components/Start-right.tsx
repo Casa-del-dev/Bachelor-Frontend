@@ -860,6 +860,8 @@ Editing logic START
         current[idx].status.correctness = "";
         current[idx].status.can_be_further_divided = "";
         current[idx].code = "";
+        current[idx].correctStep = "";
+        current[idx].showCorrectStep1 = false;
       } else {
         current[idx] = {
           ...current[idx],
@@ -878,20 +880,64 @@ Editing logic START
   /* ---------------------------------------
   Giving hint step END
   --------------------------------------- */
-
   // HINT Logic
   function getNumberForStep(step: Step): number | null {
-    if (step.general_hint && !step.showGeneralHint1)
-      return step.status.can_be_further_divided === "can" &&
-        step.status.correctness === "correct"
-        ? 2
-        : 3;
-    else if (step.detailed_hint && !step.showDetailedHint1)
-      return step.status.can_be_further_divided === "can" &&
-        step.status.correctness === "correct"
-        ? 1
-        : 2;
-    else if (step.correctStep && !step.showCorrectStep1) return 1;
+    if (step.general_hint && step.detailed_hint && step.correctStep) {
+      if (step.showGeneralHint1) {
+        if (step.showGeneralHint1 && step.showDetailedHint1) {
+          if (
+            step.showGeneralHint1 &&
+            step.showDetailedHint1 &&
+            step.showCorrectStep1
+          ) {
+            return null;
+          } else {
+            return 1;
+          }
+        } else {
+          return 2;
+        }
+      } else {
+        return 3;
+      }
+    } else if (step.general_hint && step.correctStep) {
+      if (step.showGeneralHint1) {
+        if (step.showGeneralHint1 && step.showCorrectStep1) {
+          return null;
+        } else {
+          return 1;
+        }
+      } else {
+        return 2;
+      }
+    } else if (step.detailed_hint && step.correctStep) {
+      if (step.detailed_hint) {
+        if (step.detailed_hint && step.showCorrectStep1) {
+          return null;
+        } else {
+          return 1;
+        }
+      } else {
+        return 2;
+      }
+    } else if (step.general_hint && step.detailed_hint) {
+      if (step.general_hint) {
+        if (step.general_hint && step.detailed_hint) {
+          return null;
+        } else {
+          return 1;
+        }
+      } else {
+        return 2;
+      }
+    } else if (step.correctStep) {
+      if (step.showCorrectStep1) {
+        return null;
+      } else {
+        return 1;
+      }
+    }
+
     return null;
   }
 
@@ -1534,9 +1580,7 @@ Editing logic START
                                   step,
                                   currentPath,
                                   getNumberForStep(step),
-                                  step.status.can_be_further_divided ===
-                                    "can" &&
-                                    step.status.correctness === "correct"
+                                  false
                                 )
                               }
                             />
@@ -1582,8 +1626,7 @@ Editing logic START
                                 step,
                                 currentPath,
                                 getNumberForStep(step),
-                                step.status.can_be_further_divided === "can" &&
-                                  step.status.correctness === "correct"
+                                false
                               )
                             }
                           />
@@ -3100,8 +3143,7 @@ Biggest render Tree ever recored START
                               step,
                               currentPath,
                               getNumberForStep(step),
-                              step.status.can_be_further_divided === "can" &&
-                                step.status.correctness === "correct"
+                              false
                             )
                           }
                         />
@@ -3142,13 +3184,7 @@ Biggest render Tree ever recored START
                         fill={hintNumber ? "yellow" : "none"}
                         color={getStepBoxTextColor(step)}
                         onGiveHint={() =>
-                          handleGiveHint(
-                            step,
-                            currentPath,
-                            hintNumber,
-                            step.status.can_be_further_divided === "can" &&
-                              step.status.correctness === "correct"
-                          )
+                          handleGiveHint(step, currentPath, hintNumber, false)
                         }
                       />
                       <Trash
