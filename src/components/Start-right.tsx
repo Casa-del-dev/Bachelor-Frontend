@@ -1019,20 +1019,6 @@ Editing logic START
 
     const saved = localStorage.getItem("savedCorrectSteps") === "true";
 
-    if (hintNumber === 1) {
-      if (step.status.can_be_further_divided === "can" && !step.correctStep) {
-        step.showDetailedHint1 = true;
-        console.log(step);
-      } else {
-        if (saved === true) {
-          revealCorrectStep(path);
-        } else {
-          setShowCorrectStepOverlay(path);
-        }
-      }
-      return;
-    }
-
     // otherwise, general/detailed hints
     updateSteps((prevSteps) => {
       const newSteps = JSON.parse(JSON.stringify(prevSteps)) as Step[];
@@ -1042,10 +1028,39 @@ Editing logic START
       }
       const stepIndex = path[path.length - 1];
       const step = current[stepIndex];
-      if (hintNumber === 3 || (dividableStep && hintNumber === 2))
-        step.showGeneralHint1 = true;
-      else if (hintNumber === 2 || (dividableStep && hintNumber === 1))
-        step.showDetailedHint1 = true;
+      if (step.general_hint && step.detailed_hint && step.correctStep) {
+        if (hintNumber === 3) step.showGeneralHint1 = true;
+        else if (hintNumber === 2) step.showDetailedHint1 = true;
+        else if (hintNumber === 1) {
+          if (saved === true) {
+            revealCorrectStep(path);
+          } else {
+            setShowCorrectStepOverlay(path);
+          }
+        }
+      } else if (step.general_hint && step.detailed_hint) {
+        if (hintNumber === 2) step.showGeneralHint1 = true;
+        else if (hintNumber === 1) step.showDetailedHint1 = true;
+      } else if (step.general_hint && step.correctStep) {
+        if (hintNumber === 2) step.showGeneralHint1 = true;
+        else if (hintNumber === 1) {
+          if (saved === true) {
+            revealCorrectStep(path);
+          } else {
+            setShowCorrectStepOverlay(path);
+          }
+        }
+      } else if (step.detailed_hint && step.correctStep) {
+        if (hintNumber === 2) step.showDetailedHint1 = true;
+        else if (hintNumber === 1) {
+          if (saved === true) {
+            revealCorrectStep(path);
+          } else {
+            setShowCorrectStepOverlay(path);
+          }
+        }
+      }
+
       return newSteps;
     });
 
