@@ -1009,12 +1009,7 @@ Editing logic START
   }
 
   // handleGiveHint
-  function handleGiveHint(
-    step: Step,
-    path: number[],
-    hintNumber: number | null,
-    dividableStep: boolean
-  ) {
+  function handleGiveHint(path: number[], hintNumber: number | null) {
     if (hintNumber === null) return;
 
     const saved = localStorage.getItem("savedCorrectSteps") === "true";
@@ -1592,10 +1587,8 @@ Editing logic START
                               color={getStepBoxTextColor(step)}
                               onGiveHint={() =>
                                 handleGiveHint(
-                                  step,
                                   currentPath,
-                                  getNumberForStep(step),
-                                  false
+                                  getNumberForStep(step)
                                 )
                               }
                             />
@@ -1638,10 +1631,8 @@ Editing logic START
                             color={getStepBoxTextColor(step)}
                             onGiveHint={() =>
                               handleGiveHint(
-                                step,
                                 currentPath,
-                                getNumberForStep(step),
-                                false
+                                getNumberForStep(step)
                               )
                             }
                           />
@@ -3154,12 +3145,7 @@ Biggest render Tree ever recored START
                           fill={getNumberForStep(step) ? "yellow" : "none"}
                           color={getStepBoxTextColor(step)}
                           onGiveHint={() =>
-                            handleGiveHint(
-                              step,
-                              currentPath,
-                              getNumberForStep(step),
-                              false
-                            )
+                            handleGiveHint(currentPath, getNumberForStep(step))
                           }
                         />
                         <Trash
@@ -3199,7 +3185,7 @@ Biggest render Tree ever recored START
                         fill={hintNumber ? "yellow" : "none"}
                         color={getStepBoxTextColor(step)}
                         onGiveHint={() =>
-                          handleGiveHint(step, currentPath, hintNumber, false)
+                          handleGiveHint(currentPath, hintNumber)
                         }
                       />
                       <Trash
