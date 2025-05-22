@@ -747,8 +747,8 @@ const Abstract: React.FC = ({}) => {
         return 2;
       }
     } else if (step.detailed_hint && step.correctStep) {
-      if (step.detailed_hint) {
-        if (step.detailed_hint && step.showCorrectStep1) {
+      if (step.showDetailedHint1) {
+        if (step.showDetailedHint1 && step.showCorrectStep1) {
           return null;
         } else {
           return 1;
@@ -757,8 +757,8 @@ const Abstract: React.FC = ({}) => {
         return 2;
       }
     } else if (step.general_hint && step.detailed_hint) {
-      if (step.general_hint) {
-        if (step.general_hint && step.detailed_hint) {
+      if (step.showGeneralHint1) {
+        if (step.showGeneralHint1 && step.showDetailedHint1) {
           return null;
         } else {
           return 1;
@@ -785,29 +785,10 @@ const Abstract: React.FC = ({}) => {
   >(null);
   const [saveCorrectStep, setSaveCorrectStep] = useState(false);
 
-  function handleGiveHint(
-    step: Step,
-    path: number[],
-    hintNumber: number | null,
-    dividableStep: boolean
-  ) {
+  function handleGiveHint(path: number[], hintNumber: number | null) {
     if (hintNumber === null) return;
 
     const saved = localStorage.getItem("savedCorrectSteps") === "true";
-
-    if (hintNumber === 1) {
-      if (step.status.can_be_further_divided === "can" && !step.correctStep) {
-        step.showDetailedHint1 = true;
-        console.log(step);
-      } else {
-        if (saved === true) {
-          revealCorrectStep(path);
-        } else {
-          setShowCorrectStepOverlay(path);
-        }
-      }
-      return;
-    }
 
     // otherwise, general/detailed hints
     updateSteps((prevSteps) => {
@@ -818,10 +799,39 @@ const Abstract: React.FC = ({}) => {
       }
       const stepIndex = path[path.length - 1];
       const step = current[stepIndex];
-      if (hintNumber === 3 || (dividableStep && hintNumber === 2))
-        step.showGeneralHint1 = true;
-      else if (hintNumber === 2 || (dividableStep && hintNumber === 1))
-        step.showDetailedHint1 = true;
+      if (step.general_hint && step.detailed_hint && step.correctStep) {
+        if (hintNumber === 3) step.showGeneralHint1 = true;
+        else if (hintNumber === 2) step.showDetailedHint1 = true;
+        else if (hintNumber === 1) {
+          if (saved === true) {
+            revealCorrectStep(path);
+          } else {
+            setShowCorrectStepOverlay(path);
+          }
+        }
+      } else if (step.general_hint && step.detailed_hint) {
+        if (hintNumber === 2) step.showGeneralHint1 = true;
+        else if (hintNumber === 1) step.showDetailedHint1 = true;
+      } else if (step.general_hint && step.correctStep) {
+        if (hintNumber === 2) step.showGeneralHint1 = true;
+        else if (hintNumber === 1) {
+          if (saved === true) {
+            revealCorrectStep(path);
+          } else {
+            setShowCorrectStepOverlay(path);
+          }
+        }
+      } else if (step.detailed_hint && step.correctStep) {
+        if (hintNumber === 2) step.showDetailedHint1 = true;
+        else if (hintNumber === 1) {
+          if (saved === true) {
+            revealCorrectStep(path);
+          } else {
+            setShowCorrectStepOverlay(path);
+          }
+        }
+      }
+
       return newSteps;
     });
 
@@ -1417,12 +1427,7 @@ const Abstract: React.FC = ({}) => {
                       fill={getNumberForStep(node) ? "yellow" : "none"}
                       color={getStepBoxTextColor(node)}
                       onGiveHint={() =>
-                        handleGiveHint(
-                          node,
-                          path,
-                          getNumberForStep(node),
-                          false
-                        )
+                        handleGiveHint(path, getNumberForStep(node))
                       }
                     />
                     <Trash
