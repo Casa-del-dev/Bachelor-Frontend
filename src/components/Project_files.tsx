@@ -1,14 +1,7 @@
 import React, { useState, useRef, JSX, useEffect, useMemo } from "react";
 import "./Project_files.css";
 import { useCodeContext } from "../CodeContext";
-import {
-  FolderOpen,
-  Folder,
-  Trash,
-  File,
-  FolderPlus,
-  LucideBookTemplate,
-} from "lucide-react";
+import { FolderOpen, Folder, Trash, File, FolderPlus } from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 export interface FileItem {
@@ -350,14 +343,6 @@ const ProjectFiles = ({
     setEditingId(item.id);
     setEditText(item.name);
     e.stopPropagation();
-  }
-
-  function getVisualWeight(item: FileItem): number {
-    if (item.type === "file") return 1;
-    if (!item.children || item.children.length === 0) return 1;
-    return (
-      1 + item.children.reduce((sum, child) => sum + getVisualWeight(child), 0)
-    );
   }
 
   const inputRef = useRef<HTMLInputElement>(null);
