@@ -1,11 +1,19 @@
 :root {
   --second-background: #ffffff;
   --main-text: #000000;
+  --header-startRight-icon-shield: lightblue;
+  --header-startRight-icon-shield-hover: rgb(105, 186, 212);
+  --header-startRight-icon-trash: rgb(253, 89, 89);
+  --header-startRight-icon-trash-hover: rgb(255, 0, 0);
 }
 
 body.dark-mode {
   --second-background: #2a2a2a;
   --main-text: #f0f0f0;
+  --header-startRight-icon-shield: rgb(0, 0, 184);
+  --header-startRight-icon-shield-hover: blue;
+  --header-startRight-icon-trash: rgb(218, 0, 0);
+  --header-startRight-icon-trash-hover: rgb(255, 0, 0);
 }
 
 .Right-Side-main {
@@ -411,17 +419,17 @@ Textarea for starting prompt END
 }
 
 .trash-icon.header-shield {
-  fill: blue;
+  fill: var(--header-startRight-icon-shield);
 }
 .trash-icon.header-shield:hover {
-  fill: rgb(0, 0, 184);
+  fill: var(--header-startRight-icon-shield-hover);
 }
 
 .trash-icon.header-trash {
-  fill: rgb(201, 81, 51);
+  fill: var(--header-startRight-icon-trash);
 }
 .trash-icon.header-trash:hover {
-  fill: rgb(187, 62, 31);
+  fill: var(--header-startRight-icon-trash-hover);
 }
 
 .arrow-down {
