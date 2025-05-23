@@ -407,8 +407,21 @@ Textarea for starting prompt END
 }
 
 .trash-icon:hover {
-  color: #414040;
   fill: lightgrey;
+}
+
+.trash-icon.header-shield {
+  fill: blue;
+}
+.trash-icon.header-shield:hover {
+  fill: rgb(0, 0, 184);
+}
+
+.trash-icon.header-trash {
+  fill: rgb(201, 81, 51);
+}
+.trash-icon.header-trash:hover {
+  fill: rgb(187, 62, 31);
 }
 
 .arrow-down {

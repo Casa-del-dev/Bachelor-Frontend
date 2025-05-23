@@ -3815,7 +3815,7 @@ Biggest render Tree ever recored END
                 size={"1vw"}
                 strokeWidth={1}
                 cursor="pointer"
-                className="trash-icon"
+                className="trash-icon header-shield"
                 onClick={
                   loading
                     ? () => console.log("undefined")
@@ -3827,7 +3827,7 @@ Biggest render Tree ever recored END
                 strokeWidth={1}
                 cursor="pointer"
                 onClick={HandleDeleteTree}
-                className="trash-icon"
+                className="trash-icon header-trash"
               />
             </div>
           )}
