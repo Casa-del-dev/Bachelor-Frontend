@@ -409,7 +409,7 @@ body.dark-mode {
   content: "";
   position: absolute;
   top: 0;
-  bottom: 0;
+  bottom: var(--vertical-height);
   width: 0;
   border-left: 1px solid var(--border-color);
   z-index: 1;
@@ -486,16 +486,6 @@ body.dark-mode {
 }
 
 /* Stop vertical line after last child */
-.tree ul > li:last-child::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: var(--connector-top, 50%);
-  bottom: 0;
-  width: 1px;
-  background: var(--main-background);
-  z-index: 1;
-}
 
 .tree > li.pseudo-root-li::after {
   content: none;

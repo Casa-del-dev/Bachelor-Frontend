@@ -1,7 +1,14 @@
 import React, { useState, useRef, JSX, useEffect, useMemo } from "react";
 import "./Project_files.css";
 import { useCodeContext } from "../CodeContext";
-import { FolderOpen, Folder, Trash, File, FolderPlus } from "lucide-react";
+import {
+  FolderOpen,
+  Folder,
+  Trash,
+  File,
+  FolderPlus,
+  LucideBookTemplate,
+} from "lucide-react";
 import { useAuth } from "../AuthContext";
 
 export interface FileItem {
@@ -417,21 +424,18 @@ const ProjectFiles = ({
     );
   }
 
-  function computeConnectorTop(item: FileItem): string {
-    if (
-      item.type !== "folder" ||
-      !item.children ||
-      item.children.length === 0 ||
-      !openFolders[item.id]
-    ) {
-      return "50%";
-    }
-    const totalCount = getTotalDescendantCount(item);
-    if (totalCount <= 0) {
-      return "50%";
-    }
-    const value = Math.ceil((52 / (48 + 185 * totalCount)) * 100);
-    return `${value.toFixed(2)}%`;
+  function computeConnectorTop(item: FileItem): number {
+    const totalCount = getTotalDescendantCount(item) + 1;
+
+    const value = Math.ceil((1 / totalCount) * 50);
+    return value;
+  }
+
+  function calculateFirstHeight(x: number, searchedHeight: number): number {
+    const totalCount = x;
+
+    const value = Math.ceil((searchedHeight / totalCount) * 100);
+    return value;
   }
 
   function renderTree(tree: FileItem[]): JSX.Element {
@@ -446,21 +450,76 @@ const ProjectFiles = ({
           // Otherwise, if it is a file (or the folder is folded), use "50%".
           // Else, use your previous connector top calculation.
           let connectorTop: string;
+          const isFolder = item.type === "folder";
+          const isOpen = isFolder && openFolders[item.id];
+          const hasKids = isFolder && (item.children?.length || -1) > 0;
+
+          let temp;
           if (
             isLastChild &&
             item.type === "folder" &&
             item.children &&
-            item.children.length > 0
+            item.children.length > 0 &&
+            openFolders[item.id] === true
           ) {
-            connectorTop = computeConnectorTop(item);
+            temp = computeConnectorTop(item);
           } else if (item.type === "file" || openFolders[item.id] === false) {
-            connectorTop = "50%";
+            temp = 50;
           } else {
-            connectorTop = `${100 / (getVisualWeight(item) * 2)}%`;
+            temp = computeConnectorTop(item);
+          }
+
+          connectorTop = `${temp}%`;
+
+          // ——— new verticalHeight logic ———
+          let verticalHeight: string;
+
+          if (!isOpen || !hasKids) {
+            // files or closed folders never get a line (even if last)
+            verticalHeight = "0%";
+          } else {
+            // ——— last child AND it’s an open folder ———
+            const kids = item.children ?? [];
+            const n = kids.length;
+            const last = n > 0 ? kids[n - 1] : null;
+
+            // 1) total “boxes” before the last child:
+            //    each sibling contributes 1 (its own box) + all of its descendants
+            const beforeCount = kids
+              .slice(0, -1)
+              .reduce((sum, kid) => sum + 1 + getTotalDescendantCount(kid), 0);
+
+            // 2) if that last child is a folder, how many descendants _it_ has?
+            const lastDescCount =
+              last &&
+              last.type === "folder" &&
+              last.children?.length &&
+              openFolders[last.id]
+                ? getTotalDescendantCount(last)
+                : 0;
+
+            const effectiveCount = beforeCount + 1 + lastDescCount;
+
+            let temp;
+            if (lastDescCount > 0) {
+              temp =
+                100 -
+                calculateFirstHeight(effectiveCount, beforeCount + 1) -
+                (1 / effectiveCount) * (lastDescCount / effectiveCount) +
+                (1 / effectiveCount) * 50;
+            } else {
+              temp =
+                100 -
+                calculateFirstHeight(effectiveCount, beforeCount + 1) +
+                (1 / effectiveCount) * 50;
+            }
+
+            verticalHeight = `${temp}%`;
           }
 
           const styleObj: React.CSSProperties = {
             "--connector-top": connectorTop,
+            "--vertical-height": verticalHeight,
           } as React.CSSProperties;
 
           // Determine CSS class (as in your original code).
@@ -582,7 +641,13 @@ const ProjectFiles = ({
                                   fileTree,
                                   item.id
                                 );
-                                if (original) setEditText(original.name);
+                                if (original) {
+                                  if (original.name) {
+                                    setEditText(original.name);
+                                  } else {
+                                    deleteItem(original.id, true);
+                                  }
+                                }
                                 setEditingId(null);
                               }
                             }}
