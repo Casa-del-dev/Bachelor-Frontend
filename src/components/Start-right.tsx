@@ -28,6 +28,13 @@ import {
   setChanged,
 } from "./BuildingBlocks/StepsData";
 
+export interface FileItem {
+  id: number;
+  name: string;
+  type: "file" | "folder";
+  children?: FileItem[];
+}
+
 function Collapsible({
   isOpen,
   children,
@@ -216,6 +223,8 @@ interface StartRightProps {
   codeMap: Record<string, string | null>;
   setCodeForFile: (fileId: number, code: string) => void;
   currentFile: number | null;
+  fileTree: FileItem[];
+
   stepTree: Step[];
   setStepTree: React.Dispatch<React.SetStateAction<Step[]>>;
 }
@@ -232,6 +241,7 @@ const StartRight: React.FC<StartRightProps> = ({
   currentFile,
   stepTree,
   setStepTree,
+  fileTree,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
@@ -356,19 +366,35 @@ const StartRight: React.FC<StartRightProps> = ({
     return Object.keys(obj).map((key) => transformStep(obj[key], hasParent));
   }
 
+  function findItemById(tree: FileItem[], targetId: number): FileItem | null {
+    for (const item of tree) {
+      if (item.id === targetId) return item;
+      if (item.type === "folder" && item.children) {
+        const found = findItemById(item.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
   async function HandleImplemented() {
     if (!isAuthenticated) {
       console.log("Login Needed");
       return;
     }
 
+    const temp = steps;
+
+    if (
+      currentFile === null ||
+      findItemById(fileTree, currentFile) === null ||
+      findItemById(fileTree, currentFile)?.type === "folder"
+    )
+      return;
+
+    setSteps([]);
     setLoading(true);
     setLoadingCheck(true);
-
-    const temp = steps;
-    setSteps([]);
-
-    if (currentFile === null || codeMap[currentFile]?.trim() === "") return;
 
     try {
       const code = codeMap[currentFile];

@@ -337,6 +337,7 @@ const Start: React.FC = () => {
       currentFile={currentFile}
       stepTree={stepTree}
       setStepTree={setStepTree}
+      fileTree={fileTree}
     />
   );
 
