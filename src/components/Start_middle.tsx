@@ -504,7 +504,7 @@ export default function ResizableSplitView({
     if (!isResizing.current) return;
     e.preventDefault();
     // calculate percentage directly from cursor Y
-    const newHeight = (e.clientY / window.innerHeight) * 100;
+    const newHeight = (e.clientY / window.innerHeight) * 92.5;
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());
@@ -527,7 +527,7 @@ export default function ResizableSplitView({
   return (
     <div
       className="container"
-      style={{ height: "100vh", display: "flex", flexDirection: "column" }}
+      style={{ display: "flex", flexDirection: "column" }}
     >
       <div className="top-section" style={{ height: `${topHeight}%` }}>
         <PythonPlayground
