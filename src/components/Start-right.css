@@ -425,9 +425,6 @@ Textarea for starting prompt END
   fill: var(--header-startRight-icon-shield-hover);
 }
 
-.trash-icon.header-trash {
-  fill: var(--header-startRight-icon-trash);
-}
 .trash-icon.header-trash:hover {
   fill: var(--header-startRight-icon-trash-hover);
 }
