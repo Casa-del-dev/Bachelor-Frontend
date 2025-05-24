@@ -504,7 +504,7 @@ export default function ResizableSplitView({
     if (!isResizing.current) return;
     e.preventDefault();
     // calculate percentage directly from cursor Y
-    const newHeight = (e.clientY / window.innerHeight) * 88;
+    const newHeight = (e.clientY / window.outerHeight) * 100;
     if (newHeight > 10 && newHeight < 90) {
       setTopHeight(newHeight);
       localStorage.setItem("terminal-height", newHeight.toString());
