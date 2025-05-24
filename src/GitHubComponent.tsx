@@ -31,5 +31,5 @@ export default function GitHubCallback() {
     })();
   }, [login, navigate]);
 
-  return <p>Logging in with GitHub…</p>;
+  return <div className="logging-in-text">Logging in...</div>;
 }
