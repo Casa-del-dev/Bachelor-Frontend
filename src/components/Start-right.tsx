@@ -372,8 +372,7 @@ const StartRight: React.FC<StartRightProps> = ({
 
     try {
       const code = codeMap[currentFile];
-      if (!code) return;
-      const gptResponse = await apiCallTree(JSON.stringify(steps), code);
+      const gptResponse = await apiCallTree(JSON.stringify(steps), code || "");
       const rawMessage = gptResponse.choices[0].message.content;
 
       if (!rawMessage) {
