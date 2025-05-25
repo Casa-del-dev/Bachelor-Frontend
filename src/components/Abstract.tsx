@@ -768,9 +768,10 @@ const Abstract: React.FC = ({}) => {
       }
     } else if (step.correctStep) {
       if (step.showCorrectStep1) {
+        step.correctStep = "";
         return null;
       } else {
-        return 1;
+        return null;
       }
     }
 
@@ -851,7 +852,11 @@ const Abstract: React.FC = ({}) => {
       }
       const stepIndex = path[path.length - 1];
       current[stepIndex].showCorrectStep1 = true;
+      current[stepIndex].status.correctness = "correct";
+      current[stepIndex].status.can_be_further_divided = "cannot";
       current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
+      current[stepIndex].correctStep = "";
+
       return newSteps;
     });
     const stepId = `step-${path.join("-")}-correct`;
