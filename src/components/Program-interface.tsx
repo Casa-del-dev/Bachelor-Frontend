@@ -223,6 +223,17 @@ export default function PythonPlayground({
     );
   }
 
+  function findItemById(tree: FileItem[], targetId: number): FileItem | null {
+    for (const item of tree) {
+      if (item.id === targetId) return item;
+      if (item.type === "folder" && item.children) {
+        const found = findItemById(item.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
   const handleGenerateStepTree = () => {
     const dontAsk = localStorage.getItem("dontAskGenerateStepTree");
     if (dontAsk === "true") {
@@ -260,8 +271,6 @@ export default function PythonPlayground({
   const onGenerateStepTreeFromCode = async () => {
     if (loading) return;
 
-    setLoading(true);
-    setFromEditor(true);
     if (!isAuthenticated) {
       console.log("Login Needed");
       return;
@@ -274,6 +283,8 @@ export default function PythonPlayground({
     )
       return;
 
+    setLoading(true);
+    setFromEditor(true);
     const selectedProblem = problemId;
 
     const selectedProblemDetails = problemDetailsMap[selectedProblem];
@@ -472,7 +483,14 @@ export default function PythonPlayground({
             className="Network"
             style={{ padding: "0.5vw", cursor: "pointer" }}
             size={"1.5vw"}
-            onClick={handleGenerateStepTree}
+            onClick={
+              currentFile === null ||
+              codeMap[currentFile]?.trim() === "" ||
+              currentFile === -1 ||
+              findItemById(fileTree, currentFile)?.type === "folder"
+                ? undefined
+                : handleGenerateStepTree
+            }
           />
         </div>
       </div>
