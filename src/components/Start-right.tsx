@@ -959,7 +959,7 @@ Editing logic START
       if (step.showCorrectStep1) {
         return null;
       } else {
-        return 1;
+        return null;
       }
     }
 
@@ -1006,6 +1006,8 @@ Editing logic START
       }
       const stepIndex = path[path.length - 1];
       current[stepIndex].showCorrectStep1 = true;
+      current[stepIndex].status.correctness = "correct";
+      current[stepIndex].status.can_be_further_divided = "cannot";
       current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
       return newSteps;
     });
