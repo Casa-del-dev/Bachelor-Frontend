@@ -957,6 +957,7 @@ Editing logic START
       }
     } else if (step.correctStep) {
       if (step.showCorrectStep1) {
+        step.correctStep = "";
         return null;
       } else {
         return null;
