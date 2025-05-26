@@ -1,8 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./Abstract.css";
-import { Search, X, Check, Pen, Trash, SquarePlus } from "lucide-react";
+import {
+  X,
+  Check,
+  Pen,
+  Trash,
+  SquarePlus,
+  SearchCheck,
+  SearchX,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useAuth } from "../AuthContext";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
+import apiCallAbstract from "./AI_Abstract";
 
 // ======================
 // CORRECT STEP OVERLAY
@@ -12,6 +23,20 @@ interface CorrectStepOverlayProps {
   onConfirm: () => void;
   saveChecked: boolean;
   setSaveChecked: (val: boolean) => void;
+}
+
+interface AbstractionItem {
+  steps: { id: string }[][]; // array of arrays of `{ id: string }`
+  general_hint: string;
+  detailed_hint: string;
+  correct_answer: {
+    steps: {
+      [key: string]: {
+        content: string;
+        substeps: Record<string, { content: string; substeps: any }>;
+      };
+    };
+  };
 }
 
 const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
@@ -655,8 +680,6 @@ const Abstract: React.FC = ({}) => {
       editingPath.length === path.length &&
       editingPath.every((v, i) => v === path[i]);
 
-    console.log(isSame);
-
     if (isSame) {
       setEditingPath(null);
       setTempContent("");
@@ -956,12 +979,33 @@ const Abstract: React.FC = ({}) => {
     setTimeout(() => {
       updateSteps((prevSteps) => {
         const newSteps = removeStepById(prevSteps, id);
-        console.log(newSteps);
         saveStepTree(newSteps);
         return newSteps;
       });
     }, 300);
   };
+
+  //added this beacuse one time when deleting it didn't delete the step but only marked it as deleting
+  function removeDeletingSteps(steps: Step[]): Step[] {
+    return steps
+      .filter((step) => !step.isDeleting)
+      .map((step) => ({
+        ...step,
+        children: removeDeletingSteps(step.children),
+      }));
+  }
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSteps((prev) => {
+        const filtered = removeDeletingSteps(prev);
+        saveStepTree(filtered);
+        return filtered;
+      });
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   function markStepAndChildrenAsDeleting(step: Step, id: string): Step {
     if (step.id === id) {
@@ -1364,6 +1408,306 @@ const Abstract: React.FC = ({}) => {
   /* DRAG AND DROP FUNCTIONS END  */
   /*------------------------------*/
 
+  //------------------------------------------//
+  //------------LLM CALLING-------------------//
+  //------------------------------------------//
+
+  const [treeCorrect, setTreeCorrect] = useState(true); //used to keep track if the tree is correct!
+
+  useEffect(() => {
+    const allStepsAreCorrect = (step: Step): boolean => {
+      if (step.status.correctness !== "correct") {
+        setTreeCorrect(false);
+        return false;
+      }
+      return step.children.every(allStepsAreCorrect);
+    };
+
+    const result = steps.every(allStepsAreCorrect);
+
+    if (result) {
+      setTreeCorrect(true);
+    }
+  }, [steps]);
+
+  //hovering over incorrect tree
+  const [isHoveringAbstraction, setIsHoveringAbstraction] = useState(false);
+  const [abstractionTooltipPos, setAbstractionTooltipPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  //simlifying the tree structure to save money on the llm
+  function simplifyStepTree(steps: Step[]): any[] {
+    return steps.map((step) => ({
+      id: step.id,
+      content: step.content,
+      substeps: simplifyStepTree(step.children),
+    }));
+  }
+
+  const saveAbstraction = useCallback(
+    async (abstraction: any) => {
+      if (!problemId) return;
+
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      try {
+        const res = await fetch(
+          `https://bachelor-backend.erenhomburg.workers.dev/abstraction/v1/saveAbstraction?id=${encodeURIComponent(
+            problemId
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ abstraction }),
+          }
+        );
+        if (!res.ok) throw new Error(`Save abstraction failed (${res.status})`);
+      } catch (err) {
+        console.error("Error in saveAbstraction:", err);
+      }
+    },
+    [problemId]
+  );
+
+  const handleCallAbstraction = async () => {
+    if (treeCorrect) {
+      const simplifiedTree = simplifyStepTree(steps);
+      try {
+        const gptResponse = await apiCallAbstract(simplifiedTree); // <-- await here!
+        const rawMessage = gptResponse.choices[0].message.content;
+
+        console.log(rawMessage);
+
+        let abstractionJson;
+        try {
+          abstractionJson = JSON.parse(rawMessage);
+        } catch (e) {
+          console.error("Failed to parse abstraction JSON:", e);
+          return;
+        }
+
+        // Save it under /Abstraction
+        await saveAbstraction(abstractionJson);
+      } catch (error) {
+        console.error("Failed to get response from API Abstract:", error);
+      }
+    }
+  };
+
+  //the abstraction
+  const [abstractions, setAbstractions] = useState<AbstractionItem[]>([]);
+
+  //neeeded to load the abstraction everytime we toggle the abstraction
+  useEffect(() => {
+    if (toggleAbstraction !== "true") {
+      setAbstractions([]);
+      return;
+    }
+    if (!problemId) return;
+
+    const load = async () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) return setAbstractions([]);
+      try {
+        const res = await fetch(
+          `https://bachelor-backend.erenhomburg.workers.dev/abstraction/v1/loadAbstraction?id=${encodeURIComponent(
+            problemId
+          )}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.status === 404) {
+          setAbstractions([]);
+        } else {
+          const data = (await res.json()) as AbstractionItem[];
+          setAbstractions(data || []);
+        }
+      } catch (e) {
+        console.error(e);
+        setAbstractions([]);
+      }
+    };
+
+    load();
+  }, [toggleAbstraction, problemId]);
+
+  //Hovering the abstraction
+  const [hoverGroupIds, setHoverGroupIds] = useState<string[]>([]);
+  const [hoverPoly, setHoverPoly] = useState<[number, number][]>([]);
+  const [hoveredStepId, setHoveredStepId] = useState<string | null>(null);
+
+  const doHighlight = useCallback(
+    (id: string) => {
+      // 1. Find all abstraction‐items touching this step
+      const candidates = abstractions.filter((a) =>
+        a.steps.some((group) => group.some((s) => s.id === id))
+      );
+      if (candidates.length === 0) return;
+
+      // 2. Prefer a single‐group item, else the first multi‐group
+      const singleGroup = candidates.find((a) => a.steps.length === 1);
+      const chosen = singleGroup ?? candidates[0];
+
+      // 3. Flatten only THAT item’s IDs, dedupe
+      const allIds = Array.from(
+        new Set(chosen.steps.flatMap((group) => group.map((s) => s.id)))
+      );
+
+      setHoverGroupIds(allIds);
+
+      // 4. Gather every corner of each step‐box
+      const corners: [number, number][] = [];
+      allIds.forEach((sid) => {
+        const el = document.querySelector<HTMLElement>(
+          `[data-node-id="${sid}"]`
+        );
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        corners.push(
+          [r.left, r.top],
+          [r.right, r.top],
+          [r.right, r.bottom],
+          [r.left, r.bottom]
+        );
+      });
+      if (corners.length === 0) return;
+
+      // 5. Convex hull
+      let hull = convexHull(corners);
+      if (hull.length < 3) {
+        // degenerate: just draw a small box around it
+        hull = corners;
+      }
+
+      // 6. Padding
+      const PADDING = 20;
+      const cx = hull.reduce((sum, [x]) => sum + x, 0) / hull.length;
+      const cy = hull.reduce((sum, [, y]) => sum + y, 0) / hull.length;
+      const padded = hull.map(([x, y]) => {
+        const dx = x - cx,
+          dy = y - cy,
+          d = Math.hypot(dx, dy) || 1;
+        return [
+          cx + (dx / d) * (d + PADDING),
+          cy + (dy / d) * (d + PADDING),
+        ] as [number, number];
+      });
+
+      // 7. Smooth the corners a couple of times
+      const smoothPoly = chaikin(padded, 2);
+
+      // 8. Shift into container-relative coords
+      const containerRect = mapContainerRef.current!.getBoundingClientRect();
+      setHoverPoly(
+        smoothPoly.map(([x, y]) => [
+          x - containerRect.left,
+          y - containerRect.top,
+        ])
+      );
+    },
+    [abstractions /* … any deps … */]
+  );
+
+  function onStepMouseEnter(id: string) {
+    if (toggleAbstraction !== "true") return;
+    setIsHoveringStep(true);
+    setHoveredStepId(id);
+    /*     doHighlight(id);
+     */
+  }
+
+  function chaikin(
+    points: [number, number][],
+    iterations = 1
+  ): [number, number][] {
+    let pts = points;
+    for (let it = 0; it < iterations; it++) {
+      const newPts: [number, number][] = [];
+      for (let i = 0; i < pts.length; i++) {
+        const [x0, y0] = pts[i];
+        const [x1, y1] = pts[(i + 1) % pts.length];
+        // Q = 0.75 * P[i] + 0.25 * P[i+1]
+        newPts.push([0.75 * x0 + 0.25 * x1, 0.75 * y0 + 0.25 * y1]);
+        // R = 0.25 * P[i] + 0.75 * P[i+1]
+        newPts.push([0.25 * x0 + 0.75 * x1, 0.25 * y0 + 0.75 * y1]);
+      }
+      pts = newPts;
+    }
+    return pts;
+  }
+
+  // Monotone chain (Andrew) convex hull
+  function convexHull(points: [number, number][]): [number, number][] {
+    if (points.length < 4) return points.slice();
+    // sort lexicographically
+    points = points.slice().sort(([ax, ay], [bx, by]) => ax - bx || ay - by);
+    const cross = (
+      [ax, ay]: [number, number],
+      [bx, by]: [number, number],
+      [cx, cy]: [number, number]
+    ) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+
+    const lower: [number, number][] = [];
+    for (let p of points) {
+      while (
+        lower.length >= 2 &&
+        cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0
+      ) {
+        lower.pop();
+      }
+      lower.push(p);
+    }
+
+    const upper: [number, number][] = [];
+    for (let i = points.length - 1; i >= 0; i--) {
+      let p = points[i];
+      while (
+        upper.length >= 2 &&
+        cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0
+      ) {
+        upper.pop();
+      }
+      upper.push(p);
+    }
+
+    // remove duplicates of endpoints
+    upper.pop();
+    lower.pop();
+    return lower.concat(upper);
+  }
+
+  useEffect(() => {
+    if (hoveredStepId) {
+      doHighlight(hoveredStepId);
+    }
+  }, [transform.scale, doHighlight, hoveredStepId]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (hoveredStepId) doHighlight(hoveredStepId);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [hoveredStepId, doHighlight]);
+
+  const [isHoveringStep, setIsHoveringStep] = useState(false);
+  const [isHoveringPoly, setIsHoveringPoly] = useState(false);
+
+  useEffect(() => {
+    if (!isHoveringStep && !isHoveringPoly) {
+      setHoveredStepId(null);
+      setHoverPoly([]);
+      setHoverGroupIds([]);
+    }
+  }, [isHoveringStep, isHoveringPoly]);
+
   /**
    * Recursively renders a node and its children
    */
@@ -1396,6 +1740,18 @@ const Abstract: React.FC = ({}) => {
       };
     }
 
+    <svg width="0" height="0">
+      <filter id="wavy">
+        <feTurbulence
+          id="turbulence"
+          type="fractalNoise"
+          baseFrequency="0.02"
+          numOctaves="3"
+        />
+        <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="6" />
+      </filter>
+    </svg>;
+
     return (
       <div
         key={node.id}
@@ -1407,7 +1763,14 @@ const Abstract: React.FC = ({}) => {
       >
         <div className="step-box-ab">
           <div
-            className="tree-node-ab"
+            className={`tree-node-ab ${
+              hoverGroupIds.includes(node.id) ? "highlighted" : ""
+            }`}
+            data-node-id={node.id}
+            onMouseEnter={() => onStepMouseEnter(node.id)}
+            onMouseLeave={() => {
+              setIsHoveringStep(false);
+            }}
             style={{
               border: `2px ${getBorder(node)} black`,
               backgroundColor: getStepBoxColor(node),
@@ -1420,7 +1783,7 @@ const Abstract: React.FC = ({}) => {
                 <div className="icon-container">
                   <div className="leftSide-Icons">
                     <Pen
-                      className="Filetext-tree"
+                      className="Filetext-tree abstract"
                       strokeWidth={1.2}
                       onClick={() => handleStartEditing(path, node.content)}
                       style={{ fill: editingPath ? "lightgray" : undefined }}
@@ -1434,13 +1797,14 @@ const Abstract: React.FC = ({}) => {
                       onGiveHint={() =>
                         handleGiveHint(path, getNumberForStep(node))
                       }
+                      abstract={true}
                     />
                     <Trash
                       cursor="pointer"
                       strokeWidth={1.2}
                       color={getStepBoxTextColor(node)}
                       onClick={() => handleRemoveStep(node.id)}
-                      className="trash-icon"
+                      className="trash-icon abstract"
                     />
                   </div>
                 </div>
@@ -1577,6 +1941,61 @@ const Abstract: React.FC = ({}) => {
     );
   }
 
+  //particles coming out of the hovered steps
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    if (hoverPoly.length === 0) return;
+    const svg = svgRef.current!;
+    const path = svg.querySelector<SVGPathElement>("#highlight-path")!;
+    const pathLen = path.getTotalLength();
+
+    const SPAWN_RATE = 50; // spawn every 100ms
+    const PARTICLE_LIFE = 800; // each lives 800ms
+
+    const id = window.setInterval(() => {
+      // pick a random point along the path
+      const { x, y } = path.getPointAtLength(Math.random() * pathLen);
+
+      // create a tiny white circle
+      const circle = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
+      );
+      circle.setAttribute("cx", `${x}`);
+      circle.setAttribute("cy", `${y}`);
+      circle.setAttribute("r", "2");
+      circle.setAttribute("class", "particle-circle");
+
+      svg.appendChild(circle);
+
+      // animate it drifting + fading out
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 10;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+
+      circle.animate(
+        [
+          { transform: "translate(0,0)", opacity: 1 },
+          { transform: `translate(${dx}px,${dy}px)`, opacity: 0 },
+        ],
+        {
+          duration: PARTICLE_LIFE,
+          easing: "ease-out",
+          fill: "forwards",
+        }
+      );
+
+      // cleanup
+      setTimeout(() => {
+        if (circle.parentNode === svg) svg.removeChild(circle);
+      }, PARTICLE_LIFE + 50);
+    }, SPAWN_RATE);
+
+    return () => window.clearInterval(id);
+  }, [hoverPoly]);
+
   /* ---------------------------------------
   render Tree function END
 --------------------------------------- */
@@ -1603,22 +2022,59 @@ const Abstract: React.FC = ({}) => {
       <div className="header-abstract">
         <div ref={headerRef} className="header-text-abstract">
           <div className="header-left-ab-container">
-            <div
-              className="header-left-abstraction"
-              onClick={() => console.log("Clicked Abstraction Search")}
-            >
+            <div className="header-left-abstraction">
               <div
                 className="container-icons-ab"
                 onClick={handleToggleAbstraction}
               >
                 {toggleAbstraction === "true" ? (
-                  <X className="X-abstract" strokeWidth="3px" />
+                  <Eye className="Check-abstract" strokeWidth="1px" />
                 ) : (
-                  <Check className="Check-abstract" strokeWidth="3px" />
+                  <EyeOff className="X-abstract" strokeWidth="1px" />
                 )}
               </div>
-              <div className="left-header-container-ab-notIcon">
-                Abstraction <Search />
+              <div
+                className="left-header-container-ab-notIcon"
+                onClick={treeCorrect ? handleCallAbstraction : undefined}
+                onMouseEnter={() => setIsHoveringAbstraction(true)}
+                onMouseLeave={() => {
+                  setIsHoveringAbstraction(false);
+                  setAbstractionTooltipPos(null);
+                }}
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setAbstractionTooltipPos({
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top,
+                  });
+                }}
+                style={{ position: "relative" }}
+              >
+                Abstraction {treeCorrect ? <SearchCheck /> : <SearchX />}
+                {/*Hovering over the incorrect step tree*/}
+                {!treeCorrect &&
+                  isHoveringAbstraction &&
+                  abstractionTooltipPos && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: abstractionTooltipPos.x,
+                        top: abstractionTooltipPos.y + 20,
+                        background: "#fff5f5",
+                        border: "1px solid #ff4d4f",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        color: "#ff4d4f",
+                        fontSize: "12px",
+                        whiteSpace: "nowrap",
+                        transform: "translate(-50%, 0)",
+                        zIndex: 1000,
+                        pointerEvents: "none",
+                      }}
+                    >
+                      Tree is not correct!
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -1708,6 +2164,50 @@ const Abstract: React.FC = ({}) => {
         <div className="zoom-content" ref={zoomContentRef}>
           {renderTree(getPreviewSteps())}
         </div>
+        {/* ========== SVG overlay for group highlight ========== */}
+        {hoverPoly.length > 0 && (
+          <svg
+            ref={svgRef}
+            className="abstraction-overlay"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+            }}
+          >
+            {/* white glowing stroke */}
+            <polygon
+              className="highlight-poly"
+              points={hoverPoly.map((p) => p.join(",")).join(" ")}
+              fill="none"
+              stroke="white"
+              strokeWidth={4}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              style={{
+                pointerEvents: "all",
+              }}
+              onMouseEnter={() => {
+                setIsHoveringPoly(true);
+                if (hoveredStepId) doHighlight(hoveredStepId);
+              }}
+              onMouseLeave={() => {
+                setIsHoveringPoly(false);
+              }}
+            />
+
+            {/* invisible path for sampling points */}
+            <path
+              id="highlight-path"
+              d={`M${hoverPoly.map((p) => p.join(" ")).join(" L")} Z`}
+              fill="none"
+              stroke="none"
+            />
+          </svg>
+        )}
       </div>
       {/* ========== FULLSCREEN OVERLAY ========== */}
       {showCorrectStepOverlay && (

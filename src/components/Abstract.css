@@ -1,3 +1,15 @@
+:root {
+  --hover-color: rgb(202, 202, 202);
+  --hover-highlighted-color: drop-shadow(0 0 6px rgba(71, 38, 38, 0.6));
+  --hover-highlighted-color-steps: 0 15px 15px 10px rgba(71, 38, 38, 0.8);
+}
+
+body.dark-mode {
+  --hover-color: white;
+  --hover-highlighted-color: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+  --hover-highlighted-color-steps: 0 5px 15px 5px rgba(255, 255, 255, 0.6);
+}
+
 .main-container-abstract {
   display: grid;
   overflow: auto;
@@ -111,6 +123,8 @@
 }
 
 .container-icons-ab {
+  height: 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   padding: 6px 0.5rem 6px 0.5rem;
@@ -119,14 +133,6 @@
 
 .container-icons-ab:hover {
   background-color: var(--dropdown-hover-bg);
-}
-
-.X-abstract {
-  color: red;
-}
-
-.Check-abstract {
-  color: lightgreen;
 }
 
 .select-problem-abstract {
@@ -383,6 +389,16 @@
   animation: fadeInHintContent 0.5s ease-in forwards;
 }
 
+.Filetext-tree.abstract {
+  width: 20px;
+  height: 20px;
+}
+
+.trash-icon.abstract {
+  width: 20px;
+  height: 20px;
+}
+
 @keyframes fadeInForCorrectHint {
   0% {
     opacity: 0;
@@ -489,4 +505,31 @@ INSERTING STEPS INTO THE TREE
 .ghost-step .tree-node-ab {
   opacity: 0.8;
   pointer-events: none;
+}
+
+/* HOVERING CSS */
+
+/* ensure the svg overlay sits on top */
+.map-abstract-container {
+  position: relative;
+  overflow: visible;
+}
+
+/* optional: smoother polyline */
+.abstraction-overlay polyline {
+  z-index: 50;
+}
+
+.highlight-poly {
+  stroke: var(--hover-color);
+  stroke-width: 4;
+  filter: var(--hover-highlighted-color);
+}
+
+.tree-node-ab.highlighted {
+  box-shadow: var(--hover-highlighted-color-steps);
+}
+
+.particle-circle {
+  fill: var(--hover-color); /* or any color */
 }

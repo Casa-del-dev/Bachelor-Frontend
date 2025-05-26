@@ -5,14 +5,16 @@ const CustomLightbulb = ({
   fill = "yellow",
   onGiveHint = () => {},
   color,
+  abstract = false,
 }: {
   number: number | null;
   fill: string;
   onGiveHint: () => void;
   color: string;
+  abstract?: boolean;
 }) => {
   return (
-    <div className="lightbulb-container">
+    <div className={`lightbulb-container ${abstract ? "abstract" : ""}`}>
       {/* Custom Lightbulb Icon */}
       <svg
         className="lightbulb-icon"
@@ -32,7 +34,7 @@ const CustomLightbulb = ({
       {/* Number Overlay (Centered Inside the Bulb) */}
       {number && (
         <span
-          className="lightbulb-number"
+          className={`lightbulb-number ${abstract ? "abstract" : ""}`}
           onClick={() => onGiveHint()}
           style={{ cursor: "pointer" }}
         >

@@ -5,6 +5,10 @@
   align-items: start;
 }
 
+.lightbulb-container.abstract {
+  width: 27px;
+}
+
 .lightbulb-icon {
   width: 100%;
   height: 100%;
@@ -22,4 +26,8 @@
   font-size: calc(var(--step-font-size, 1vw) * 0.4);
   font-weight: bold;
   color: black;
+}
+
+.lightbulb-number.abstract {
+  font-size: 8px;
 }
