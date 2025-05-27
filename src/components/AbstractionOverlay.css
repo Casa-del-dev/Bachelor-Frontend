@@ -1,0 +1,55 @@
+:root {
+  --overlay-abstraction-main-background: rgb(0, 0, 0);
+}
+
+body.dark-mode {
+  --overlay-abstraction-main-background: rgb(129, 129, 129);
+}
+
+@keyframes expandFromCenterHorizontally {
+  0% {
+    transform: scaleX(0.02); /* almost invisible width */
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.container-abstract-hover-overlay {
+  width: 80%;
+  margin-top: var(--header-height);
+  height: calc(90% - var(--header-height));
+  background: var(--header-background);
+  border: 4px solid var(--overlay-abstraction-main-background);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+
+  transform-origin: center center; /* Scale from the center */
+  animation: expandFromCenterHorizontally 0.4s ease-out;
+
+  display: grid;
+  grid-template-areas: "left divider right";
+  grid-template-columns: 1fr 4px 100px;
+}
+
+.building-abstraction-container {
+  grid-area: left;
+  overflow-y: auto;
+}
+
+.divider-abstraction-overlay {
+  grid-area: divider;
+  background: var(--overlay-abstraction-main-background);
+  width: 100%;
+  height: 100%;
+}
+
+.right-abstraction-overlay {
+  grid-area: right;
+}

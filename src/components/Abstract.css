@@ -524,6 +524,16 @@ INSERTING STEPS INTO THE TREE
   stroke: var(--hover-color);
   stroke-width: 4;
   filter: var(--hover-highlighted-color);
+  animation: fade-in-circle 0.3s ease-in-out forwards;
+}
+
+@keyframes fade-in-circle {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .tree-node-ab.highlighted {
@@ -536,6 +546,7 @@ INSERTING STEPS INTO THE TREE
 
 .lines-connecting-abstract-bubbles {
   stroke: var(--hover-color);
+  animation: fade-in-circle 0.3s ease-in-out forwards;
 }
 
 .line-pulse {
@@ -543,7 +554,9 @@ INSERTING STEPS INTO THE TREE
   stroke-width: 2;
   stroke-dasharray: 20 80; /* visible dash + long invisible gap */
   stroke-dashoffset: 0;
-  animation: pulse-glow 1.5s linear infinite;
+
+  animation: pulse-glow 1.5s linear infinite,
+    fade-in-circle 1s ease-in-out forwards;
   filter: var(--hover-highlighted-color);
   opacity: 1;
   pointer-events: none;
@@ -557,3 +570,7 @@ INSERTING STEPS INTO THE TREE
     stroke-dashoffset: 0;
   }
 }
+
+/* -----------------
+HOVERING CSS END
+----------------- */

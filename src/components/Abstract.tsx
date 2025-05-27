@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../AuthContext";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 import apiCallAbstract from "./AI_Abstract";
+import AbstractionOverlay from "./AbstractionOverlay";
 
 // ======================
 // CORRECT STEP OVERLAY
@@ -367,6 +368,17 @@ const Abstract: React.FC = ({}) => {
     window.dispatchEvent(new Event("resize"));
   }, [transform.scale]);
 
+  //showtheFixing overlay!!
+  const [showHoverOverlay, setShowHoverOverlay] = useState(false);
+  //close it at ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowHoverOverlay(false);
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, []);
+
   //One big pan+zoom effect—bind once, direct DOM writes
   useEffect(() => {
     if (draggingNew) return;
@@ -398,12 +410,15 @@ const Abstract: React.FC = ({}) => {
     }
 
     const onPointerDown = (e: PointerEvent) => {
+      if (showHoverOverlay) return;
+
       dragReady = true;
       startX = lastX = e.clientX;
       startY = lastY = e.clientY;
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (showHoverOverlay) return;
       if (!dragReady) return;
 
       const dx = e.clientX - startX;
@@ -427,6 +442,7 @@ const Abstract: React.FC = ({}) => {
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (showHoverOverlay) return;
       dragReady = false;
       if (dragging) {
         dragging = false;
@@ -437,6 +453,7 @@ const Abstract: React.FC = ({}) => {
     };
 
     const onWheel = (e: WheelEvent) => {
+      if (showHoverOverlay) return;
       e.preventDefault();
       const rect = container.getBoundingClientRect();
       const mx = e.clientX - rect.left;
@@ -451,7 +468,10 @@ const Abstract: React.FC = ({}) => {
       setTransform({ ...transformRef.current });
     };
 
-    container.addEventListener("pointerdown", onPointerDown);
+    container.addEventListener("pointerdown", (e) => {
+      if (showHoverOverlay) return;
+      onPointerDown(e);
+    });
     container.addEventListener("pointermove", onPointerMove, {
       passive: false,
     });
@@ -469,7 +489,7 @@ const Abstract: React.FC = ({}) => {
       container.removeEventListener("wheel", onWheel);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [draggingNew]);
+  }, [draggingNew, showHoverOverlay]);
 
   const handleDividerDblClick = () => {
     setAnimateToRight(true);
@@ -1481,6 +1501,7 @@ const Abstract: React.FC = ({}) => {
     if (treeCorrect) {
       const simplifiedTree = simplifyStepTree(steps);
       try {
+        setToggleAbstraction("false");
         const gptResponse = await apiCallAbstract(simplifiedTree); // <-- await here!
         const rawMessage = gptResponse.choices[0].message.content;
 
@@ -1494,6 +1515,7 @@ const Abstract: React.FC = ({}) => {
           return;
         }
 
+        setToggleAbstraction("true");
         // Save it under /Abstraction
         await saveAbstraction(abstractionJson);
       } catch (error) {
@@ -1894,17 +1916,6 @@ const Abstract: React.FC = ({}) => {
   const [isHoveringStep, setIsHoveringStep] = useState(false);
   const [isHoveringPoly, setIsHoveringPoly] = useState(false);
 
-  //showtheFixing overlay!!
-  const [showHoverOverlay, setShowHoverOverlay] = useState(false);
-  //close it at ESC
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setShowHoverOverlay(false);
-    };
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
-
   useEffect(() => {
     if (showHoverOverlay) return;
     if (!isHoveringStep && !isHoveringPoly) {
@@ -2199,6 +2210,10 @@ const Abstract: React.FC = ({}) => {
     return () => window.clearInterval(id);
   }, [hoverPolys]);
 
+  //used for sending the correct prompt
+  const [chosenAbstraction, setChosenAbstraction] =
+    useState<AbstractionItem | null>(null);
+
   /* ---------------------------------------
   render Tree function END
 --------------------------------------- */
@@ -2403,9 +2418,16 @@ const Abstract: React.FC = ({}) => {
                   setIsHoveringPoly(false);
                 }}
                 onClick={() => {
-                  if (hoverPolys.length > 0) {
-                    setShowHoverOverlay(true);
-                    console.log(showHoverOverlay);
+                  if (hoverPolys.length > 0 && hoveredStepId) {
+                    const chosen = abstractions.find((a) =>
+                      a.steps.some((group) =>
+                        group.some((s) => s.id === hoveredStepId)
+                      )
+                    );
+                    if (chosen) {
+                      setChosenAbstraction(chosen);
+                      setShowHoverOverlay(true);
+                    }
                   }
                 }}
               />
@@ -2483,14 +2505,10 @@ const Abstract: React.FC = ({}) => {
           className="fullscreen-overlay fade-in-correctStep"
           style={{ pointerEvents: "all" }}
         >
-          <div className="overlay-box">
-            <h2>🧠 Abstraction Group Info</h2>
-            <p>
-              This overlay was triggered by clicking on the abstracted bubble
-              group!
-            </p>
-            <button onClick={() => setShowHoverOverlay(false)}>Close</button>
-          </div>
+          <AbstractionOverlay
+            onClose={() => setShowHoverOverlay(false)}
+            abstraction={chosenAbstraction}
+          />
         </div>
       )}
     </div>
