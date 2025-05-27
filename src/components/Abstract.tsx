@@ -1529,49 +1529,91 @@ const Abstract: React.FC = ({}) => {
           setAbstractions([]);
         } else {
           const data = (await res.json()) as AbstractionItem[];
-          const testData = {
-            steps: [
-              [
-                { id: "step-1748260426981-6579" },
-                { id: "step-1748260426981-5639" },
+          const testData = [
+            {
+              steps: [
+                [
+                  { id: "step-1748260426981-6579" },
+                  { id: "step-1748260426981-5639" },
+                ],
+                [{ id: "step-1748260426981-7127" }],
+                [{ id: "step-1748260426981-65" }],
+                [{ id: "step-1748260426981-4722" }],
               ],
-              [{ id: "step-1748260426981-7127" }],
-              [{ id: "step-1748260426981-65" }],
-              [{ id: "step-1748260426981-4722" }],
-            ],
-            general_hint:
-              "Recycling pattern for iterating and processing characters",
-            detailed_hint:
-              "The iteration over characters and subsequent processing steps are repeated in different contexts.",
-            correct_answer: {
-              stepsTree: {
-                R: {
-                  content: "Generalized iteration and processing",
-                  general_hint:
-                    "Generalized iteration and processing of characters",
-                  detailed_hint:
-                    "This step involves iterating over characters and performing a processing action.",
-                  substeps: {
-                    R1: {
-                      content: "Iterate over characters",
-                      general_hint: "Iterate over characters",
-                      detailed_hint:
-                        "This substep involves iterating over each character in a sequence.",
-                      substeps: {},
-                    },
-                    R2: {
-                      content: "Process character",
-                      general_hint: "Process character",
-                      detailed_hint:
-                        "This substep involves processing the current character.",
-                      substeps: {},
+              general_hint:
+                "Recycling pattern for iterating and processing characters",
+              detailed_hint:
+                "The iteration over characters and subsequent processing steps are repeated in different contexts.",
+              correct_answer: {
+                stepsTree: {
+                  R: {
+                    content: "Generalized iteration and processing",
+                    general_hint:
+                      "Generalized iteration and processing of characters",
+                    detailed_hint:
+                      "This step involves iterating over characters and performing a processing action.",
+                    substeps: {
+                      R1: {
+                        content: "Iterate over characters",
+                        general_hint: "Iterate over characters",
+                        detailed_hint:
+                          "This substep involves iterating over each character in a sequence.",
+                        substeps: {},
+                      },
+                      R2: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
                     },
                   },
                 },
               },
             },
-          };
-          setAbstractions([testData]);
+            {
+              steps: [
+                [
+                  { id: "step-1748260426981-6579" },
+                  { id: "step-1748260426981-5639" },
+                ],
+              ],
+              general_hint:
+                "Recycling pattern for iterating and processing characters",
+              detailed_hint:
+                "The iteration over characters and subsequent processing steps are repeated in different contexts.",
+              correct_answer: {
+                stepsTree: {
+                  R: {
+                    content: "Generalized iteration and processing",
+                    general_hint:
+                      "Generalized iteration and processing of characters",
+                    detailed_hint:
+                      "This step involves iterating over characters and performing a processing action.",
+                    substeps: {
+                      R1: {
+                        content: "Iterate over characters",
+                        general_hint: "Iterate over characters",
+                        detailed_hint:
+                          "This substep involves iterating over each character in a sequence.",
+                        substeps: {},
+                      },
+                      R2: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ];
+
+          setAbstractions(testData);
           /*           setAbstractions(data || []);
            */
         }
@@ -1595,9 +1637,19 @@ const Abstract: React.FC = ({}) => {
 
   const doHighlight = useCallback(
     (id: string) => {
-      const chosen = abstractions.find((a) =>
-        a.steps.some((group) => group.some((s) => s.id === id))
+      const singleGroupAbstraction = abstractions.find(
+        (a) => a.steps.length === 1 && a.steps[0].some((s) => s.id === id)
       );
+
+      let chosen = singleGroupAbstraction;
+
+      // Otherwise fallback to any abstraction containing this step
+      if (!chosen) {
+        chosen = abstractions.find((a) =>
+          a.steps.some((group) => group.some((s) => s.id === id))
+        );
+      }
+
       if (!chosen) return;
 
       const containerRect = mapContainerRef.current!.getBoundingClientRect();
@@ -1829,7 +1881,7 @@ const Abstract: React.FC = ({}) => {
     if (hoveredStepId) {
       doHighlight(hoveredStepId);
     }
-  }, [transform.scale, doHighlight, hoveredStepId]);
+  }, [transform.x, transform.y, transform.scale, doHighlight, hoveredStepId]);
 
   useEffect(() => {
     const onResize = () => {
@@ -1842,13 +1894,25 @@ const Abstract: React.FC = ({}) => {
   const [isHoveringStep, setIsHoveringStep] = useState(false);
   const [isHoveringPoly, setIsHoveringPoly] = useState(false);
 
+  //showtheFixing overlay!!
+  const [showHoverOverlay, setShowHoverOverlay] = useState(false);
+  //close it at ESC
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowHoverOverlay(false);
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  useEffect(() => {
+    if (showHoverOverlay) return;
     if (!isHoveringStep && !isHoveringPoly) {
       setHoveredStepId(null);
       setHoverPolys([]);
       setHoverGroupIds([]);
     }
-  }, [isHoveringStep, isHoveringPoly]);
+  }, [isHoveringStep, isHoveringPoly, showHoverOverlay]);
 
   /**
    * Recursively renders a node and its children
@@ -2338,6 +2402,12 @@ const Abstract: React.FC = ({}) => {
                 onMouseLeave={() => {
                   setIsHoveringPoly(false);
                 }}
+                onClick={() => {
+                  if (hoverPolys.length > 0) {
+                    setShowHoverOverlay(true);
+                    console.log(showHoverOverlay);
+                  }
+                }}
               />
             ))}
 
@@ -2363,9 +2433,8 @@ const Abstract: React.FC = ({}) => {
                 );
                 if (!point) return null;
                 return (
-                  <>
+                  <React.Fragment key={`line-group-${i}`}>
                     <line
-                      key={`line-to-${i}`}
                       x1={centralHub.x}
                       y1={centralHub.y}
                       x2={point.x}
@@ -2375,7 +2444,6 @@ const Abstract: React.FC = ({}) => {
                       strokeDasharray="4 2"
                     />
                     <line
-                      key={`line-pulse-${i}`}
                       x1={centralHub.x}
                       y1={centralHub.y}
                       x2={point.x}
@@ -2383,7 +2451,7 @@ const Abstract: React.FC = ({}) => {
                       className="line-pulse"
                       strokeWidth={2}
                     />
-                  </>
+                  </React.Fragment>
                 );
               })}
 
@@ -2409,6 +2477,21 @@ const Abstract: React.FC = ({}) => {
           saveChecked={saveCorrectStep}
           setSaveChecked={setSaveCorrectStep}
         />
+      )}
+      {showHoverOverlay && (
+        <div
+          className="fullscreen-overlay fade-in-correctStep"
+          style={{ pointerEvents: "all" }}
+        >
+          <div className="overlay-box">
+            <h2>🧠 Abstraction Group Info</h2>
+            <p>
+              This overlay was triggered by clicking on the abstracted bubble
+              group!
+            </p>
+            <button onClick={() => setShowHoverOverlay(false)}>Close</button>
+          </div>
+        </div>
       )}
     </div>
   );
