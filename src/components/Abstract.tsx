@@ -30,9 +30,11 @@ interface AbstractionItem {
   general_hint: string;
   detailed_hint: string;
   correct_answer: {
-    steps: {
+    stepsTree: {
       [key: string]: {
         content: string;
+        general_hint: string;
+        detailed_hint: string;
         substeps: Record<string, { content: string; substeps: any }>;
       };
     };
@@ -1527,7 +1529,51 @@ const Abstract: React.FC = ({}) => {
           setAbstractions([]);
         } else {
           const data = (await res.json()) as AbstractionItem[];
-          setAbstractions(data || []);
+          const testData = {
+            steps: [
+              [
+                { id: "step-1748260426981-6579" },
+                { id: "step-1748260426981-5639" },
+              ],
+              [{ id: "step-1748260426981-7127" }],
+              [{ id: "step-1748260426981-65" }],
+              [{ id: "step-1748260426981-4722" }],
+            ],
+            general_hint:
+              "Recycling pattern for iterating and processing characters",
+            detailed_hint:
+              "The iteration over characters and subsequent processing steps are repeated in different contexts.",
+            correct_answer: {
+              stepsTree: {
+                R: {
+                  content: "Generalized iteration and processing",
+                  general_hint:
+                    "Generalized iteration and processing of characters",
+                  detailed_hint:
+                    "This step involves iterating over characters and performing a processing action.",
+                  substeps: {
+                    R1: {
+                      content: "Iterate over characters",
+                      general_hint: "Iterate over characters",
+                      detailed_hint:
+                        "This substep involves iterating over each character in a sequence.",
+                      substeps: {},
+                    },
+                    R2: {
+                      content: "Process character",
+                      general_hint: "Process character",
+                      detailed_hint:
+                        "This substep involves processing the current character.",
+                      substeps: {},
+                    },
+                  },
+                },
+              },
+            },
+          };
+          setAbstractions([testData]);
+          /*           setAbstractions(data || []);
+           */
         }
       } catch (e) {
         console.error(e);
@@ -1540,89 +1586,98 @@ const Abstract: React.FC = ({}) => {
 
   //Hovering the abstraction
   const [hoverGroupIds, setHoverGroupIds] = useState<string[]>([]);
-  const [hoverPoly, setHoverPoly] = useState<[number, number][]>([]);
+  const [hoverPolys, setHoverPolys] = useState<[number, number][][]>([]);
+  const [centralHub, setCentralHub] = useState<{ x: number; y: number } | null>(
+    null
+  );
+
   const [hoveredStepId, setHoveredStepId] = useState<string | null>(null);
 
   const doHighlight = useCallback(
     (id: string) => {
-      // 1. Find all abstraction‐items touching this step
-      const candidates = abstractions.filter((a) =>
+      const chosen = abstractions.find((a) =>
         a.steps.some((group) => group.some((s) => s.id === id))
       );
-      if (candidates.length === 0) return;
+      if (!chosen) return;
 
-      // 2. Prefer a single‐group item, else the first multi‐group
-      const singleGroup = candidates.find((a) => a.steps.length === 1);
-      const chosen = singleGroup ?? candidates[0];
+      const containerRect = mapContainerRef.current!.getBoundingClientRect();
 
-      // 3. Flatten only THAT item’s IDs, dedupe
+      const newPolys: [number, number][][] = [];
+      const newCentroids: { x: number; y: number }[] = [];
+
+      for (const group of chosen.steps) {
+        // 1. gather corners for *this* group
+        const corners: [number, number][] = [];
+        for (const { id: sid } of group) {
+          const el = document.querySelector<HTMLElement>(
+            `[data-node-id="${sid}"]`
+          );
+          if (!el) continue;
+          const r = el.getBoundingClientRect();
+          corners.push(
+            [r.left, r.top],
+            [r.right, r.top],
+            [r.right, r.bottom],
+            [r.left, r.bottom]
+          );
+        }
+        if (corners.length === 0) continue;
+
+        // 2. convex hull + pad + smooth (reuse your convexHull + chaikin)
+        let hull = convexHull(corners);
+        if (hull.length < 3) hull = corners;
+        const cx = hull.reduce((sum, [x]) => sum + x, 0) / hull.length;
+        const cy = hull.reduce((sum, [, y]) => sum + y, 0) / hull.length;
+        const padded = hull.map(([x, y]) => {
+          const dx = x - cx,
+            dy = y - cy,
+            d = Math.hypot(dx, dy) || 1;
+          const PAD = 20;
+          return [cx + (dx / d) * (d + PAD), cy + (dy / d) * (d + PAD)] as [
+            number,
+            number
+          ];
+        });
+        const smooth = chaikin(padded, 2);
+
+        // 3. shift to container-relative coords
+        const rel = smooth.map(
+          ([x, y]) =>
+            [x - containerRect.left, y - containerRect.top] as [number, number]
+        );
+        newPolys.push(rel);
+
+        // 4. record centroid in container coords
+        newCentroids.push({
+          x: cx - containerRect.left,
+          y: cy - containerRect.top,
+        });
+      }
+
       const allIds = Array.from(
         new Set(chosen.steps.flatMap((group) => group.map((s) => s.id)))
       );
-
       setHoverGroupIds(allIds);
 
-      // 4. Gather every corner of each step‐box
-      const corners: [number, number][] = [];
-      allIds.forEach((sid) => {
-        const el = document.querySelector<HTMLElement>(
-          `[data-node-id="${sid}"]`
-        );
-        if (!el) return;
-        const r = el.getBoundingClientRect();
-        corners.push(
-          [r.left, r.top],
-          [r.right, r.top],
-          [r.right, r.bottom],
-          [r.left, r.bottom]
-        );
-      });
-      if (corners.length === 0) return;
+      setHoverPolys(newPolys);
 
-      // 5. Convex hull
-      let hull = convexHull(corners);
-      if (hull.length < 3) {
-        // degenerate: just draw a small box around it
-        hull = corners;
-      }
-
-      // 6. Padding
-      const PADDING = 20;
-      const cx = hull.reduce((sum, [x]) => sum + x, 0) / hull.length;
-      const cy = hull.reduce((sum, [, y]) => sum + y, 0) / hull.length;
-      const padded = hull.map(([x, y]) => {
-        const dx = x - cx,
-          dy = y - cy,
-          d = Math.hypot(dx, dy) || 1;
-        return [
-          cx + (dx / d) * (d + PADDING),
-          cy + (dy / d) * (d + PADDING),
-        ] as [number, number];
-      });
-
-      // 7. Smooth the corners a couple of times
-      const smoothPoly = chaikin(padded, 2);
-
-      // 8. Shift into container-relative coords
-      const containerRect = mapContainerRef.current!.getBoundingClientRect();
-      setHoverPoly(
-        smoothPoly.map(([x, y]) => [
-          x - containerRect.left,
-          y - containerRect.top,
-        ])
-      );
+      const centralPoint = {
+        x: newCentroids.reduce((sum, c) => sum + c.x, 0) / newCentroids.length,
+        y: newCentroids.reduce((sum, c) => sum + c.y, 0) / newCentroids.length,
+      };
+      setCentralHub(centralPoint);
     },
-    [abstractions /* … any deps … */]
+    [abstractions /*…*/]
   );
 
   function onStepMouseEnter(id: string) {
     if (toggleAbstraction !== "true") return;
     setIsHoveringStep(true);
     setHoveredStepId(id);
-    /*     doHighlight(id);
-     */
+    doHighlight(id);
   }
 
+  //used for curves
   function chaikin(
     points: [number, number][],
     iterations = 1
@@ -1641,6 +1696,93 @@ const Abstract: React.FC = ({}) => {
       pts = newPts;
     }
     return pts;
+  }
+
+  //lines connecting the poly bubbles
+  function getEdgeIntersectionWithPolygonEdge(
+    polygon: [number, number][],
+    origin: { x: number; y: number }
+  ): { x: number; y: number } | null {
+    if (isPointInPolygon(origin, polygon)) {
+      return null; // 🚫 Don't draw a line if the origin is inside the polygon
+    }
+
+    const intersections: { x: number; y: number; dist2: number }[] = [];
+
+    for (let i = 0; i < polygon.length; i++) {
+      const a = { x: polygon[i][0], y: polygon[i][1] };
+      const b = {
+        x: polygon[(i + 1) % polygon.length][0],
+        y: polygon[(i + 1) % polygon.length][1],
+      };
+
+      const intersection = raySegmentIntersection(origin, a, b);
+      if (intersection) {
+        const dx = intersection.x - origin.x;
+        const dy = intersection.y - origin.y;
+        intersections.push({
+          ...intersection,
+          dist2: dx * dx + dy * dy,
+        });
+      }
+    }
+
+    if (intersections.length === 0) return null;
+
+    intersections.sort((a, b) => a.dist2 - b.dist2);
+    return { x: intersections[0].x, y: intersections[0].y };
+  }
+  //helper for getEdgeIntersectionWithPolygonEdge
+  function raySegmentIntersection(
+    origin: { x: number; y: number },
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+  ): { x: number; y: number } | null {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+
+    const edge = { x: dx, y: dy };
+    const ray = { x: b.x - origin.x, y: b.y - origin.y }; // ray direction
+
+    const s1_x = edge.x;
+    const s1_y = edge.y;
+    const s2_x = ray.x;
+    const s2_y = ray.y;
+
+    const denom = -s2_x * s1_y + s1_x * s2_y;
+    if (Math.abs(denom) < 1e-6) return null; // parallel
+
+    const s = (-s1_y * (a.x - origin.x) + s1_x * (a.y - origin.y)) / denom;
+    const t = (s2_x * (a.y - origin.y) - s2_y * (a.x - origin.x)) / denom;
+
+    if (s >= 0 && t >= 0 && t <= 1) {
+      return {
+        x: a.x + t * s1_x,
+        y: a.y + t * s1_y,
+      };
+    }
+
+    return null;
+  }
+  //helper for getEdgeIntersectionWithPolygonEdge
+  function isPointInPolygon(
+    point: { x: number; y: number },
+    polygon: [number, number][]
+  ): boolean {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i][0],
+        yi = polygon[i][1];
+      const xj = polygon[j][0],
+        yj = polygon[j][1];
+
+      const intersect =
+        yi > point.y !== yj > point.y &&
+        point.x <
+          ((xj - xi) * (point.y - yi)) / (yj - yi + Number.EPSILON) + xi;
+      if (intersect) inside = !inside;
+    }
+    return inside;
   }
 
   // Monotone chain (Andrew) convex hull
@@ -1703,7 +1845,7 @@ const Abstract: React.FC = ({}) => {
   useEffect(() => {
     if (!isHoveringStep && !isHoveringPoly) {
       setHoveredStepId(null);
-      setHoverPoly([]);
+      setHoverPolys([]);
       setHoverGroupIds([]);
     }
   }, [isHoveringStep, isHoveringPoly]);
@@ -1945,56 +2087,53 @@ const Abstract: React.FC = ({}) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    if (hoverPoly.length === 0) return;
+    if (hoverPolys.length === 0) return;
     const svg = svgRef.current!;
-    const path = svg.querySelector<SVGPathElement>("#highlight-path")!;
-    const pathLen = path.getTotalLength();
+    const paths = svg.querySelectorAll<SVGPathElement>(".highlight-path");
 
-    const SPAWN_RATE = 50; // spawn every 100ms
-    const PARTICLE_LIFE = 800; // each lives 800ms
+    const SPAWN_RATE = 50;
+    const PARTICLE_LIFE = 800;
 
     const id = window.setInterval(() => {
-      // pick a random point along the path
-      const { x, y } = path.getPointAtLength(Math.random() * pathLen);
+      paths.forEach((path) => {
+        const pathLen = path.getTotalLength();
+        const { x, y } = path.getPointAtLength(Math.random() * pathLen);
 
-      // create a tiny white circle
-      const circle = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "circle"
-      );
-      circle.setAttribute("cx", `${x}`);
-      circle.setAttribute("cy", `${y}`);
-      circle.setAttribute("r", "2");
-      circle.setAttribute("class", "particle-circle");
+        const circle = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "circle"
+        );
+        circle.setAttribute("cx", `${x}`);
+        circle.setAttribute("cy", `${y}`);
+        circle.setAttribute("r", "2");
+        circle.setAttribute("class", "particle-circle");
+        svg.appendChild(circle);
 
-      svg.appendChild(circle);
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 20 + Math.random() * 10;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
 
-      // animate it drifting + fading out
-      const angle = Math.random() * Math.PI * 2;
-      const dist = 20 + Math.random() * 10;
-      const dx = Math.cos(angle) * dist;
-      const dy = Math.sin(angle) * dist;
+        circle.animate(
+          [
+            { transform: "translate(0,0)", opacity: 1 },
+            { transform: `translate(${dx}px,${dy}px)`, opacity: 0 },
+          ],
+          {
+            duration: PARTICLE_LIFE,
+            easing: "ease-out",
+            fill: "forwards",
+          }
+        );
 
-      circle.animate(
-        [
-          { transform: "translate(0,0)", opacity: 1 },
-          { transform: `translate(${dx}px,${dy}px)`, opacity: 0 },
-        ],
-        {
-          duration: PARTICLE_LIFE,
-          easing: "ease-out",
-          fill: "forwards",
-        }
-      );
-
-      // cleanup
-      setTimeout(() => {
-        if (circle.parentNode === svg) svg.removeChild(circle);
-      }, PARTICLE_LIFE + 50);
+        setTimeout(() => {
+          if (circle.parentNode === svg) svg.removeChild(circle);
+        }, PARTICLE_LIFE + 50);
+      });
     }, SPAWN_RATE);
 
     return () => window.clearInterval(id);
-  }, [hoverPoly]);
+  }, [hoverPolys]);
 
   /* ---------------------------------------
   render Tree function END
@@ -2164,8 +2303,9 @@ const Abstract: React.FC = ({}) => {
         <div className="zoom-content" ref={zoomContentRef}>
           {renderTree(getPreviewSteps())}
         </div>
+
         {/* ========== SVG overlay for group highlight ========== */}
-        {hoverPoly.length > 0 && (
+        {hoverPolys.length > 0 && (
           <svg
             ref={svgRef}
             className="abstraction-overlay"
@@ -2178,34 +2318,86 @@ const Abstract: React.FC = ({}) => {
               pointerEvents: "none",
             }}
           >
-            {/* white glowing stroke */}
-            <polygon
-              className="highlight-poly"
-              points={hoverPoly.map((p) => p.join(",")).join(" ")}
-              fill="none"
-              stroke="white"
-              strokeWidth={4}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              style={{
-                pointerEvents: "all",
-              }}
-              onMouseEnter={() => {
-                setIsHoveringPoly(true);
-                if (hoveredStepId) doHighlight(hoveredStepId);
-              }}
-              onMouseLeave={() => {
-                setIsHoveringPoly(false);
-              }}
-            />
+            {hoverPolys.map((poly, i) => (
+              <polygon
+                key={i}
+                className="highlight-poly"
+                points={poly.map((p) => p.join(",")).join(" ")}
+                fill="none"
+                stroke="white"
+                strokeWidth={4}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                style={{
+                  pointerEvents: "all",
+                }}
+                onMouseEnter={() => {
+                  setIsHoveringPoly(true);
+                  if (hoveredStepId) doHighlight(hoveredStepId);
+                }}
+                onMouseLeave={() => {
+                  setIsHoveringPoly(false);
+                }}
+              />
+            ))}
 
-            {/* invisible path for sampling points */}
-            <path
-              id="highlight-path"
-              d={`M${hoverPoly.map((p) => p.join(" ")).join(" L")} Z`}
-              fill="none"
-              stroke="none"
-            />
+            {/* if you have at least two centroids, connect them */}
+            <defs>
+              <linearGradient
+                id="energy-gradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <stop offset="0%" stopColor="white" stopOpacity="0" />
+                <stop offset="50%" stopColor="white" stopOpacity="1" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {centralHub &&
+              hoverPolys.map((poly, i) => {
+                const point = getEdgeIntersectionWithPolygonEdge(
+                  poly,
+                  centralHub
+                );
+                if (!point) return null;
+                return (
+                  <>
+                    <line
+                      key={`line-to-${i}`}
+                      x1={centralHub.x}
+                      y1={centralHub.y}
+                      x2={point.x}
+                      y2={point.y}
+                      className="lines-connecting-abstract-bubbles"
+                      strokeWidth={2}
+                      strokeDasharray="4 2"
+                    />
+                    <line
+                      key={`line-pulse-${i}`}
+                      x1={centralHub.x}
+                      y1={centralHub.y}
+                      x2={point.x}
+                      y2={point.y}
+                      className="line-pulse"
+                      strokeWidth={2}
+                    />
+                  </>
+                );
+              })}
+
+            {hoverPolys.map((poly, i) => (
+              <path
+                key={`path-${i}`}
+                id={i === 0 ? "highlight-path" : undefined}
+                // keep the original id on the first one for your existing useEffect
+                className="highlight-path"
+                d={`M${poly.map((p) => p.join(" ")).join(" L")} Z`}
+                fill="none"
+                stroke="none"
+              />
+            ))}
           </svg>
         )}
       </div>

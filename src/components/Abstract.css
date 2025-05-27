@@ -533,3 +533,27 @@ INSERTING STEPS INTO THE TREE
 .particle-circle {
   fill: var(--hover-color); /* or any color */
 }
+
+.lines-connecting-abstract-bubbles {
+  stroke: var(--hover-color);
+}
+
+.line-pulse {
+  stroke: var(--hover-color);
+  stroke-width: 2;
+  stroke-dasharray: 20 80; /* visible dash + long invisible gap */
+  stroke-dashoffset: 0;
+  animation: pulse-glow 1.5s linear infinite;
+  filter: var(--hover-highlighted-color);
+  opacity: 1;
+  pointer-events: none;
+}
+
+@keyframes pulse-glow {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
