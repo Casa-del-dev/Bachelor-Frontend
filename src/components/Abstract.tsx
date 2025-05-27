@@ -1528,8 +1528,8 @@ const Abstract: React.FC = ({}) => {
         if (res.status === 404) {
           setAbstractions([]);
         } else {
-          const data = (await res.json()) as AbstractionItem[];
-          const testData = [
+          /*           const data = (await res.json()) as AbstractionItem[];
+           */ const testData = [
             {
               steps: [
                 [
