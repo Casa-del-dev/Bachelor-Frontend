@@ -10,6 +10,8 @@ import {
   SearchX,
   Eye,
   EyeOff,
+  Recycle,
+  Users,
 } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
@@ -27,6 +29,7 @@ interface CorrectStepOverlayProps {
 }
 
 interface AbstractionItem {
+  id: string;
   steps: { id: string }[][]; // array of arrays of `{ id: string }`
   general_hint: string;
   detailed_hint: string;
@@ -1519,6 +1522,12 @@ const Abstract: React.FC = ({}) => {
   //the abstraction
   const [abstractions, setAbstractions] = useState<AbstractionItem[]>([]);
 
+  const [abstractionToSteps, setAbstractionToSteps] = useState<
+    Record<string, string[]>
+  >({});
+  const [stepToAbstractions, setStepToAbstractions] = useState<
+    Record<string, string[]>
+  >({});
   //neeeded to load the abstraction everytime we toggle the abstraction
   useEffect(() => {
     if (toggleAbstraction !== "true") {
@@ -1545,6 +1554,7 @@ const Abstract: React.FC = ({}) => {
           /*           const data = (await res.json()) as AbstractionItem[];
            */ const testData = [
             {
+              id: "abstraction-1748260426981-83469",
               steps: [
                 [
                   { id: "step-1748260426981-6579" },
@@ -1552,7 +1562,6 @@ const Abstract: React.FC = ({}) => {
                 ],
                 [{ id: "step-1748260426981-7127" }],
                 [{ id: "step-1748260426981-65" }],
-                [{ id: "step-1748260426981-4722" }],
               ],
               general_hint:
                 "Recycling pattern for iterating and processing characters",
@@ -1587,6 +1596,7 @@ const Abstract: React.FC = ({}) => {
               },
             },
             {
+              id: "abstraction-1748260426981-6579",
               steps: [
                 [
                   { id: "step-1748260426981-6579" },
@@ -1630,6 +1640,39 @@ const Abstract: React.FC = ({}) => {
           setAbstractions(testData);
           /*           setAbstractions(data || []);
            */
+
+          //here we create the arrays that are easily accessable
+
+          const abstractionToSteps: Record<string, string[]> = {};
+          const stepToAbstractions: Record<string, string[]> = {};
+
+          for (const abstraction of testData) {
+            const abstractionId = abstraction.id;
+            const stepIds: string[] = [];
+
+            for (const group of abstraction.steps) {
+              for (const step of group) {
+                stepIds.push(step.id);
+
+                // Update reverse mapping: step -> abstraction
+                if (!stepToAbstractions[step.id]) {
+                  stepToAbstractions[step.id] = [];
+                }
+                stepToAbstractions[step.id].push(abstractionId);
+              }
+            }
+
+            // Store abstraction -> step list
+            abstractionToSteps[abstractionId] = stepIds;
+          }
+
+          setAbstractionToSteps(abstractionToSteps);
+          setStepToAbstractions(stepToAbstractions);
+
+          setTimeout(() => {
+            console.log("abstractionTosteps", abstractionToSteps);
+            console.log("stepToAbstractions", stepToAbstractions);
+          }, 100);
         }
       } catch (e) {
         console.error(e);
@@ -1997,35 +2040,68 @@ const Abstract: React.FC = ({}) => {
             }}
           >
             <div className="tree-node-text">
-              <div className="title-icon-tree-ab">
-                <strong>Step {indexPath}</strong>
-                <div className="icon-container">
-                  <div className="leftSide-Icons">
-                    <Pen
-                      className="Filetext-tree abstract"
-                      strokeWidth={1.2}
-                      onClick={() => handleStartEditing(path, node.content)}
-                      style={{ fill: editingPath ? "lightgray" : undefined }}
-                    />
+              <div
+                className="the-top-part-of-step-box-abstract"
+                style={{ width: "100%" }}
+              >
+                <div className="title-icon-tree-ab">
+                  <strong>Step {indexPath}</strong>
+                  <div className="icon-container">
+                    <div className="leftSide-Icons">
+                      <Pen
+                        className="Filetext-tree abstract"
+                        strokeWidth={1.2}
+                        onClick={() => handleStartEditing(path, node.content)}
+                        style={{ fill: editingPath ? "lightgray" : undefined }}
+                      />
+                    </div>
+                    <div className="trash">
+                      <CustomLightbulb
+                        number={getNumberForStep(node)}
+                        fill={getNumberForStep(node) ? "yellow" : "none"}
+                        color={getStepBoxTextColor(node)}
+                        onGiveHint={() =>
+                          handleGiveHint(path, getNumberForStep(node))
+                        }
+                        abstract={true}
+                      />
+                      <Trash
+                        cursor="pointer"
+                        strokeWidth={1.2}
+                        color={getStepBoxTextColor(node)}
+                        onClick={() => handleRemoveStep(node.id)}
+                        className="trash-icon abstract"
+                      />
+                    </div>
                   </div>
-                  <div className="trash">
-                    <CustomLightbulb
-                      number={getNumberForStep(node)}
-                      fill={getNumberForStep(node) ? "yellow" : "none"}
-                      color={getStepBoxTextColor(node)}
-                      onGiveHint={() =>
-                        handleGiveHint(path, getNumberForStep(node))
-                      }
-                      abstract={true}
-                    />
-                    <Trash
-                      cursor="pointer"
-                      strokeWidth={1.2}
-                      color={getStepBoxTextColor(node)}
-                      onClick={() => handleRemoveStep(node.id)}
-                      className="trash-icon abstract"
-                    />
-                  </div>
+                </div>
+                <div className="group-or-recycle">
+                  {stepToAbstractions[node.id]?.length === 2 && (
+                    <>
+                      <div className="container-icon-grouping-recycling">
+                        <Users style={{ width: "20px", height: "20px" }} />
+                      </div>
+                      <div className="container-icon-grouping-recycling">
+                        <Recycle style={{ width: "20px", height: "20px" }} />
+                      </div>
+                    </>
+                  )}
+
+                  {stepToAbstractions[node.id]?.length === 1 && (
+                    <>
+                      <div className="container-icon-grouping-recycling">
+                        <Recycle style={{ width: "20px", height: "20px" }} />
+                      </div>
+                    </>
+                  )}
+                  {stepToAbstractions[node.id]?.length !== 2 &&
+                    stepToAbstractions[node.id]?.length !== 1 && (
+                      <>
+                        <div className="container-icon-grouping-recycling letsgoski">
+                          Fully Abstracted
+                        </div>
+                      </>
+                    )}
                 </div>
               </div>
 
@@ -2512,6 +2588,7 @@ const Abstract: React.FC = ({}) => {
           <AbstractionOverlay
             onClose={() => setShowHoverOverlay(false)}
             abstraction={chosenAbstraction}
+            abstractionToSteps={abstractionToSteps}
           />
         </div>
       )}

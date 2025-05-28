@@ -137,6 +137,7 @@ interface InsertTarget {
 }
 
 interface AbstractionItem {
+  id: string;
   steps: { id: string }[][]; // array of arrays of `{ id: string }`
   general_hint: string;
   detailed_hint: string;
@@ -155,6 +156,7 @@ interface AbstractionItem {
 interface AbstractionOverlayProps {
   onClose: () => void;
   abstraction: AbstractionItem | null;
+  abstractionToSteps: Record<string, string[]>;
 }
 
 export interface Step {
@@ -184,7 +186,7 @@ export interface Step {
   selected: boolean;
 }
 
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 3;
 
 function clamp(v: number, min: number, max: number) {
@@ -192,8 +194,9 @@ function clamp(v: number, min: number, max: number) {
 }
 
 const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
-  onClose,
-  /* abstraction, */
+  onClose /* abstraction, */,
+  /*   abstractionToSteps,
+   */
 }) => {
   // Pan & zoom refs and state
   const mainContainerRef = useRef<HTMLDivElement | null>(null);
@@ -201,6 +204,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
 
   const zoomContentRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const initialCentering = useRef(true);
 
   const [transform, setTransform] = useState<{
     scale: number;
@@ -251,6 +255,20 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const stepsRef = useRef<Step[]>(steps);
   useEffect(() => {
     stepsRef.current = steps;
+  }, [steps]);
+
+  useEffect(() => {
+    if (initialCentering.current && steps.length > 0) {
+      const firstItem = document.querySelector(".map-abstract-container");
+      if (firstItem) {
+        firstItem.scrollIntoView({
+          behavior: "auto", // or "smooth" if you want an animation
+          inline: "center", // horizontally center the tree
+          block: "nearest", // don't scroll vertically
+        });
+      }
+      initialCentering.current = false;
+    }
   }, [steps]);
 
   // Pan and zoom effect
@@ -365,18 +383,38 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   // Drag and drop handlers
   function startNewStepDrag(e: React.PointerEvent) {
     e.preventDefault();
-    // grab the pointer so we keep getting moves/up
     const el = e.currentTarget as Element;
     el.setPointerCapture(e.pointerId);
 
-    // 1) build the snap‐points for every existing step
+    const newBlank = createBlankStep(true);
+    blankStepRef.current = newBlank;
+    setBlankStep(newBlank);
+    setDraggingNew(true);
+    setGhostPos({ x: e.clientX, y: e.clientY });
+
+    document.addEventListener("pointermove", onDrag);
+    document.addEventListener("pointerup", onDrop);
+    document.addEventListener("keydown", onKeyDown);
+
+    // ✅ CASE 1 — empty tree: set insert target directly
+    if (stepsRef.current.length === 0) {
+      const emptyTarget = { path: [], index: 0, dropX: e.clientX };
+      insertTargetRef.current = emptyTarget;
+      setInsertTarget(emptyTarget);
+      return;
+    }
+
+    // ✅ CASE 2 — non-empty: just build snap points, don’t set insert target yet
+    const container = zoomContentRef.current!;
     const boxes = Array.from(
-      document.querySelectorAll<HTMLElement>(".tree-node-ab")
+      container.querySelectorAll<HTMLElement>(".tree-node-ab")
     );
     snapPointsRef.current = boxes.map((box) => {
-      const container = box.closest(".tree-root-item") as HTMLElement;
-      const id = container.id.replace(/^step-/, "");
-      const path = id.split("-").map((n) => parseInt(n, 10));
+      const root = box.closest(".tree-root-item")!;
+      const path = root.id
+        .replace(/^step-/, "")
+        .split("-")
+        .map((n) => parseInt(n, 10));
       const r = box.getBoundingClientRect();
       return {
         path,
@@ -388,31 +426,12 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       };
     });
 
-    // 2) make & show the ghost blank
-    const newBlank = createBlankStep(true);
-    blankStepRef.current = newBlank;
-    setBlankStep(newBlank);
-    setDraggingNew(true);
-    setGhostPos({ x: e.clientX, y: e.clientY });
-
-    // 3) immediately seed a root‐level insertTarget after the last step
-    const defaultIndex = stepsRef.current.length;
-    const defaultMid = e.clientX;
-    const defaultTarget: InsertTarget = {
-      path: [], // root‐level
-      index: defaultIndex,
-      dropX: defaultMid, // clamp‐check later
-    };
-    insertTargetRef.current = defaultTarget;
-    setInsertTarget(defaultTarget);
-
-    // 4) listen for the rest of the drag/drop
-    document.addEventListener("pointermove", onDrag);
-    document.addEventListener("pointerup", onDrop);
-    document.addEventListener("keydown", onKeyDown);
+    // ❌ DO NOT set insertTarget for non-empty tree!
+    insertTargetRef.current = null;
+    setInsertTarget(null);
   }
 
-  const SNAP_THRESHOLD = 200;
+  const SNAP_THRESHOLD = 100;
   const VERTICAL_THRESHOLD = SNAP_THRESHOLD;
 
   function getPreviewSteps(): Step[] {
@@ -440,10 +459,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     setGhostPos({ x: e.clientX, y: e.clientY });
 
     if (stepsRef.current.length === 0) {
-      const pt = snapPointsRef.current[0]!;
-      const target: InsertTarget = { path: [], index: 0, dropX: pt.mid };
-      insertTargetRef.current = target;
-      setInsertTarget(target);
       return;
     }
 
@@ -454,8 +469,9 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       let node: Step | undefined;
       for (const idx of pt.path) {
         node = nodeList[idx];
-        nodeList = node!.children;
+        nodeList = node.children;
       }
+      if (!node) continue;
       // if it’s a leaf...
       if (
         node &&
@@ -645,9 +661,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") {
       // cleanup
-      setDraggingNew(false);
-      setBlankStep(null);
-      setInsertTarget(null);
+      cleanupDrag();
     }
   }, []);
 
@@ -1070,14 +1084,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }
   }, [editingPath]);
 
-  //focus on right step after clicking edit
-  useEffect(() => {
-    if (editingPath && textareaRef.current) {
-      textareaRef.current.focus({ preventScroll: true });
-      const len = textareaRef.current.value.length;
-      textareaRef.current.setSelectionRange(len, len);
-    }
-  }, [editingPath]);
+  //center while editing still not working
 
   // 2) Your handlers (you already have these—just include them inside Abstract):
   function handleStartEditing(path: number[], initialValue: string) {
@@ -1142,38 +1149,75 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     return updatedSteps;
   }
 
+  function calculateStepBoxWidthPx() {
+    return 300 + 36;
+  }
+
+  const [stepBoxWidth, setStepBoxWidth] = useState(calculateStepBoxWidthPx());
+
+  const STEP_BOX_WIDTH_PX = stepBoxWidth;
+
+  useEffect(() => {
+    const handleResize = () => setStepBoxWidth(calculateStepBoxWidthPx());
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // tree render
-  function renderNode(
-    node: Step,
-    indexPath: string,
-    path: number[]
-  ): React.ReactNode {
-    const CHILD_EXTRA_MARGIN_PX = 60; // already defined elsewhere
-    const offsetWithUnit = `${calculateTreeWidth(node)}px`; // use your width helper
+  function renderNode(node: Step, indexPath: string, path: number[]) {
+    const nodeWidth = calculateTreeWidth(node);
     const elementId = `step-${path.join("-")}`;
+    const isGhost = node.isGhost ?? false;
 
-    // count how many children to know if we render branches
+    const connectorOffset = Math.round(
+      (nodeWidth - STEP_BOX_WIDTH_PX + CHILD_EXTRA_MARGIN_PX) / 2
+    );
+    const offsetWithUnit = `${connectorOffset}px`;
+
     const childCount = node.children.length;
+    let branchLineStyle: React.CSSProperties | undefined;
 
-    // style for the vertical branch line
-    const branchLineStyle = {
-      height: `${childCount * 50 + (childCount - 1) * CHILD_EXTRA_MARGIN_PX}px`,
-      top: "0px",
-      left: "12px",
-    };
+    if (childCount > 0) {
+      const leftChildWidth = calculateTreeWidth(node.children[0]);
+      const rightChildWidth = calculateTreeWidth(node.children[childCount - 1]);
+      const branchLineLeftOffset = Math.ceil(leftChildWidth / 2);
+      const branchLineRightOffset = Math.ceil(rightChildWidth / 2);
+      const branchLineWidth =
+        nodeWidth - leftChildWidth / 2 - rightChildWidth / 2;
+
+      branchLineStyle = {
+        position: "absolute",
+        left: `${branchLineLeftOffset}px`,
+        right: `${branchLineRightOffset}px`,
+        width: `${branchLineWidth}px`,
+      };
+    }
+
+    <svg width="0" height="0">
+      <filter id="wavy">
+        <feTurbulence
+          id="turbulence"
+          type="fractalNoise"
+          baseFrequency="0.02"
+          numOctaves="3"
+        />
+        <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="6" />
+      </filter>
+    </svg>;
 
     return (
       <div
         key={node.id}
         id={elementId}
         className={`tree-root-item ${node.isDeleting ? "deleting" : ""} ${
-          node.isGhost ? "ghost-step" : ""
+          isGhost ? "ghost-step" : ""
         }`}
         style={{ "--margin-var-tree": offsetWithUnit } as React.CSSProperties}
       >
         <div className="step-box-ab">
           <div
-            className={`tree-node-ab `}
+            className={`tree-node-ab 
+            `}
             data-node-id={node.id}
             style={{
               border: `2px ${getBorder(node)} black`,
@@ -1281,6 +1325,43 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           </Collapsible>
         )}
 
+        {node.general_hint && node.showGeneralHint1 && (
+          <Collapsible
+            isOpen={node.showGeneralHint2}
+            id={`hint-general-${node.id}`}
+            toggleHint={toggleHint}
+            stepId={node.id}
+            what="general"
+          >
+            <div
+              className={`hint-inner ${
+                node.showGeneralHint2 ? "extended" : ""
+              } ${
+                justUnlockedHintId === `step-${path.join("-")}-3`
+                  ? "fade-in-hint"
+                  : ""
+              }`}
+            >
+              {node.showGeneralHint2 ? (
+                <>
+                  <strong>General Hint:</strong>{" "}
+                  <span className="hint-content-ab">{node.general_hint}</span>
+                </>
+              ) : (
+                <div className="not-extented-hint ab">
+                  <strong>General Hint:</strong>{" "}
+                  <span
+                    className="hint-content-ab"
+                    style={{ visibility: "hidden" }}
+                  >
+                    {node.general_hint}
+                  </span>
+                </div>
+              )}
+            </div>
+          </Collapsible>
+        )}
+
         {childCount > 0 && (
           <div className="tree-children-ab" style={{ position: "relative" }}>
             <div className="branch-line" style={branchLineStyle} />
@@ -1299,14 +1380,14 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
 
   function renderTree(tree = steps) {
     return (
-      <div className="tree-root">
+      <div className={`tree-root`}>
         {tree.map((node, i) => renderNode(node, `${i + 1}`, [i]))}
       </div>
     );
   }
 
   return (
-    <div className="container-abstract-hover-overlay" onClick={onClose}>
+    <div className="container-abstract-hover-overlay">
       {draggingNew && ghostPos && (
         <div
           style={{
@@ -1365,7 +1446,12 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       >
         <div
           className="container-plus-ab"
-          style={{ width: "10%", height: "10%" }}
+          style={{
+            width: "20px",
+            height: "20px",
+            padding: "10px 10px",
+            borderRadius: "10px",
+          }}
         >
           <SquarePlus
             className="square-plus-ab"
@@ -1373,6 +1459,12 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
             style={{ touchAction: "none" }}
           />
         </div>
+        <X
+          className="close-abstraction-overlay"
+          style={{ position: "absolute", right: "5px", top: "5px" }}
+          size={20}
+          onClick={onClose}
+        />
       </div>
       {showCorrectStepOverlay && (
         <CorrectStepOverlay

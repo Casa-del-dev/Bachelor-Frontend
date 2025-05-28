@@ -41,6 +41,7 @@ body.dark-mode {
 .building-abstraction-container {
   grid-area: left;
   overflow: hidden;
+  padding-top: 100px;
 }
 
 .divider-abstraction-overlay {
@@ -52,4 +53,14 @@ body.dark-mode {
 
 .right-abstraction-overlay {
   grid-area: right;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-abstraction-overlay:hover {
+  cursor: pointer;
+  color: grey;
 }
