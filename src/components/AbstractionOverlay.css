@@ -35,12 +35,12 @@ body.dark-mode {
 
   display: grid;
   grid-template-areas: "left divider right";
-  grid-template-columns: 1fr 4px 100px;
+  grid-template-columns: 1fr 4px 200px;
 }
 
 .building-abstraction-container {
   grid-area: left;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .divider-abstraction-overlay {

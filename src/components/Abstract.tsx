@@ -370,14 +370,6 @@ const Abstract: React.FC = ({}) => {
 
   //showtheFixing overlay!!
   const [showHoverOverlay, setShowHoverOverlay] = useState(false);
-  //close it at ESC
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setShowHoverOverlay(false);
-    };
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
 
   //One big pan+zoom effect—bind once, direct DOM writes
   useEffect(() => {
@@ -1744,12 +1736,22 @@ const Abstract: React.FC = ({}) => {
     [abstractions /*…*/]
   );
 
+  // Needed for reclicks after overlay closes
+  const lastHoveredRef = useRef<string | null>(null);
+
   function onStepMouseEnter(id: string) {
     if (toggleAbstraction !== "true") return;
+    lastHoveredRef.current = id;
     setIsHoveringStep(true);
     setHoveredStepId(id);
     doHighlight(id);
   }
+
+  useEffect(() => {
+    if (hoverPolys.length === 0) {
+      lastHoveredRef.current = null;
+    }
+  }, [hoverPolys]);
 
   //used for curves
   function chaikin(
@@ -2418,10 +2420,12 @@ const Abstract: React.FC = ({}) => {
                   setIsHoveringPoly(false);
                 }}
                 onClick={() => {
-                  if (hoverPolys.length > 0 && hoveredStepId) {
+                  // allow click even if hoveredStepId was cleared
+                  const clickId = hoveredStepId ?? lastHoveredRef.current;
+                  if (hoverPolys.length > 0 && clickId) {
                     const chosen = abstractions.find((a) =>
                       a.steps.some((group) =>
-                        group.some((s) => s.id === hoveredStepId)
+                        group.some((s) => s.id === clickId)
                       )
                     );
                     if (chosen) {
