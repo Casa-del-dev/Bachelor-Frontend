@@ -1,9 +1,11 @@
 :root {
   --overlay-abstraction-main-background: rgb(0, 0, 0);
+  --hover-color-abstraction-overlay: black;
 }
 
 body.dark-mode {
   --overlay-abstraction-main-background: rgb(129, 129, 129);
+  --hover-color-abstraction-overlay: white;
 }
 
 @keyframes expandFromCenterHorizontally {
@@ -56,11 +58,167 @@ body.dark-mode {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
+}
+.Right-abstraction-overlay-title {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.step-labels-wrapper-abstractionOverlay {
+  position: relative;
+  display: inline-block;
+}
+
+.WhatDoing-title {
+  font-weight: bolder;
+  font-size: 50px;
+  text-decoration: underline solid 5px;
+}
+
+.step-labels-container-abstractionOverlay {
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin: 0 10px;
+}
+
+.custom-tooltip-abstractionOverlay {
+  position: fixed;
+  background: var(--seg-btn-border);
+  color: var(--hover-color-abstraction-overlay);
+  padding: 8px;
+  font-size: 0.85rem;
+  max-width: 240px;
+  white-space: normal;
+  border-radius: 4px;
+  z-index: 9999;
+  pointer-events: none;
+  text-align: left;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.fade-in-abstractionOverlay {
+  opacity: 1;
 }
 
 .close-abstraction-overlay:hover {
   cursor: pointer;
   color: grey;
+}
+
+.hinting-abstractionOverlay {
+  display: flex;
+  flex-direction: row;
+  gap: 50px;
+}
+
+.container-plus-ab-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: var(--seg-btn-bg);
+  border: 1px solid var(--seg-btn-border);
+  border-radius: 1rem;
+}
+
+/* ------------- The fancy buttons START------------ */
+.container-plus-ab-overlay.available-ab-overlay {
+  position: relative;
+  overflow: hidden;
+  color: white;
+  border: none; /* you can remove if you want a border */
+  background: linear-gradient(
+    120deg,
+    #ffeb3b 0%,
+    #ffc107 20%,
+    #ff5722 40%,
+    #e91e63 60%,
+    #9c27b0 80%,
+    #3f51b5 100%
+  );
+  background-size: 300% 300%;
+  animation: fancyGradient-abOverlay 8s ease infinite;
+  border-radius: 1rem;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4), 0 0 24px rgba(0, 0, 0, 0.2);
+  transform: scale(1);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* soft radial gloss in the top-left corner */
+.container-plus-ab-overlay.available-ab-overlay::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at 20% 20%,
+    rgba(255, 255, 255, 0.6),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* quick diagonal “shine” sweep */
+.container-plus-ab-overlay.available-ab-overlay::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: shineSweep-abOverlay 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* gradient animation */
+@keyframes fancyGradient-abOverlay {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* shine sweep */
+@keyframes shineSweep-abOverlay {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    left: 100%;
+    opacity: 0.6;
+  }
+  100% {
+    left: 200%;
+    opacity: 0;
+  }
+}
+
+/* ------------- The fancy buttons END------------ */
+
+.container-plus-ab-overlay.available-ab-overlay:hover {
+  transform: scale(1.1);
+  cursor: pointer;
 }

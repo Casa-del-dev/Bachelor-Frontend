@@ -1,6 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./AbstractionOverlay.css";
-import { Check, Pen, SquarePlus, Trash, X } from "lucide-react";
+import {
+  Check,
+  LayoutTemplate,
+  Lightbulb,
+  Pen,
+  Save,
+  SquarePlus,
+  Trash,
+  X,
+} from "lucide-react";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 
 interface CorrectStepOverlayProps {
@@ -157,6 +166,8 @@ interface AbstractionOverlayProps {
   onClose: () => void;
   abstraction: AbstractionItem | null;
   abstractionToSteps: Record<string, string[]>;
+  stepLabels: string[];
+  getType: "Group" | "Recycle";
 }
 
 export interface Step {
@@ -194,9 +205,11 @@ function clamp(v: number, min: number, max: number) {
 }
 
 const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
-  onClose /* abstraction, */,
-  /*   abstractionToSteps,
-   */
+  onClose,
+  abstraction,
+  /*   abstractionToSteps,*/
+  stepLabels,
+  getType,
 }) => {
   // Pan & zoom refs and state
   const mainContainerRef = useRef<HTMLDivElement | null>(null);
@@ -206,6 +219,11 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialCentering = useRef(true);
 
+  //needed for the hints
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [allIsAvailable, setAllIsAvailable] = useState(true);
+  /*   const [numberOfStepsNeeded, setNumberOfStepsNeeded] = useState<number>(0);
+   */
   const [transform, setTransform] = useState<{
     scale: number;
     x: number;
@@ -270,6 +288,61 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       initialCentering.current = false;
     }
   }, [steps]);
+
+  function StepLabels({ stepLabels }: { stepLabels: string[] }) {
+    const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+    const [visible, setVisible] = useState(false);
+    const [fadeIn, setFadeIn] = useState(false);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleMouseEnter = () => {
+      timeoutRef.current = setTimeout(() => {
+        setVisible(true);
+      }, 500);
+    };
+
+    const handleMouseLeave = () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setVisible(false);
+      setFadeIn(false);
+    };
+
+    useEffect(() => {
+      if (visible) {
+        // wait one frame to trigger the animation
+        requestAnimationFrame(() => setFadeIn(true));
+      }
+    }, [visible]);
+
+    return (
+      <div
+        className="step-labels-container-abstractionOverlay"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onMouseMove={(e) =>
+          setTooltipPos({ x: e.clientX + 10, y: e.clientY + 10 })
+        }
+      >
+        {stepLabels.join(", ")}
+
+        {visible && (
+          <div
+            className={`custom-tooltip-abstractionOverlay ${
+              fadeIn ? "fade-in-abstractionOverlay" : ""
+            }`}
+            style={{
+              top: tooltipPos.y,
+              left: tooltipPos.x,
+            }}
+          >
+            {stepLabels.map((label, i) => (
+              <div key={i}>{label}</div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // Pan and zoom effect
   useEffect(() => {
@@ -1386,6 +1459,41 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     );
   }
 
+  /* -----------------------
+  Hint handling START
+  ----------------------- */
+  interface StepNode {
+    // (you can include any other fields you actually use)
+    content: string;
+    general_hint?: string;
+    detailed_hint?: string;
+
+    // recursive substeps
+    substeps: StepsTree;
+  }
+
+  // 2) A StepsTree is just a string‐keyed map of nodes
+  type StepsTree = Record<string, StepNode>;
+
+  // 3) Now annotate your function
+  function countStepsTree(tree: StepsTree): number {
+    let count = 0;
+    for (const key in tree) {
+      count += 1; // one step
+
+      const node = tree[key];
+      // if there are any substeps, recurse
+      if (Object.keys(node.substeps).length > 0) {
+        count += countStepsTree(node.substeps);
+      }
+    }
+    return count;
+  }
+
+  /* -----------------------
+  Hint handling END
+  ----------------------- */
+
   return (
     <div className="container-abstract-hover-overlay">
       {draggingNew && ghostPos && (
@@ -1444,6 +1552,14 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         className="right-abstraction-overlay"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="Right-abstraction-overlay-title">
+          <div className="WhatDoing-title">{getType}</div>
+
+          <div className="step-labels-wrapper-abstractionOverlay">
+            {StepLabels({ stepLabels })}
+          </div>
+        </div>
+        <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
         <div
           className="container-plus-ab"
           style={{
@@ -1459,6 +1575,80 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
             style={{ touchAction: "none" }}
           />
         </div>
+        <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
+
+        <div className="hinting-abstractionOverlay">
+          <div
+            className={`container-plus-ab-overlay ${
+              allIsAvailable && isAvailable ? "available-ab-overlay" : ""
+            }`}
+            style={{
+              width: "20px",
+              height: "20px",
+              padding: "10px 10px",
+              borderRadius: "10px",
+            }}
+            onClick={() => {
+              if (isAvailable) {
+                setIsAvailable(false);
+                // grab the tree (or bail out)
+                const tree = abstraction?.correct_answer?.stepsTree;
+                if (tree && typeof tree === "object") {
+                  const total = countStepsTree(tree);
+                  console.log("Total steps + substeps:", total);
+                } else {
+                  console.warn("Abstraction has no stepsTree!", abstraction);
+                }
+              }
+            }}
+          >
+            <Lightbulb />
+          </div>
+          <div
+            className={`container-plus-ab-overlay ${
+              allIsAvailable ? "available-ab-overlay" : ""
+            }`}
+            style={{
+              width: "20px",
+              height: "20px",
+              padding: "10px 10px",
+              borderRadius: "10px",
+            }}
+            onClick={() => {
+              if (allIsAvailable) {
+                setAllIsAvailable(false);
+              }
+            }}
+          >
+            <LayoutTemplate />
+          </div>
+        </div>
+        <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
+        <div className="hinting-abstractionOverlay">
+          <div
+            className="container-plus-ab-overlay"
+            style={{
+              width: "20px",
+              height: "20px",
+              padding: "10px 10px",
+              borderRadius: "10px",
+            }}
+          >
+            <Save />
+          </div>
+          <div
+            className="container-plus-ab-overlay"
+            style={{
+              width: "20px",
+              height: "20px",
+              padding: "10px 10px",
+              borderRadius: "10px",
+            }}
+          >
+            <Check style={{ color: "rgb(40, 211, 40)" }} strokeWidth={5} />
+          </div>
+        </div>
+
         <X
           className="close-abstraction-overlay"
           style={{ position: "absolute", right: "5px", top: "5px" }}

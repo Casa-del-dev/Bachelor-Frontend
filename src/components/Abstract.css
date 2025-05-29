@@ -503,7 +503,7 @@ INSERTING STEPS INTO THE TREE
 }
 
 .ghost-step .tree-node-ab {
-  opacity: 0.8;
+  opacity: 0.3;
   pointer-events: none;
 }
 

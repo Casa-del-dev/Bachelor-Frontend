@@ -28,20 +28,20 @@ interface CorrectStepOverlayProps {
   setSaveChecked: (val: boolean) => void;
 }
 
+interface StepNode {
+  content: string;
+  general_hint: string;
+  detailed_hint: string;
+  substeps: Record<string, StepNode>;
+}
+
 interface AbstractionItem {
   id: string;
-  steps: { id: string }[][]; // array of arrays of `{ id: string }`
+  steps: { id: string }[][];
   general_hint: string;
   detailed_hint: string;
   correct_answer: {
-    stepsTree: {
-      [key: string]: {
-        content: string;
-        general_hint: string;
-        detailed_hint: string;
-        substeps: Record<string, { content: string; substeps: any }>;
-      };
-    };
+    stepsTree: Record<string, StepNode>;
   };
 }
 
@@ -1552,7 +1552,7 @@ const Abstract: React.FC = ({}) => {
           setAbstractions([]);
         } else {
           /*           const data = (await res.json()) as AbstractionItem[];
-           */ const testData = [
+           */ const testData: AbstractionItem[] = [
             {
               id: "abstraction-1748260426981-83469",
               steps: [
@@ -1630,6 +1630,20 @@ const Abstract: React.FC = ({}) => {
                           "This substep involves processing the current character.",
                         substeps: {},
                       },
+                      R3: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
+                      R4: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
                     },
                   },
                 },
@@ -1682,6 +1696,30 @@ const Abstract: React.FC = ({}) => {
 
     load();
   }, [toggleAbstraction, problemId]);
+
+  const [abstractionStepLabels, setAbstractionStepLabels] = useState<string[]>(
+    []
+  );
+
+  const idToLabelMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    function traverse(nodes: Step[], parentPath = "") {
+      nodes.forEach((node, i) => {
+        const path = parentPath ? `${parentPath}.${i + 1}` : `${i + 1}`;
+        map[node.id] = path;
+        if (node.children.length) {
+          traverse(node.children, path);
+        }
+      });
+    }
+    traverse(steps);
+    return map;
+  }, [steps]);
+
+  //passed as reference to abstractionOverlay
+  const [abstractionType, setAbstractionType] = useState<"Group" | "Recycle">(
+    "Group"
+  );
 
   //Hovering the abstraction
   const [hoverGroupIds, setHoverGroupIds] = useState<string[]>([]);
@@ -2499,14 +2537,36 @@ const Abstract: React.FC = ({}) => {
                   // allow click even if hoveredStepId was cleared
                   const clickId = hoveredStepId ?? lastHoveredRef.current;
                   if (hoverPolys.length > 0 && clickId) {
-                    const chosen = abstractions.find((a) =>
+                    const matches = abstractions.filter((a) =>
                       a.steps.some((group) =>
                         group.some((s) => s.id === clickId)
                       )
                     );
+                    const chosen =
+                      matches.find((a) => a.steps.length === 1) ??
+                      // otherwise take the first match (a multi-group)
+                      matches[0];
+
+                    const getAbstractionType = matches.find(
+                      (a) => a.steps.length === 1
+                    )
+                      ? "Group"
+                      : "Recycle";
+
                     if (chosen) {
                       setChosenAbstraction(chosen);
                       setShowHoverOverlay(true);
+                      const labels = chosen.steps.flatMap((group) =>
+                        group.map((s) => {
+                          const num = idToLabelMap[s.id] ?? s.id;
+                          return `Step ${num}`;
+                        })
+                      );
+
+                      setChosenAbstraction(chosen);
+                      setAbstractionStepLabels(labels);
+                      setShowHoverOverlay(true);
+                      setAbstractionType(getAbstractionType);
                     }
                   }
                 }}
@@ -2589,6 +2649,8 @@ const Abstract: React.FC = ({}) => {
             onClose={() => setShowHoverOverlay(false)}
             abstraction={chosenAbstraction}
             abstractionToSteps={abstractionToSteps}
+            stepLabels={abstractionStepLabels}
+            getType={abstractionType}
           />
         </div>
       )}
