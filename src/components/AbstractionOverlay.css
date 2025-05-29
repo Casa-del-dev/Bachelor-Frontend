@@ -88,6 +88,40 @@ body.dark-mode {
   margin: 0 10px;
 }
 
+.containerForPlusAndNumberStepsNeeded {
+  position: relative;
+}
+
+.container-plus-ab.deactivated-ab {
+  opacity: 0.4;
+}
+
+.square-plus-ab.deactivated-ab {
+  opacity: 0.4;
+}
+
+.square-plus-ab.deactivated-ab:hover {
+  color: unset;
+  cursor: default;
+}
+
+.number-needed-steps-AbstractionOverlay {
+  position: absolute;
+  top: 30px;
+  left: 25px;
+  background-color: var(--seg-btn-bg);
+  border: 1px solid var(--seg-btn-border);
+  width: 15px;
+  height: 15px;
+  padding: 5px;
+  border-radius: 50%;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+}
+
 .custom-tooltip-abstractionOverlay {
   position: fixed;
   background: var(--seg-btn-border);
@@ -127,6 +161,14 @@ body.dark-mode {
   background-color: var(--seg-btn-bg);
   border: 1px solid var(--seg-btn-border);
   border-radius: 1rem;
+}
+
+.container-plus-ab-overlay.deactivated-ab {
+  opacity: 0.5;
+}
+
+.container-plus-ab-overlay.deactivated-ab > .deactivated-ab {
+  opacity: 0.5;
 }
 
 /* ------------- The fancy buttons START------------ */

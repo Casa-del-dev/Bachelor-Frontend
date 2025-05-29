@@ -222,8 +222,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   //needed for the hints
   const [isAvailable, setIsAvailable] = useState(true);
   const [allIsAvailable, setAllIsAvailable] = useState(true);
-  /*   const [numberOfStepsNeeded, setNumberOfStepsNeeded] = useState<number>(0);
-   */
+
   const [transform, setTransform] = useState<{
     scale: number;
     x: number;
@@ -455,6 +454,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   }
   // Drag and drop handlers
   function startNewStepDrag(e: React.PointerEvent) {
+    if (!allIsAvailable) return;
     e.preventDefault();
     const el = e.currentTarget as Element;
     el.setPointerCapture(e.pointerId);
@@ -463,6 +463,9 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     blankStepRef.current = newBlank;
     setBlankStep(newBlank);
     setDraggingNew(true);
+
+    setNumberOfNeededSteps((prev) => (prev ? prev - 1 : prev));
+
     setGhostPos({ x: e.clientX, y: e.clientY });
 
     document.addEventListener("pointermove", onDrag);
@@ -735,6 +738,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     if (e.key === "Escape") {
       // cleanup
       cleanupDrag();
+      recalcNumberOfNeeded();
     }
   }, []);
 
@@ -1490,6 +1494,36 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     return count;
   }
 
+  const [numberOfNeededSteps, setNumberOfNeededSteps] = useState<number | null>(
+    null
+  );
+
+  function countCurrentSteps(steps: Step[]): number {
+    let count = 0;
+    for (const step of steps) {
+      // count this node
+      count += 1;
+      // recurse into any children
+      if (step.children.length > 0) {
+        count += countCurrentSteps(step.children);
+      }
+    }
+    return count;
+  }
+
+  const recalcNumberOfNeeded = useCallback(() => {
+    if (!abstraction?.correct_answer?.stepsTree) return;
+    const totalNeeded = countStepsTree(abstraction.correct_answer.stepsTree);
+    const currentHave = countCurrentSteps(stepsRef.current);
+    setNumberOfNeededSteps(totalNeeded - currentHave);
+  }, [abstraction]);
+
+  useEffect(() => {
+    if (numberOfNeededSteps !== null && draggingNew === false) {
+      recalcNumberOfNeeded();
+    }
+  }, [steps, recalcNumberOfNeeded, numberOfNeededSteps, draggingNew]);
+
   /* -----------------------
   Hint handling END
   ----------------------- */
@@ -1560,28 +1594,40 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           </div>
         </div>
         <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
-        <div
-          className="container-plus-ab"
-          style={{
-            width: "20px",
-            height: "20px",
-            padding: "10px 10px",
-            borderRadius: "10px",
-          }}
-        >
-          <SquarePlus
-            className="square-plus-ab"
-            onPointerDown={startNewStepDrag}
-            style={{ touchAction: "none" }}
-          />
+        <div className="containerForPlusAndNumberStepsNeeded">
+          <div
+            className={`container-plus-ab ${
+              !allIsAvailable ? "deactivated-ab" : ""
+            }`}
+            style={{
+              width: "20px",
+              height: "20px",
+              padding: "10px 10px",
+              borderRadius: "10px",
+            }}
+          >
+            <SquarePlus
+              className={`square-plus-ab ${
+                !allIsAvailable ? "deactivated-ab" : ""
+              }`}
+              onPointerDown={startNewStepDrag}
+              style={{ touchAction: "none" }}
+            />
+          </div>
+
+          <div className="number-needed-steps-AbstractionOverlay">
+            {numberOfNeededSteps ?? "?"}
+          </div>
         </div>
+
         <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
 
         <div className="hinting-abstractionOverlay">
           <div
             className={`container-plus-ab-overlay ${
               allIsAvailable && isAvailable ? "available-ab-overlay" : ""
-            }`}
+            }
+            ${!allIsAvailable || !isAvailable ? "deactivated-ab" : ""}`}
             style={{
               width: "20px",
               height: "20px",
@@ -1594,20 +1640,25 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                 // grab the tree (or bail out)
                 const tree = abstraction?.correct_answer?.stepsTree;
                 if (tree && typeof tree === "object") {
-                  const total = countStepsTree(tree);
-                  console.log("Total steps + substeps:", total);
+                  const totalNeeded = countStepsTree(tree);
+                  const currentCount = countCurrentSteps(steps);
+                  const diff = totalNeeded - currentCount;
+                  setNumberOfNeededSteps(diff);
                 } else {
                   console.warn("Abstraction has no stepsTree!", abstraction);
                 }
               }
             }}
           >
-            <Lightbulb />
+            <Lightbulb className="deactivated-ab" />
           </div>
           <div
             className={`container-plus-ab-overlay ${
               allIsAvailable ? "available-ab-overlay" : ""
-            }`}
+            }
+            
+            ${!allIsAvailable ? "deactivated-ab" : ""}
+            `}
             style={{
               width: "20px",
               height: "20px",
@@ -1620,7 +1671,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               }
             }}
           >
-            <LayoutTemplate />
+            <LayoutTemplate className="deactivated-ab" />
           </div>
         </div>
         <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
