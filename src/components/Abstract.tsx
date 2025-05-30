@@ -459,8 +459,14 @@ const Abstract: React.FC = ({}) => {
       transformRef.current.x = mx - (mx - old.x) * (newScale / old.scale);
       transformRef.current.y = my - (my - old.y) * (newScale / old.scale);
       transformRef.current.scale = newScale;
+
       scheduleUpdate();
       setTransform({ ...transformRef.current });
+
+      const el = zoomContentRef.current!;
+      el.style.display = "none";
+      void el.offsetHeight;
+      el.style.display = "";
     };
 
     container.addEventListener("pointerdown", (e) => {
@@ -1530,10 +1536,6 @@ const Abstract: React.FC = ({}) => {
   >({});
   //neeeded to load the abstraction everytime we toggle the abstraction
   useEffect(() => {
-    if (toggleAbstraction !== "true") {
-      setAbstractions([]);
-      return;
-    }
     if (!problemId) return;
 
     const load = async () => {
@@ -1682,11 +1684,6 @@ const Abstract: React.FC = ({}) => {
 
           setAbstractionToSteps(abstractionToSteps);
           setStepToAbstractions(stepToAbstractions);
-
-          setTimeout(() => {
-            console.log("abstractionTosteps", abstractionToSteps);
-            console.log("stepToAbstractions", stepToAbstractions);
-          }, 100);
         }
       } catch (e) {
         console.error(e);
@@ -2126,19 +2123,16 @@ const Abstract: React.FC = ({}) => {
                   )}
 
                   {stepToAbstractions[node.id]?.length === 1 && (
-                    <>
-                      <div className="container-icon-grouping-recycling">
-                        <Recycle style={{ width: "20px", height: "20px" }} />
-                      </div>
-                    </>
+                    <div className="container-icon-grouping-recycling">
+                      <Recycle style={{ width: "20px", height: "20px" }} />
+                    </div>
                   )}
+
                   {stepToAbstractions[node.id]?.length !== 2 &&
                     stepToAbstractions[node.id]?.length !== 1 && (
-                      <>
-                        <div className="container-icon-grouping-recycling letsgoski">
-                          Fully Abstracted
-                        </div>
-                      </>
+                      <div className="container-icon-grouping-recycling letsgoski">
+                        Fully Abstracted
+                      </div>
                     )}
                 </div>
               </div>
@@ -2644,6 +2638,11 @@ const Abstract: React.FC = ({}) => {
         <div
           className="fullscreen-overlay fade-in-correctStep"
           style={{ pointerEvents: "all" }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowHoverOverlay(false);
+            }
+          }}
         >
           <AbstractionOverlay
             onClose={() => setShowHoverOverlay(false)}

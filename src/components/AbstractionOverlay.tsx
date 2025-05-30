@@ -2,15 +2,46 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./AbstractionOverlay.css";
 import {
   Check,
+  Hash,
   LayoutTemplate,
   Lightbulb,
   Pen,
-  Save,
   SquarePlus,
   Trash,
   X,
 } from "lucide-react";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
+
+const BASE =
+  "https://bachelor-backend.erenhomburg.workers.dev/abstractionInbetween/v1";
+
+export async function saveAbstractionInbetween(
+  problemId: string,
+  abstractionId: string,
+  steps: Step[],
+  isAvailable: boolean,
+  allIsAvailable: boolean,
+  allIsHinted: boolean
+): Promise<void> {
+  const token = localStorage.getItem("authToken");
+  if (!token) throw new Error("Not authenticated");
+
+  await fetch(
+    `${BASE}/saveAbstraction?problemId=${encodeURIComponent(
+      problemId
+    )}&abstractionId=${encodeURIComponent(abstractionId)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ steps, isAvailable, allIsAvailable, allIsHinted }),
+    }
+  ).then((res) => {
+    if (!res.ok) throw new Error(res.statusText);
+  });
+}
 
 interface CorrectStepOverlayProps {
   onClose: () => void;
@@ -156,7 +187,7 @@ interface AbstractionItem {
         content: string;
         general_hint: string;
         detailed_hint: string;
-        substeps: Record<string, { content: string; substeps: any }>;
+        substeps: Record<string, any>;
       };
     };
   };
@@ -197,6 +228,43 @@ export interface Step {
   selected: boolean;
 }
 
+export async function loadAbstractionInbetween(
+  problemId: string,
+  abstractionId: string
+): Promise<{
+  steps: Step[];
+  isAvailable: boolean;
+  allIsAvailable: boolean;
+  allIsHinted: boolean;
+}> {
+  const token = localStorage.getItem("authToken");
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(
+    `${BASE}/loadAbstraction?problemId=${encodeURIComponent(
+      problemId
+    )}&abstractionId=${encodeURIComponent(abstractionId)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (res.status === 204) {
+    // no content yet, return defaults
+    return {
+      steps: [],
+      isAvailable: true,
+      allIsAvailable: true,
+      allIsHinted: true,
+    };
+  }
+  if (!res.ok) throw new Error(res.statusText);
+
+  return await res.json();
+}
+
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 3;
 
@@ -211,6 +279,8 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   stepLabels,
   getType,
 }) => {
+  const problemId = localStorage.getItem("selectedProblem")!;
+  const abstractionId = abstraction?.id!;
   // Pan & zoom refs and state
   const mainContainerRef = useRef<HTMLDivElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -218,10 +288,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const zoomContentRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialCentering = useRef(true);
-
-  //needed for the hints
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [allIsAvailable, setAllIsAvailable] = useState(true);
 
   const [transform, setTransform] = useState<{
     scale: number;
@@ -267,8 +333,30 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }[]
   >([]);
 
-  // Steps state (to match Abstract.tsx)
+  const loadedRefSteps = useRef(false);
+
   const [steps, setSteps] = useState<Step[]>([]);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [allIsAvailable, setAllIsAvailable] = useState(true);
+  const [allIsHinted, setAllIsHinted] = useState(true);
+
+  useEffect(() => {
+    loadedRefSteps.current = false;
+    setSteps([]);
+
+    loadAbstractionInbetween(problemId, abstractionId)
+      .then(({ steps, isAvailable, allIsAvailable, allIsHinted }) => {
+        setSteps(steps);
+        setIsAvailable(isAvailable);
+        setAllIsAvailable(allIsAvailable);
+        setAllIsHinted(allIsHinted);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        loadedRefSteps.current = true;
+      });
+  }, [problemId, abstractionId]);
+
   const stepsRef = useRef<Step[]>(steps);
   useEffect(() => {
     stepsRef.current = steps;
@@ -415,11 +503,18 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       const factor = e.deltaY < 0 ? 1.1 : 0.9;
       const old = transformRef.current;
       const newScale = clamp(old.scale * factor, MIN_ZOOM, MAX_ZOOM);
+
       transformRef.current.x = mx - (mx - old.x) * (newScale / old.scale);
       transformRef.current.y = my - (my - old.y) * (newScale / old.scale);
       transformRef.current.scale = newScale;
+
       scheduleUpdate();
       setTransform({ ...transformRef.current });
+
+      const el = zoomContentRef.current!;
+      el.style.display = "none";
+      void el.offsetHeight;
+      el.style.display = "";
     };
 
     container.addEventListener("pointerdown", onPointerDown);
@@ -506,6 +601,26 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     insertTargetRef.current = null;
     setInsertTarget(null);
   }
+
+  useEffect(() => {
+    if (!loadedRefSteps.current) return;
+    if (!problemId || !abstractionId) return;
+    saveAbstractionInbetween(
+      problemId,
+      abstractionId,
+      steps,
+      isAvailable,
+      allIsAvailable,
+      allIsHinted
+    );
+  }, [
+    steps,
+    isAvailable,
+    allIsAvailable,
+    allIsHinted,
+    problemId,
+    abstractionId,
+  ]);
 
   const SNAP_THRESHOLD = 100;
   const VERTICAL_THRESHOLD = SNAP_THRESHOLD;
@@ -742,7 +857,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }
   }, []);
 
-  function createBlankStep(Selected: boolean): Step {
+  function createBlankStep(Selected: boolean, isGhost: boolean = true): Step {
     return {
       id: `step-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       code: "",
@@ -763,7 +878,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       isNewlyInserted: true,
       isexpanded: true,
       isHyperExpanded: false,
-      isGhost: true,
+      isGhost: isGhost,
       selected: Selected,
     };
   }
@@ -973,7 +1088,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       current[stepIndex].status.correctness = "correct";
       current[stepIndex].status.can_be_further_divided = "cannot";
       current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
-      current[stepIndex].correctStep = "";
 
       return newSteps;
     });
@@ -1524,6 +1638,72 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }
   }, [steps, recalcNumberOfNeeded, numberOfNeededSteps, draggingNew]);
 
+  //Handle hint all
+  function mapStepsTreeToBlank(
+    tree: Record<string, { substeps: any }>
+  ): Step[] {
+    return Object.keys(tree).map((key) => {
+      // create a blank step (just like createBlankStep does)
+      const blank: Step = createBlankStep(true, false);
+
+      // recurse into its substeps
+      blank.children = mapStepsTreeToBlank(tree[key].substeps || {});
+      return blank;
+    });
+  }
+
+  function applyAbstractionHints(
+    steps: Step[],
+    abstraction: AbstractionItem | null
+  ): void {
+    if (!abstraction) return;
+
+    // 1) build maps for the actual steps tree
+    const idToPath = new Map<string, string>();
+    const pathToStep = new Map<string, Step>();
+    function walkSteps(nodes: Step[], prefix = "") {
+      nodes.forEach((node, i) => {
+        const path = prefix === "" ? `${i}` : `${prefix}.${i}`;
+        idToPath.set(node.id, path);
+        pathToStep.set(path, node);
+        if (node.children.length > 0) {
+          walkSteps(node.children, path);
+        }
+      });
+    }
+    walkSteps(steps);
+
+    // 2) build a map for the abstraction’s stepsTree (with numeric indexing)
+    type TreeNode = AbstractionItem["correct_answer"]["stepsTree"][string];
+    const pathToAbstractionNode = new Map<string, TreeNode>();
+    function walkAbstractionTree(
+      subtree: Record<string, TreeNode>,
+      prefix = ""
+    ) {
+      // use numeric indices rather than original keys
+      Object.keys(subtree).forEach((origKey, i) => {
+        const node = subtree[origKey];
+        const path = prefix === "" ? `${i}` : `${prefix}.${i}`;
+        pathToAbstractionNode.set(path, node);
+        if (node.substeps && Object.keys(node.substeps).length > 0) {
+          walkAbstractionTree(node.substeps, path);
+        }
+      });
+    }
+    walkAbstractionTree(abstraction.correct_answer.stepsTree);
+
+    // 3) apply each abstraction-node’s hints to the matching Step
+    idToPath.forEach((path, _) => {
+      const targetStep = pathToStep.get(path);
+      const sourceNode = pathToAbstractionNode.get(path);
+      if (targetStep && sourceNode) {
+        targetStep.general_hint = sourceNode.general_hint;
+        targetStep.detailed_hint = sourceNode.detailed_hint;
+        targetStep.correctStep = sourceNode.content;
+      }
+    });
+  }
+
   /* -----------------------
   Hint handling END
   ----------------------- */
@@ -1593,8 +1773,13 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
             {StepLabels({ stepLabels })}
           </div>
         </div>
-        <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
-        <div className="containerForPlusAndNumberStepsNeeded">
+        <hr
+          style={{ width: "90%", opacity: "0.2", margin: 0, marginTop: "10px" }}
+        />
+        <div
+          className="containerForPlusAndNumberStepsNeeded"
+          style={{ marginTop: "30px" }}
+        >
           <div
             className={`container-plus-ab ${
               !allIsAvailable ? "deactivated-ab" : ""
@@ -1620,44 +1805,78 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           </div>
         </div>
 
-        <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
+        <hr
+          style={{ width: "90%", opacity: "0.2", margin: 0, marginTop: "30px" }}
+        />
 
-        <div className="hinting-abstractionOverlay">
-          <div
-            className={`container-plus-ab-overlay ${
-              allIsAvailable && isAvailable ? "available-ab-overlay" : ""
-            }
-            ${!allIsAvailable || !isAvailable ? "deactivated-ab" : ""}`}
-            style={{
-              width: "20px",
-              height: "20px",
-              padding: "10px 10px",
-              borderRadius: "10px",
-            }}
-            onClick={() => {
-              if (isAvailable) {
-                setIsAvailable(false);
-                // grab the tree (or bail out)
-                const tree = abstraction?.correct_answer?.stepsTree;
-                if (tree && typeof tree === "object") {
-                  const totalNeeded = countStepsTree(tree);
-                  const currentCount = countCurrentSteps(steps);
-                  const diff = totalNeeded - currentCount;
-                  setNumberOfNeededSteps(diff);
-                } else {
-                  console.warn("Abstraction has no stepsTree!", abstraction);
-                }
+        <div
+          className="hinting-abstractionOverlay"
+          style={{ marginTop: "30px" }}
+        >
+          <div className="container-twoInitial-hints">
+            <div
+              className={`container-plus-ab-overlay ${
+                allIsAvailable && isAvailable ? "available-ab-overlay" : ""
               }
-            }}
-          >
-            <Lightbulb className="deactivated-ab" />
+            ${!allIsAvailable || !isAvailable ? "deactivated-ab" : ""}`}
+              style={{
+                width: "20px",
+                height: "20px",
+                padding: "10px 10px",
+                borderRadius: "10px",
+              }}
+              onClick={() => {
+                if (isAvailable) {
+                  setIsAvailable(false);
+                  // grab the tree (or bail out)
+                  const tree = abstraction?.correct_answer?.stepsTree;
+                  if (tree && typeof tree === "object") {
+                    const totalNeeded = countStepsTree(tree);
+                    const currentCount = countCurrentSteps(steps);
+                    const diff = totalNeeded - currentCount;
+                    setNumberOfNeededSteps(diff);
+                  } else {
+                    console.warn("Abstraction has no stepsTree!", abstraction);
+                  }
+                }
+              }}
+            >
+              <Hash className="deactivated-ab" />
+            </div>
+            <div
+              className={`container-plus-ab-overlay ${
+                allIsAvailable ? "available-ab-overlay" : ""
+              }
+            
+            ${!allIsAvailable ? "deactivated-ab" : ""}
+            `}
+              style={{
+                width: "20px",
+                height: "20px",
+                padding: "10px 10px",
+                borderRadius: "10px",
+              }}
+              onClick={() => {
+                if (!allIsAvailable) return;
+                setAllIsAvailable(false);
+
+                const tree = abstraction?.correct_answer?.stepsTree;
+                if (tree) {
+                  const blankTree = mapStepsTreeToBlank(tree);
+                  setSteps(blankTree);
+                  setNumberOfNeededSteps(0);
+                }
+              }}
+            >
+              <LayoutTemplate className="deactivated-ab" />
+            </div>
           </div>
           <div
             className={`container-plus-ab-overlay ${
-              allIsAvailable ? "available-ab-overlay" : ""
+              !allIsAvailable && allIsHinted ? "available-ab-overlay" : ""
             }
             
-            ${!allIsAvailable ? "deactivated-ab" : ""}
+            ${allIsAvailable || !allIsHinted ? "deactivated-ab" : ""}
             `}
             style={{
               width: "20px",
@@ -1666,27 +1885,22 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               borderRadius: "10px",
             }}
             onClick={() => {
-              if (allIsAvailable) {
-                setAllIsAvailable(false);
-              }
+              if (!allIsHinted && !allIsAvailable) return;
+              setAllIsHinted(false);
+              applyAbstractionHints(steps, abstraction);
+              setSteps((prev) => [...prev]);
             }}
           >
-            <LayoutTemplate className="deactivated-ab" />
+            <Lightbulb className="deactivated-ab" />
           </div>
         </div>
-        <hr style={{ width: "90%", opacity: "0.2", margin: 0 }} />
-        <div className="hinting-abstractionOverlay">
-          <div
-            className="container-plus-ab-overlay"
-            style={{
-              width: "20px",
-              height: "20px",
-              padding: "10px 10px",
-              borderRadius: "10px",
-            }}
-          >
-            <Save />
-          </div>
+        <hr
+          style={{ width: "90%", opacity: "0.2", margin: 0, marginTop: "30px" }}
+        />
+        <div
+          className="hinting-abstractionOverlay"
+          style={{ marginTop: "30px" }}
+        >
           <div
             className="container-plus-ab-overlay"
             style={{
