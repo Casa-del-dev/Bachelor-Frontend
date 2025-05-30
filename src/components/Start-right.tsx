@@ -1010,7 +1010,9 @@ Editing logic START
       current[stepIndex].status.correctness = "correct";
       current[stepIndex].status.can_be_further_divided = "cannot";
       current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
-      current[stepIndex].correctStep = "";
+      setTimeout(() => {
+        current[stepIndex].correctStep = "";
+      }, 0);
       return newSteps;
     });
     const stepId = `step-${path.join("-")}-correct`;
@@ -1030,9 +1032,9 @@ Editing logic START
       localStorage.setItem("savedCorrectSteps", "true");
     }
 
+    setShowCorrectStepOverlay(null);
     // done
     setTimeout(() => {
-      setShowCorrectStepOverlay(null);
       setSaveCorrectStep(false);
     }, 300);
   }

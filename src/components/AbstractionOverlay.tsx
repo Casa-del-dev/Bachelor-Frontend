@@ -62,6 +62,7 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   // Handle fade-out before closing
   const handleClose = () => {
     setFadeState("fade-out-correctStep");
+    console.log(fadeState);
     setTimeout(() => onClose(), 300); // Delay removal after fade-out
   };
 
@@ -1089,6 +1090,10 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       current[stepIndex].status.can_be_further_divided = "cannot";
       current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
 
+      setTimeout(() => {
+        current[stepIndex].correctStep = "";
+      }, 0);
+
       return newSteps;
     });
     const stepId = `step-${path.join("-")}-correct`;
@@ -1116,9 +1121,9 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       localStorage.setItem("savedCorrectSteps", "true");
     }
 
+    setShowCorrectStepOverlay(null);
     // done
     setTimeout(() => {
-      setShowCorrectStepOverlay(null);
       setSaveCorrectStep(false);
     }, 300);
   }

@@ -901,7 +901,9 @@ const Abstract: React.FC = ({}) => {
       current[stepIndex].status.correctness = "correct";
       current[stepIndex].status.can_be_further_divided = "cannot";
       current[stepIndex].content = current[stepIndex].correctStep; // Overwrite content
-      current[stepIndex].correctStep = "";
+      setTimeout(() => {
+        current[stepIndex].correctStep = "";
+      }, 0);
 
       return newSteps;
     });
@@ -930,9 +932,9 @@ const Abstract: React.FC = ({}) => {
       localStorage.setItem("savedCorrectSteps", "true");
     }
 
+    setShowCorrectStepOverlay(null);
     // done
     setTimeout(() => {
-      setShowCorrectStepOverlay(null);
       setSaveCorrectStep(false);
     }, 300);
   }
