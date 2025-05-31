@@ -1,0 +1,18 @@
+.gradient-spinner {
+  display: inline-block;
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Optional: slightly reduce opacity so it fades out smoothly at the trailing edge */
+.path {
+  transition: stroke-opacity 0.3s;
+}

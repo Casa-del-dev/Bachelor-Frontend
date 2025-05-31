@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 import apiCallCheckAbstraction from "./AI_EqualityCheck";
+import GradientSpinner from "./BuildingBlocks/GradientSpinner";
 
 const BASE =
   "https://bachelor-backend.erenhomburg.workers.dev/abstractionInbetween/v1";
@@ -1724,20 +1725,29 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   /* -----------------------
   Replacing / Checking Steps START
   ----------------------- */
+  const [isCheckingAbstractionOverlay, setIsCheckingAbstractionOverlay] =
+    useState(false);
 
-  async function handleReplaceSteps(
-    steps: Step[],
-    abstraction: AbstractionItem | null
-  ) {
-    if (!abstraction) return;
+  const handleReplaceSteps = useCallback(
+    async (steps: Step[], abstraction: AbstractionItem | null) => {
+      if (!abstraction) return;
 
-    const data = await apiCallCheckAbstraction(
-      steps,
-      abstraction.correct_answer.stepsTree
-    );
-    const answer = data.choices[0].message.content;
-    console.log(answer);
-  }
+      try {
+        setIsCheckingAbstractionOverlay(true);
+        const data = await apiCallCheckAbstraction(
+          steps,
+          abstraction.correct_answer.stepsTree
+        );
+        console.log(data.choices[0].message.content);
+        // … any further handling of “answer” …
+      } catch (err) {
+        console.error("Error during abstraction check:", err);
+      } finally {
+        setIsCheckingAbstractionOverlay(false);
+      }
+    },
+    []
+  );
 
   /* -----------------------
   Replacing / Checking Steps END
@@ -1946,7 +1956,16 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
             }}
             onClick={() => handleReplaceSteps(steps, abstraction)}
           >
-            <Check style={{ color: "rgb(40, 211, 40)" }} strokeWidth={5} />
+            {isCheckingAbstractionOverlay ? (
+              <GradientSpinner size={48} strokeWidth={6} />
+            ) : (
+              <Check
+                size={48}
+                strokeWidth={5}
+                style={{ color: "rgb(40, 211, 40)", cursor: "pointer" }}
+                onClick={() => handleReplaceSteps(steps, abstraction)}
+              />
+            )}
           </div>
         </div>
 
