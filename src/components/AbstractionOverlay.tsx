@@ -1821,7 +1821,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           simplifiedSteps,
           simplifiedAbstraction
         );
-        console.log(data.choices[0].message.content);
         setAnswerAbstractionOVerlay(data.choices[0].message.content);
       } catch (err) {
         console.error("Error during abstraction check:", err);
@@ -2183,6 +2182,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                 style={{ color: "rgb(40, 211, 40)", cursor: "pointer" }}
               />
             )}
+            Check and Replace!
           </div>
           {answerAbstractionOVerlay === "No" && (
             <div
