@@ -21,8 +21,6 @@ export const apiCallCheckAbstraction = async (
       },
     });
 
-    console.log("Response:", response);
-
     return response.data;
   } catch (error) {
     console.error("Error in API call:", error);

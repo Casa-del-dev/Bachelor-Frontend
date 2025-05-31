@@ -1561,116 +1561,16 @@ const Abstract: React.FC = ({}) => {
         if (res.status === 404) {
           setAbstractions([]);
         } else {
-          /*           const data = (await res.json()) as AbstractionItem[];
-           */ const testData: AbstractionItem[] = [
-            {
-              id: "abstraction-1748260426981-83469",
-              steps: [
-                [
-                  { id: "step-1748260426981-6579" },
-                  { id: "step-1748260426981-5639" },
-                ],
-                [{ id: "step-1748260426981-7127" }],
-                [{ id: "step-1748260426981-65" }],
-              ],
-              general_hint:
-                "Recycling pattern for iterating and processing characters",
-              detailed_hint:
-                "The iteration over characters and subsequent processing steps are repeated in different contexts.",
-              correct_answer: {
-                stepsTree: {
-                  R: {
-                    content: "Generalized iteration and processing",
-                    general_hint:
-                      "Generalized iteration and processing of characters",
-                    detailed_hint:
-                      "This step involves iterating over characters and performing a processing action.",
-                    substeps: {
-                      R1: {
-                        content: "Iterate over characters",
-                        general_hint: "Iterate over characters",
-                        detailed_hint:
-                          "This substep involves iterating over each character in a sequence.",
-                        substeps: {},
-                      },
-                      R2: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            {
-              id: "abstraction-1748260426981-6579",
-              steps: [
-                [
-                  { id: "step-1748260426981-6579" },
-                  { id: "step-1748260426981-5639" },
-                ],
-              ],
-              general_hint:
-                "Recycling pattern for iterating and processing characters",
-              detailed_hint:
-                "The iteration over characters and subsequent processing steps are repeated in different contexts.",
-              correct_answer: {
-                stepsTree: {
-                  R: {
-                    content: "Generalized iteration and processing",
-                    general_hint:
-                      "Generalized iteration and processing of characters",
-                    detailed_hint:
-                      "This step involves iterating over characters and performing a processing action.",
-                    substeps: {
-                      R1: {
-                        content: "Iterate over characters",
-                        general_hint: "Iterate over characters",
-                        detailed_hint:
-                          "This substep involves iterating over each character in a sequence.",
-                        substeps: {},
-                      },
-                      R2: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                      R3: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                      R4: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          ];
+          const data = (await res.json()) as AbstractionItem[];
 
-          setAbstractions(testData);
-          /*           setAbstractions(data || []);
-           */
+          setAbstractions(data || []);
 
           //here we create the arrays that are easily accessable
 
           const abstractionToSteps: Record<string, string[]> = {};
           const stepToAbstractions: Record<string, string[]> = {};
 
-          for (const abstraction of testData) {
+          for (const abstraction of data) {
             const abstractionId = abstraction.id;
             const stepIds: string[] = [];
 
@@ -2119,29 +2019,52 @@ const Abstract: React.FC = ({}) => {
                   </div>
                 </div>
                 <div className="group-or-recycle">
-                  {stepToAbstractions[node.id]?.length === 2 && (
-                    <>
-                      <div className="container-icon-grouping-recycling">
-                        <Users style={{ width: "20px", height: "20px" }} />
-                      </div>
-                      <div className="container-icon-grouping-recycling">
-                        <Recycle style={{ width: "20px", height: "20px" }} />
-                      </div>
-                    </>
-                  )}
+                  {toggleAbstraction === "true" &&
+                    (() => {
+                      // 1) Find all abstractions that mention this step-ID:
+                      const absIds = stepToAbstractions[node.id] || [];
+                      const matches = abstractions.filter((a) =>
+                        absIds.includes(a.id)
+                      );
 
-                  {stepToAbstractions[node.id]?.length === 1 && (
-                    <div className="container-icon-grouping-recycling">
-                      <Recycle style={{ width: "20px", height: "20px" }} />
-                    </div>
-                  )}
+                      // 2) Determine flags:
+                      const hasGrouping = matches.some(
+                        (a) => a.steps.length === 1
+                      );
+                      const hasRecycling = matches.some(
+                        (a) => a.steps.length > 1
+                      );
 
-                  {stepToAbstractions[node.id]?.length !== 2 &&
-                    stepToAbstractions[node.id]?.length !== 1 && (
-                      <div className="container-icon-grouping-recycling letsgoski">
-                        Fully Abstracted
-                      </div>
-                    )}
+                      // 3) Render according to rules:
+                      if (!hasGrouping && !hasRecycling) {
+                        // No matching abstraction at all
+                        return (
+                          <div className="container-icon-grouping-recycling letsgoski">
+                            Fully Abstracted
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <>
+                          {hasGrouping && (
+                            <div className="container-icon-grouping-recycling">
+                              <Users
+                                style={{ width: "20px", height: "20px" }}
+                              />
+                            </div>
+                          )}
+
+                          {hasRecycling && (
+                            <div className="container-icon-grouping-recycling">
+                              <Recycle
+                                style={{ width: "20px", height: "20px" }}
+                              />
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                 </div>
               </div>
 
@@ -2555,6 +2478,30 @@ const Abstract: React.FC = ({}) => {
                       ? "Group"
                       : "Recycle";
 
+                    if (getAbstractionType === "Recycle") {
+                      // Flatten out every step‐ID in the chosen Recycle abstraction:
+                      const allStepIds: string[] = chosen.steps.flatMap(
+                        (group) => group.map((s) => s.id)
+                      );
+
+                      // Now check: for each of those step‐IDs, is there still a “Group” abstraction
+                      // (i.e. some abstraction whose .steps.length > 1) that contains it?
+                      const needsMoreGrouping = allStepIds.some((stepId) => {
+                        const containingAbstractions =
+                          stepToAbstractions[stepId] || [];
+                        return containingAbstractions.some((absId) => {
+                          const abs = abstractions.find((a) => a.id === absId);
+                          return !!abs && abs.steps.length > 1;
+                        });
+                      });
+
+                      if (needsMoreGrouping) {
+                        // As soon as you find at least one step‐ID that still belongs to a multi‐step group,
+                        // “block” the Recycle click by returning early.
+                        return;
+                      }
+                    }
+
                     if (chosen) {
                       setChosenAbstraction(chosen);
                       setShowHoverOverlay(true);
@@ -2653,6 +2600,11 @@ const Abstract: React.FC = ({}) => {
           }}
         >
           <AbstractionOverlay
+            saveAbstraction={saveAbstraction}
+            originalAbstraction={abstractions}
+            originalSetAbstraction={setAbstractions}
+            originalSteps={steps}
+            originalSetSteps={setSteps}
             onClose={() => setShowHoverOverlay(false)}
             abstraction={chosenAbstraction}
             abstractionToSteps={abstractionToSteps}

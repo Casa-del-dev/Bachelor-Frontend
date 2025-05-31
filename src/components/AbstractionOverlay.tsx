@@ -64,7 +64,6 @@ const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   // Handle fade-out before closing
   const handleClose = () => {
     setFadeState("fade-out-correctStep");
-    console.log(fadeState);
     setTimeout(() => onClose(), 300); // Delay removal after fade-out
   };
 
@@ -196,7 +195,30 @@ interface AbstractionItem {
   };
 }
 
+interface AbstractionItemOriginal {
+  id: string;
+  steps: { id: string }[][];
+  general_hint: string;
+  detailed_hint: string;
+  correct_answer: {
+    stepsTree: Record<string, StepNode>;
+  };
+}
+interface StepNode {
+  content: string;
+  general_hint: string;
+  detailed_hint: string;
+  substeps: Record<string, StepNode>;
+}
+
 interface AbstractionOverlayProps {
+  saveAbstraction: any;
+  originalAbstraction: AbstractionItemOriginal[];
+  originalSetAbstraction: React.Dispatch<
+    React.SetStateAction<AbstractionItemOriginal[]>
+  >;
+  originalSteps: Step[];
+  originalSetSteps: React.Dispatch<React.SetStateAction<Step[]>>;
   onClose: () => void;
   abstraction: AbstractionItem | null;
   abstractionToSteps: Record<string, string[]>;
@@ -268,6 +290,30 @@ export async function loadAbstractionInbetween(
   return await res.json();
 }
 
+export async function deleteAbstractionInbetween(
+  problemId: string,
+  abstractionId: string
+): Promise<void> {
+  const token = localStorage.getItem("authToken");
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(
+    `${BASE}/deleteAbstraction?problemId=${encodeURIComponent(
+      problemId
+    )}&abstractionId=${encodeURIComponent(abstractionId)}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Failed to delete abstraction: ${res.statusText}`);
+  }
+}
+
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 3;
 
@@ -276,14 +322,20 @@ function clamp(v: number, min: number, max: number) {
 }
 
 const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
+  saveAbstraction,
+  originalAbstraction,
+  originalSetAbstraction,
+  originalSteps,
+  originalSetSteps,
   onClose,
   abstraction,
-  /*   abstractionToSteps,*/
+  abstractionToSteps,
   stepLabels,
   getType,
 }) => {
   const problemId = localStorage.getItem("selectedProblem")!;
   const abstractionId = abstraction?.id!;
+
   // Pan & zoom refs and state
   const mainContainerRef = useRef<HTMLDivElement | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -1727,6 +1779,31 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   ----------------------- */
   const [isCheckingAbstractionOverlay, setIsCheckingAbstractionOverlay] =
     useState(false);
+  const [answerAbstractionOVerlay, setAnswerAbstractionOVerlay] = useState<
+    string | null
+  >(null);
+
+  const simplifySteps = (steps: Step[]): any[] => {
+    return steps.map((step) => ({
+      id: step.id,
+      content: step.content,
+      children: step.children ? simplifySteps(step.children) : [],
+    }));
+  };
+
+  const simplifyAbstractionTree = (
+    tree: Record<string, any>
+  ): Record<string, any> => {
+    const result: Record<string, any> = {};
+    for (const [key, node] of Object.entries(tree)) {
+      result[key] = {
+        id: key,
+        content: node.content,
+        substeps: simplifyAbstractionTree(node.substeps || {}),
+      };
+    }
+    return result;
+  };
 
   const handleReplaceSteps = useCallback(
     async (steps: Step[], abstraction: AbstractionItem | null) => {
@@ -1734,12 +1811,18 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
 
       try {
         setIsCheckingAbstractionOverlay(true);
-        const data = await apiCallCheckAbstraction(
-          steps,
+
+        const simplifiedSteps = simplifySteps(steps);
+        const simplifiedAbstraction = simplifyAbstractionTree(
           abstraction.correct_answer.stepsTree
         );
+
+        const data = await apiCallCheckAbstraction(
+          simplifiedSteps,
+          simplifiedAbstraction
+        );
         console.log(data.choices[0].message.content);
-        // … any further handling of “answer” …
+        setAnswerAbstractionOVerlay(data.choices[0].message.content);
       } catch (err) {
         console.error("Error during abstraction check:", err);
       } finally {
@@ -1748,6 +1831,141 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     },
     []
   );
+
+  const [fadeInTextNo, setFadeInTextNo] = useState(false);
+  const [fadeOutTextNo, setFadeOutTextNo] = useState(false);
+
+  useEffect(() => {
+    if (answerAbstractionOVerlay === "No") {
+      setFadeOutTextNo(false);
+      setFadeInTextNo(true);
+
+      setTimeout(() => {
+        setFadeInTextNo(false);
+        setFadeOutTextNo(true);
+      }, 4500);
+
+      setTimeout(() => {
+        setAnswerAbstractionOVerlay(null);
+        setFadeOutTextNo(false);
+      }, 5300);
+    } else if (answerAbstractionOVerlay === "Yes") {
+      //implement here
+      const stepIdsToReplace = abstractionToSteps[abstraction!.id];
+      const updatedSteps = replaceOrMergeSteps(
+        originalSteps,
+        new Set(stepIdsToReplace),
+        steps
+      );
+
+      originalSetSteps(updatedSteps);
+
+      const filtered = originalAbstraction.filter(
+        (a) => a.id !== abstraction!.id
+      );
+      originalSetAbstraction(filtered);
+
+      saveAbstraction(filtered).catch((err: unknown) =>
+        console.error("Failed to re-save abstractions:", err)
+      );
+
+      deleteAbstractionInbetween(problemId, abstraction!.id)
+        .catch((err) => {
+          console.error("Failed to delete abstraction from backend:", err);
+        })
+        .finally(() => {
+          onClose();
+        });
+    }
+  }, [answerAbstractionOVerlay]);
+
+  function replaceOrMergeSteps(
+    originalSteps: Step[],
+    stepIdsToReplace: Set<string>,
+    replacements: Step[]
+  ): Step[] {
+    if (getType === "Recycle") {
+      return replaceStepsById(originalSteps, stepIdsToReplace, replacements);
+    } else {
+      return mergeStepsById(originalSteps, stepIdsToReplace, replacements);
+    }
+  }
+
+  function mergeStepsById(
+    tree: Step[],
+    idsToMerge: Set<string>,
+    replacements: Step[]
+  ): Step[] {
+    const result: Step[] = [];
+
+    let i = 0;
+    while (i < tree.length) {
+      const step = tree[i];
+
+      // If this step should be merged
+      if (idsToMerge.has(step.id)) {
+        const mergedGroup: Step[] = [];
+        const mergedChildren: Step[] = [];
+
+        // Collect all consecutive steps that should be merged
+        while (i < tree.length && idsToMerge.has(tree[i].id)) {
+          mergedGroup.push(tree[i]);
+          mergedChildren.push(...(tree[i].children || []));
+          i++;
+        }
+
+        // Clone replacements and attach mergedChildren after their own children
+        const mergedSteps = replacements.map((replacementStep) => ({
+          ...replacementStep,
+          children: [...(replacementStep.children || []), ...mergedChildren],
+        }));
+
+        result.push(...mergedSteps);
+      } else {
+        // Recursively check children
+        const newChildren = step.children?.length
+          ? mergeStepsById(step.children, idsToMerge, replacements)
+          : [];
+
+        result.push({
+          ...step,
+          children: newChildren,
+        });
+        i++;
+      }
+    }
+
+    return result;
+  }
+
+  function replaceStepsById(
+    tree: Step[],
+    idsToReplace: Set<string>,
+    replacements: Step[]
+  ): Step[] {
+    const newTree: Step[] = [];
+
+    for (const step of tree) {
+      if (idsToReplace.has(step.id)) {
+        // Insert all replacement steps in place of the matched step
+        for (const repl of replacements) {
+          newTree.push({ ...repl });
+        }
+      } else {
+        // Recurse into children if they exist
+        const newChildren = step.children?.length
+          ? replaceStepsById(step.children, idsToReplace, replacements)
+          : [];
+
+        newTree.push({
+          ...step,
+          children: newChildren,
+        });
+      }
+    }
+
+    return newTree;
+  }
 
   /* -----------------------
   Replacing / Checking Steps END
@@ -1963,10 +2181,18 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                 size={48}
                 strokeWidth={5}
                 style={{ color: "rgb(40, 211, 40)", cursor: "pointer" }}
-                onClick={() => handleReplaceSteps(steps, abstraction)}
               />
             )}
           </div>
+          {answerAbstractionOVerlay === "No" && (
+            <div
+              className={`text-after-GettingFalse ${
+                fadeInTextNo ? "fade-in" : fadeOutTextNo ? "fade-out" : ""
+              }`}
+            >
+              Abstraction not implemented correctly yet
+            </div>
+          )}
         </div>
 
         <X
