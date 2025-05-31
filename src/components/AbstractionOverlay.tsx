@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
+import apiCallCheckAbstraction from "./AI_EqualityCheck";
 
 const BASE =
   "https://bachelor-backend.erenhomburg.workers.dev/abstractionInbetween/v1";
@@ -431,6 +432,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       </div>
     );
   }
+  const editingRef = useRef(false);
 
   // Pan and zoom effect
   useEffect(() => {
@@ -461,6 +463,13 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }
 
     const onPointerDown = (e: PointerEvent) => {
+      if (
+        editingRef.current &&
+        textareaRef.current &&
+        textareaRef.current.contains(e.target as Node)
+      )
+        return;
+
       dragReady = true;
       startX = lastX = e.clientX;
       startY = lastY = e.clientY;
@@ -536,7 +545,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       container.removeEventListener("wheel", onWheel);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [draggingNew]);
+  }, [draggingNew, editingRef.current]);
 
   function cleanupDrag() {
     document.removeEventListener("pointermove", onDrag);
@@ -1258,7 +1267,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const [tempContent, setTempContent] = useState("");
 
   //disable pan zoom handler
-  const editingRef = useRef(false);
   useEffect(() => {
     editingRef.current = editingPath !== null;
   }, [editingPath]);
@@ -1713,6 +1721,28 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   Hint handling END
   ----------------------- */
 
+  /* -----------------------
+  Replacing / Checking Steps START
+  ----------------------- */
+
+  async function handleReplaceSteps(
+    steps: Step[],
+    abstraction: AbstractionItem | null
+  ) {
+    if (!abstraction) return;
+
+    const data = await apiCallCheckAbstraction(
+      steps,
+      abstraction.correct_answer.stepsTree
+    );
+    const answer = data.choices[0].message.content;
+    console.log(answer);
+  }
+
+  /* -----------------------
+  Replacing / Checking Steps END
+  ----------------------- */
+
   return (
     <div className="container-abstract-hover-overlay">
       {draggingNew && ghostPos && (
@@ -1914,6 +1944,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               padding: "10px 10px",
               borderRadius: "10px",
             }}
+            onClick={() => handleReplaceSteps(steps, abstraction)}
           >
             <Check style={{ color: "rgb(40, 211, 40)" }} strokeWidth={5} />
           </div>

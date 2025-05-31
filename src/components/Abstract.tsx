@@ -406,6 +406,12 @@ const Abstract: React.FC = ({}) => {
 
     const onPointerDown = (e: PointerEvent) => {
       if (showHoverOverlay) return;
+      if (
+        editingRef.current &&
+        textareaRef.current &&
+        textareaRef.current.contains(e.target as Node)
+      )
+        return;
 
       dragReady = true;
       startX = lastX = e.clientX;
