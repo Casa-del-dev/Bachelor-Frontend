@@ -1856,7 +1856,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         new Set(stepIdsToReplace),
         steps
       );
-
       originalSetSteps(updatedSteps);
 
       const filtered = originalAbstraction.filter(
@@ -1890,6 +1889,19 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }
   }
 
+  function generateUniqueId(): string {
+    return `step-${Date.now()}-${Math.floor(Math.random() * 100000000)}`;
+  }
+
+  function cloneWithNewIds(step: Step): Step {
+    const newId = generateUniqueId();
+    return {
+      ...step,
+      id: newId,
+      children: step.children.map(cloneWithNewIds),
+    };
+  }
+
   function mergeStepsById(
     tree: Step[],
     idsToMerge: Set<string>,
@@ -1914,10 +1926,22 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         }
 
         // Clone replacements and attach mergedChildren after their own children
-        const mergedSteps = replacements.map((replacementStep) => ({
-          ...replacementStep,
-          children: [...(replacementStep.children || []), ...mergedChildren],
-        }));
+        const mergedSteps: Step[] = replacements.map((replacementStep) => {
+          const newId = generateUniqueId();
+
+          return {
+            ...replacementStep,
+            id: newId,
+            children: [
+              // first keep any children that replacementStep already had
+              ...(replacementStep.children || []).map((child) => ({
+                ...child,
+              })),
+              // then append all mergedChildren as grandchildren of this new root
+              ...mergedChildren.map((child) => ({ ...child })),
+            ],
+          };
+        });
 
         result.push(...mergedSteps);
       } else {
@@ -1946,20 +1970,18 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
 
     for (const step of tree) {
       if (idsToReplace.has(step.id)) {
-        // Insert all replacement steps in place of the matched step
+        // Instead of pushing `repl` itself, push a deep clone with new ids
         for (const repl of replacements) {
-          newTree.push({ ...repl });
+          newTree.push(cloneWithNewIds(repl));
         }
       } else {
-        // Recurse into children if they exist
-        const newChildren = step.children?.length
-          ? replaceStepsById(step.children, idsToReplace, replacements)
-          : [];
-
-        newTree.push({
-          ...step,
-          children: newChildren,
-        });
+        // Recurse into children normally
+        const newChildren = replaceStepsById(
+          step.children,
+          idsToReplace,
+          replacements
+        );
+        newTree.push({ ...step, children: newChildren });
       }
     }
 
@@ -2166,23 +2188,28 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           <div
             className="container-plus-ab-overlay"
             style={{
-              width: "20px",
+              width: "100px",
               height: "20px",
               padding: "10px 10px",
               borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "5px",
+              fontSize: "20px",
             }}
             onClick={() => handleReplaceSteps(steps, abstraction)}
           >
             {isCheckingAbstractionOverlay ? (
-              <GradientSpinner size={48} strokeWidth={6} />
+              <GradientSpinner size={35} strokeWidth={6} />
             ) : (
               <Check
-                size={48}
-                strokeWidth={5}
+                size={30}
+                strokeWidth={3}
                 style={{ color: "rgb(40, 211, 40)", cursor: "pointer" }}
               />
             )}
-            Check and Replace!
+            Check
           </div>
           {answerAbstractionOVerlay === "No" && (
             <div

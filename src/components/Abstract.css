@@ -19,6 +19,7 @@ body.dark-mode {
   align-items: flex-start;
   justify-content: flex-start;
   overflow: hidden;
+  position: relative;
 }
 
 .right-abstract-container {
@@ -628,4 +629,18 @@ HOVERING CSS END
   100% {
     left: 125%;
   }
+}
+
+.abstraction-spinner-overlay {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000000;
+  position: fixed;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: all;
+  top: 0;
+  left: 0;
 }

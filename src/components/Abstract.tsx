@@ -17,6 +17,7 @@ import { useAuth } from "../AuthContext";
 import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 import apiCallAbstract from "./AI_Abstract";
 import AbstractionOverlay from "./AbstractionOverlay";
+import GradientSpinner from "./BuildingBlocks/GradientSpinner";
 
 // ======================
 // CORRECT STEP OVERLAY
@@ -1506,30 +1507,35 @@ const Abstract: React.FC = ({}) => {
     [problemId]
   );
 
+  const [isLoadingAbstraction, setIsLoadingAbstraction] = useState(false);
+
   const handleCallAbstraction = async () => {
-    if (treeCorrect) {
+    if (!treeCorrect) return;
+
+    // 2) Turn on loading
+    setIsLoadingAbstraction(true);
+
+    try {
       const simplifiedTree = simplifyStepTree(steps);
+      setToggleAbstraction("false");
+      const gptResponse = await apiCallAbstract(simplifiedTree); // <-- await here!
+      const rawMessage = gptResponse.choices[0].message.content;
+
+      let abstractionJson;
       try {
-        setToggleAbstraction("false");
-        const gptResponse = await apiCallAbstract(simplifiedTree); // <-- await here!
-        const rawMessage = gptResponse.choices[0].message.content;
-
-        console.log(rawMessage);
-
-        let abstractionJson;
-        try {
-          abstractionJson = JSON.parse(rawMessage);
-        } catch (e) {
-          console.error("Failed to parse abstraction JSON:", e);
-          return;
-        }
-
-        setToggleAbstraction("true");
-        // Save it under /Abstraction
-        await saveAbstraction(abstractionJson);
-      } catch (error) {
-        console.error("Failed to get response from API Abstract:", error);
+        abstractionJson = JSON.parse(rawMessage);
+      } catch (e) {
+        console.error("Failed to parse abstraction JSON:", e);
+        return;
       }
+
+      setToggleAbstraction("true");
+      await saveAbstraction(abstractionJson);
+    } catch (error) {
+      console.error("Failed to get response from API Abstract:", error);
+    } finally {
+      // 3) Always turn loading off, whether success or error
+      setIsLoadingAbstraction(false);
     }
   };
 
@@ -2019,7 +2025,8 @@ const Abstract: React.FC = ({}) => {
                   </div>
                 </div>
                 <div className="group-or-recycle">
-                  {toggleAbstraction === "true" &&
+                  {(toggleAbstraction === "true" ||
+                    toggleAbstraction === "false") &&
                     (() => {
                       // 1) Find all abstractions that mention this step-ID:
                       const absIds = stepToAbstractions[node.id] || [];
@@ -2034,6 +2041,8 @@ const Abstract: React.FC = ({}) => {
                       const hasRecycling = matches.some(
                         (a) => a.steps.length > 1
                       );
+
+                      if (!treeCorrect) return;
 
                       // 3) Render according to rules:
                       if (!hasGrouping && !hasRecycling) {
@@ -2266,6 +2275,11 @@ const Abstract: React.FC = ({}) => {
         animateToRight ? "slide-right" : ""
       }`}
     >
+      {isLoadingAbstraction && (
+        <div className="abstraction-spinner-overlay">
+          <GradientSpinner />
+        </div>
+      )}
       {/* Left line container*/}
 
       <div ref={rightAbstractRef} className="right-abstract-container">
@@ -2376,6 +2390,7 @@ const Abstract: React.FC = ({}) => {
           />
         </div>
       </div>
+
       {/* Tree Container container*/}
       {draggingNew && ghostPos && (
         <div
@@ -2489,13 +2504,26 @@ const Abstract: React.FC = ({}) => {
                       const needsMoreGrouping = allStepIds.some((stepId) => {
                         const containingAbstractions =
                           stepToAbstractions[stepId] || [];
+
                         return containingAbstractions.some((absId) => {
+                          // 1) Skip the Recycle abstraction we just clicked on:
+                          if (absId === chosen.id) return false;
+
+                          // 2) If any *other* abstraction is a “Group” type (i.e. steps.length === 1),
+                          //    block the click immediately:
                           const abs = abstractions.find((a) => a.id === absId);
-                          return !!abs && abs.steps.length > 1;
+                          return !!abs && abs.steps.length === 1;
                         });
                       });
 
                       if (needsMoreGrouping) {
+                        // At least one step is still in some OTHER Group‐type abstraction,
+                        // so we block the Recycle click by returning early.
+                        return;
+                      }
+
+                      if (needsMoreGrouping) {
+                        console.log("ci");
                         // As soon as you find at least one step‐ID that still belongs to a multi‐step group,
                         // “block” the Recycle click by returning early.
                         return;
