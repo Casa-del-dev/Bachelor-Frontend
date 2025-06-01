@@ -60,6 +60,7 @@ body.dark-mode {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  overflow-y: auto;
 }
 .Right-abstraction-overlay-title {
   display: flex;
