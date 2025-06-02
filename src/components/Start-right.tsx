@@ -383,8 +383,6 @@ const StartRight: React.FC<StartRightProps> = ({
       return;
     }
 
-    const temp = steps;
-
     if (
       currentFile === null ||
       findItemById(fileTree, currentFile) === null ||
