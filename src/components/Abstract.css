@@ -380,6 +380,8 @@ body.dark-mode {
 }
 
 .step-content-ab {
+  word-break: break-word;
+  overflow-wrap: anywhere;
   text-align: start;
   width: 100%;
 }

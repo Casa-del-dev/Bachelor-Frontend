@@ -458,7 +458,6 @@ const StartRight: React.FC<StartRightProps> = ({
     } catch (error) {
       console.error("Error generating steps with ChatGPT:", error);
     } finally {
-      setSteps(temp);
       setLoading(false);
       setLoadingCheck(false);
     }
@@ -885,7 +884,6 @@ Editing logic START
         current[idx].status.correctness = "";
         current[idx].status.can_be_further_divided = "";
         current[idx].code = "";
-        current[idx].correctStep = "";
         current[idx].showCorrectStep1 = false;
       } else {
         current[idx] = {

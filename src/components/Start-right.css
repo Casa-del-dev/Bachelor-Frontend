@@ -517,6 +517,8 @@ Textarea for starting prompt END
 .step-content {
   display: inline-block;
   margin-bottom: calc(var(--step-font-size, 1vw) * 1);
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .step-content-hinted {
