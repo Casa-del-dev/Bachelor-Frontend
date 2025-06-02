@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import "./Problem_detail.css";
 
 type ProblemDetailsProps = {
@@ -192,8 +191,6 @@ Output: 2`,
 };
 
 const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
-  const navigate = useNavigate();
-
   // Check if selectedProblem is empty (initial state)
   const isInitial = !selectedProblem;
 
@@ -203,7 +200,7 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
   const handleCheckClick = () => {
     localStorage.setItem("selectedProblem", selectedProblem);
     localStorage.setItem("selectedSection", "Problem");
-    navigate(`/start/${selectedProblem}`);
+    window.location.href = `/start/${selectedProblem}`;
   };
 
   return (

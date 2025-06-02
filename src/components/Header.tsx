@@ -159,9 +159,9 @@ export function Header() {
     const parentRect = navContainerRef.current.getBoundingClientRect();
     const rect = el.getBoundingClientRect();
     setIndicator({
-      left: rect.left - parentRect.left - 5,
+      left: rect.left - parentRect.left - 10,
       top: rect.top - parentRect.top,
-      width: rect.width + 10,
+      width: rect.width + 20,
       height: rect.height,
     });
   };

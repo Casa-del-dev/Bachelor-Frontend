@@ -1851,21 +1851,54 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     } else if (answerAbstractionOVerlay === "Yes") {
       //implement here
       const stepIdsToReplace = abstractionToSteps[abstraction!.id];
-      const updatedSteps = replaceOrMergeSteps(
+
+      const updatedStepsTree: Step[] = replaceOrMergeSteps(
         originalSteps,
         new Set(stepIdsToReplace),
         steps
       );
-      originalSetSteps(updatedSteps);
 
       const filtered = originalAbstraction.filter(
         (a) => a.id !== abstraction!.id
       );
-      originalSetAbstraction(filtered);
 
-      saveAbstraction(filtered).catch((err: unknown) =>
-        console.error("Failed to re-save abstractions:", err)
+      const oldAbstractionItem = originalAbstraction.find(
+        (a) => a.id === abstraction!.id
       );
+      if (!oldAbstractionItem) {
+        console.error(
+          "Could not find old abstraction item for id",
+          abstraction!.id
+        );
+        return;
+      }
+
+      const newAllIds = collectAllStepIds(steps);
+
+      const newGroup: { id: string }[] = newAllIds.map((id) => ({ id }));
+
+      const updatedFiltered = filtered.map((absItem) => {
+        const replacedSteps = absItem.steps.map(
+          (group /* group: {id:string}[] */) => {
+            const groupIds = group.map((o) => o.id);
+            if (sameIdSet(groupIds, stepIdsToReplace)) {
+              return newGroup;
+            } else {
+              return group;
+            }
+          }
+        );
+
+        return {
+          ...absItem,
+          steps: replacedSteps,
+        };
+      });
+
+      saveAbstraction(updatedFiltered);
+      originalSetAbstraction(updatedFiltered);
+
+      originalSetSteps(updatedStepsTree);
 
       deleteAbstractionInbetween(problemId, abstraction!.id)
         .catch((err) => {
@@ -1900,6 +1933,26 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       id: newId,
       children: step.children.map(cloneWithNewIds),
     };
+  }
+
+  function collectAllStepIds(tree: Step[]): string[] {
+    const result: string[] = [];
+    function walk(nodes: Step[]) {
+      for (const node of nodes) {
+        result.push(node.id);
+        if (node.children.length > 0) {
+          walk(node.children);
+        }
+      }
+    }
+    walk(tree);
+    return result;
+  }
+
+  function sameIdSet(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) return false;
+    const setB = new Set(b);
+    return a.every((x) => setB.has(x));
   }
 
   function mergeStepsById(
@@ -2201,7 +2254,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
             onClick={() => handleReplaceSteps(steps, abstraction)}
           >
             {isCheckingAbstractionOverlay ? (
-              <GradientSpinner size={35} strokeWidth={6} />
+              <GradientSpinner size={20} strokeWidth={3} />
             ) : (
               <Check
                 size={30}

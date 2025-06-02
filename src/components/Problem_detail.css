@@ -14,7 +14,8 @@
   font-weight: bold;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 30px;
   height: 100%;
   margin: 0;
   padding-right: 1vw;
@@ -42,18 +43,32 @@
 }
 
 .check-button {
-  width: 6vw;
+  width: 100px;
+  height: 40px;
   font-size: 1vw;
   font-weight: bold;
-  background-color: lightgreen;
+  background-color: rgb(41, 124, 41);
   border: 1px solid darkgreen;
   border-radius: 0.5vw;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  color: whitesmoke;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
 }
 
 .check-button:hover {
   background-color: darkgreen;
-  color: white;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.4); /* Shiny effect */
+}
+
+.check-button:focus {
+  outline: none;
+}
+
+.check-button:active {
+  outline: none;
+  box-shadow: none; /* Or keep shine if you prefer */
 }
