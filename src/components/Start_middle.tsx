@@ -13,6 +13,13 @@ import {
   testCode,
 } from "./BuildingBlocks/PythonCompiler";
 
+interface FileItem {
+  id: number;
+  name: string;
+  type: "file" | "folder";
+  children?: FileItem[];
+}
+
 interface PythonPlaygroundProps {
   setHoveredStep: (step: Step | null) => void;
   loading: boolean;
@@ -212,6 +219,8 @@ export default function ResizableSplitView({
 
         case "Enter": {
           if (!isAuthenticated) {
+            term.current?.write("\x1b[3J");
+            term.current?.clear();
             printLinesAndReanchor(["⚠️ Please log in first."]);
             return;
           }
@@ -363,7 +372,6 @@ export default function ResizableSplitView({
   function printLinesAndReanchor(lines: string[]) {
     const t = term.current!;
     const baseRow = t.buffer.active.cursorY;
-    t.writeln("");
 
     eraseCursorBar();
 
@@ -412,9 +420,37 @@ export default function ResizableSplitView({
     return () => obs.disconnect();
   }, []);
 
+  //look if a file is selected
+  const isNetworkDisabled =
+    currentFile === null ||
+    codeMap[currentFile]?.trim() === "" ||
+    currentFile === -1 ||
+    findItemById(fileTree, currentFile)?.type === "folder" ||
+    currentFile === undefined;
+
+  function findItemById(tree: FileItem[], targetId: number): FileItem | null {
+    for (const item of tree) {
+      if (item.id === targetId) return item;
+      if (item.type === "folder" && item.children) {
+        const found = findItemById(item.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
   const handleRunClick = async () => {
     if (!isAuthenticated) {
+      term.current?.write("\x1b[3J");
+      term.current?.clear();
       printLinesAndReanchor(["⚠️ Please log in first."]);
+      return;
+    }
+
+    if (isNetworkDisabled) {
+      term.current?.write("\x1b[3J");
+      term.current?.clear();
+      printLinesAndReanchor(["⚠️ Please select a file first."]);
       return;
     }
 
@@ -443,7 +479,16 @@ export default function ResizableSplitView({
 
   const handleCompileClick = async () => {
     if (!isAuthenticated) {
+      term.current?.write("\x1b[3J");
+      term.current?.clear();
       printLinesAndReanchor(["⚠️ Please log in first."]);
+      return;
+    }
+
+    if (isNetworkDisabled) {
+      term.current?.write("\x1b[3J");
+      term.current?.clear();
+      printLinesAndReanchor(["⚠️ Please select a file first."]);
       return;
     }
 
@@ -470,7 +515,16 @@ export default function ResizableSplitView({
 
   const handleTestClick = async () => {
     if (!isAuthenticated) {
+      term.current?.write("\x1b[3J");
+      term.current?.clear();
       printLinesAndReanchor(["⚠️ Please log in first."]);
+      return;
+    }
+
+    if (isNetworkDisabled) {
+      term.current?.write("\x1b[3J");
+      term.current?.clear();
+      printLinesAndReanchor(["⚠️ Please select a file first."]);
       return;
     }
 

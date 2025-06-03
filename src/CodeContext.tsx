@@ -72,7 +72,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
   }
 
   const currentFileName =
-    currentFile !== null
+    currentFile !== null && currentFile !== undefined
       ? currentFile === -1
         ? "Project Files"
         : findFileNameById(fileTree, currentFile) || null

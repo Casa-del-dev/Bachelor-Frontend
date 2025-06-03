@@ -454,8 +454,75 @@ export default function PythonPlayground({
     }).catch((err) => console.error("Failed to save from playground:", err));
   }
 
+  //Handle the network click when no file is selected
+  // -------------------------------------------------------------
+  // 1) New “tooltip” state to track visibility, coords, fade‐class
+  // -------------------------------------------------------------
+  const [tooltip, setTooltip] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+  }>({ visible: false, x: 0, y: 0 });
+
+  const [hoverTimer, setHoverTimer] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  // -------------------------------------------------------------
+  // 2) Extract exactly the same “disabled” condition you had inline
+  // -------------------------------------------------------------
+  const isNetworkDisabled =
+    currentFile === null ||
+    codeMap[currentFile]?.trim() === "" ||
+    currentFile === -1 ||
+    findItemById(fileTree, currentFile)?.type === "folder" ||
+    currentFile === undefined;
+
+  // --------------------------------------------
+  // 3) New click handler that shows a tooltip
+  // --------------------------------------------
+  const handleMouseEnterNetwork = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isNetworkDisabled) return;
+
+    // record where we hovered
+    const x = e.clientX - 220;
+    const y = e.clientY + 15; // a little “below” the cursor
+
+    // start a 2 second timer.
+    const id = setTimeout(() => {
+      setTooltip({ visible: true, x, y });
+    }, 2000);
+
+    setHoverTimer(id);
+  };
+
+  const handleMouseLeaveNetwork = () => {
+    // If the user leaves before 2 seconds, cancel the timer
+    if (hoverTimer) {
+      clearTimeout(hoverTimer);
+      setHoverTimer(null);
+    }
+    // If the tooltip was already visible, hide it immediately
+    if (tooltip.visible) {
+      setTooltip((prev) => ({ ...prev, visible: false }));
+    }
+  };
+
   return (
     <div className="container-programming-bro">
+      {tooltip.visible && (
+        <div
+          className="tooltip"
+          style={{
+            position: "fixed",
+            top: tooltip.y,
+            left: tooltip.x,
+            zIndex: 1000,
+          }}
+        >
+          Select a valid file with code first.
+        </div>
+      )}
       <div className="title-middle-programming">
         <div className="Title-current-edit">
           {selectedProblemName} - {currentFileName}
@@ -480,17 +547,16 @@ export default function PythonPlayground({
             }}
           />
           <Network
-            className="Network"
-            style={{ padding: "0.5vw", cursor: "pointer" }}
+            className={`Network ${isNetworkDisabled ? "disabled" : ""}`}
+            style={{ padding: "0.5vw" }}
             size={"1.5vw"}
-            onClick={
-              currentFile === null ||
-              codeMap[currentFile]?.trim() === "" ||
-              currentFile === -1 ||
-              findItemById(fileTree, currentFile)?.type === "folder"
-                ? undefined
-                : handleGenerateStepTree
-            }
+            onMouseEnter={handleMouseEnterNetwork}
+            onMouseLeave={handleMouseLeaveNetwork}
+            onClick={() => {
+              if (!isNetworkDisabled) {
+                handleGenerateStepTree();
+              }
+            }}
           />
         </div>
       </div>

@@ -51,6 +51,12 @@ body.dark-mode {
 
 .Network:hover {
   color: grey;
+  cursor: pointer;
+}
+
+.Network.disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 /* -----------------------------
@@ -235,4 +241,15 @@ Modal layout END
   to {
     opacity: 0.1;
   }
+}
+
+.tooltip {
+  background-color: var(--seg-btn-active-bg);
+  color: red;
+  padding: 0.3rem 0.6rem;
+  font-size: 1.5vw;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  pointer-events: none;
+  white-space: nowrap;
 }
