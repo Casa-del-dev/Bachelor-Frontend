@@ -7,6 +7,8 @@ import {
   ReactNode,
 } from "react";
 import { useAuth } from "./AuthContext";
+import getDefaultTestCode from "./components/BuildingBlocks/TestFile";
+import getDefaultFileCode from "./components/BuildingBlocks/SolutionFile";
 
 // Define the FileItem type.
 export interface FileItem {
@@ -51,6 +53,7 @@ export function CodeProvider({ children }: { children: ReactNode }) {
 
   const [currentFile, setCurrentFile] = useState<number | null>(null);
   const [codeMap, setCodeMap] = useState<Record<number, string | null>>({});
+
   const [test, setTest] = useState<string>("");
   const [fileTree, setFileTree] = useState<FileItem[]>([]);
 
@@ -143,12 +146,6 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const sanitizedCodeMap: Record<number, string> = Object.fromEntries(
-    Object.entries(codeMap)
-      .filter(([, value]) => value !== null)
-      .map(([key, value]) => [Number(key), value as string])
-  );
-
   // Load the data from the backend once when the CodeContext mounts.
   useEffect(() => {
     let mounted = true;
@@ -160,13 +157,18 @@ export function CodeProvider({ children }: { children: ReactNode }) {
         const loadedFiles: FileItem[] = data.tree.rootNode.children || [];
         if (loadedFiles.length === 0) {
           // No files on the backend: use the fallback initialFiles.
+          const defaultFileCode = getDefaultFileCode(problemId);
+          const defaultTestCode = getDefaultTestCode(problemId);
+          const initialCodeMap: Record<number, string> = {
+            2: defaultFileCode,
+            4: defaultTestCode,
+          };
+
           setFileTree(initialFiles);
-          await saveToBackend(
-            problemId,
-            fileTree,
-            sanitizedCodeMap,
-            currentFile
-          );
+          setCodeMap(initialCodeMap);
+          setTest(defaultTestCode);
+
+          await saveToBackend(problemId, initialFiles, initialCodeMap, null);
         } else {
           setFileTree(loadedFiles);
         }
