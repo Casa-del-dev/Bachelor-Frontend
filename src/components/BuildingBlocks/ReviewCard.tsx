@@ -1,3 +1,4 @@
+// ReviewCard.tsx
 import { Pen, Plus, Trash2, Save, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import "./ReviewCard.css";
@@ -28,6 +29,7 @@ export default function ReviewCard({
   const [workingText, setWorkingText] = useState(message);
   const [workingRating, setWorkingRating] = useState(rating);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [ratingError, setRatingError] = useState(false);
 
   // Refs for click‐outside and auto‐resizing:
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +41,7 @@ export default function ReviewCard({
     setWorkingRating(rating);
     setReviewRating(rating);
     setHoveredRating(null);
+    setRatingError(false);
   }, [message, rating]);
 
   useEffect(() => {
@@ -65,20 +68,31 @@ export default function ReviewCard({
     };
   }, [editMode, workingText, workingRating]);
 
+  const flashRatingError = () => {
+    setRatingError(true);
+    setTimeout(() => {
+      setRatingError(false);
+    }, 800);
+  };
+
   const saveOrCancelOnBlur = () => {
-    if (workingRating > 0) {
-      onSave?.(workingText.trim(), workingRating);
-      setEditMode(false);
-    } else {
-      handleCancel();
+    // If no rating selected, flash error instead of exiting
+    if (workingRating === 0) {
+      flashRatingError();
+      return;
     }
+    // Otherwise, save (text may be empty)
+    onSave?.(workingText.trim(), workingRating);
+    setEditMode(false);
   };
 
   const handleSaveClick = () => {
-    if (workingRating > 0) {
-      onSave?.(workingText.trim(), workingRating);
-      setEditMode(false);
+    if (workingRating === 0) {
+      flashRatingError();
+      return;
     }
+    onSave?.(workingText.trim(), workingRating);
+    setEditMode(false);
   };
 
   const handleCancel = () => {
@@ -88,6 +102,7 @@ export default function ReviewCard({
     setReviewMessage(message);
     setReviewRating(rating);
     setHoveredRating(null);
+    setRatingError(false);
   };
 
   const handleDelete = () => {
@@ -105,9 +120,15 @@ export default function ReviewCard({
       <div className="stars">
         {Array.from({ length: 5 }, (_, i) => {
           let color = "#ccc";
-          if (editMode && hoveredRating !== null && i < hoveredRating) {
+
+          if (ratingError) {
+            // Flash all stars in red when error
+            color = "#FF2400";
+          } else if (editMode && hoveredRating !== null && i < hoveredRating) {
+            // Hover color
             color = "#DAA520";
           } else if (i < workingRating) {
+            // Filled star color
             color = "#FFD700";
           }
 
@@ -187,13 +208,8 @@ export default function ReviewCard({
       <div className="review-header">
         <h4>{username}</h4>
         <div className="icon-buttons">
-          {/* Save only enabled if both text && rating ≥ 1 */}
           <Save
-            className={`icon save-icon ${
-              workingText.trim().length > 0 && workingRating > 0
-                ? ""
-                : "disabled"
-            }`}
+            className={`icon save-icon ${workingRating > 0 ? "" : "disabled"}`}
             onClick={handleSaveClick}
           />
           <X className="icon" onClick={handleCancel} />
@@ -205,11 +221,10 @@ export default function ReviewCard({
       <textarea
         ref={textareaRef}
         className="edit-textarea"
-        placeholder="Type your review here..."
+        placeholder="Type your review"
         value={workingText}
         onChange={(e) => {
           setWorkingText(e.target.value);
-          // Auto‐resize as content grows
           const el = e.target as HTMLTextAreaElement;
           el.style.height = "auto";
           el.style.height = el.scrollHeight + "px";

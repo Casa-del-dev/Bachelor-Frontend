@@ -48,7 +48,7 @@ const initialFiles: FileItem[] = [
 
 export function CodeProvider({ children }: { children: ReactNode }) {
   const [problemId, setProblemId] = useState(
-    localStorage.getItem("selectedProblem") || "MyProblem"
+    localStorage.getItem("selectedProblem") || "Problem 1"
   );
 
   const [currentFile, setCurrentFile] = useState<number | null>(null);
