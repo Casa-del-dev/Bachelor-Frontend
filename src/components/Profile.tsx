@@ -33,7 +33,7 @@ export default function Profile({ openLogin }: ProfileProps) {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (!token) throw new Error("Not authenticated");
+    if (!token) return;
 
     const loadReviewFromBackend = async () => {
       try {
@@ -146,7 +146,7 @@ export default function Profile({ openLogin }: ProfileProps) {
 
                   try {
                     const token = localStorage.getItem("authToken");
-                    if (!token) throw new Error("Not authenticated");
+                    if (!token) return;
                     const res = await fetch(
                       "https://bachelor-backend.erenhomburg.workers.dev/review/v1/save",
                       {
@@ -173,7 +173,7 @@ export default function Profile({ openLogin }: ProfileProps) {
 
                   try {
                     const token = localStorage.getItem("authToken");
-                    if (!token) throw new Error("Not authenticated");
+                    if (!token) return;
                     const res = await fetch(
                       "https://bachelor-backend.erenhomburg.workers.dev/review/v1/save",
                       {
