@@ -137,9 +137,7 @@ export default function Profile({ openLogin }: ProfileProps) {
               <ReviewCard
                 username={username}
                 rating={reviewRating}
-                setReviewRating={setReviewRating}
                 message={reviewMessage}
-                setReviewMessage={setReviewMessage}
                 onDelete={async () => {
                   setReviewMessage("");
                   setReviewRating(0);

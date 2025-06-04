@@ -51,16 +51,11 @@ const Reviews = ({ condition }: { condition: boolean }) => {
   useEffect(() => {
     async function fetchAndPickReviews() {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
         const res = await fetch(
           "https://bachelor-backend.erenhomburg.workers.dev/review/v1/all",
           {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { "Content-Type": "application/json" },
           }
         );
         if (!res.ok) {

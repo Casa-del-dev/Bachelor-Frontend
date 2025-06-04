@@ -6,9 +6,7 @@ import "./ReviewCard.css";
 interface ReviewCardProps {
   username: string;
   rating: number; // 0–5
-  setReviewRating: (newRating: number) => void;
   message: string; // empty = no review yet
-  setReviewMessage: (newMessage: string) => void;
   onSave?: (msg: string, rating: number) => void;
   onDelete?: () => void;
 }
@@ -16,9 +14,7 @@ interface ReviewCardProps {
 export default function ReviewCard({
   username,
   rating,
-  setReviewRating,
   message,
-  setReviewMessage,
   onSave,
   onDelete,
 }: ReviewCardProps) {
@@ -37,12 +33,17 @@ export default function ReviewCard({
 
   useEffect(() => {
     setWorkingText(message);
-    setReviewMessage(message);
     setWorkingRating(rating);
-    setReviewRating(rating);
-    setHoveredRating(null);
-    setRatingError(false);
   }, [message, rating]);
+
+  useEffect(() => {
+    if (editMode) {
+      setWorkingText(message);
+      setWorkingRating(rating);
+      setHoveredRating(null);
+      setRatingError(false);
+    }
+  }, [editMode]);
 
   useEffect(() => {
     if (!editMode) return;
@@ -99,8 +100,6 @@ export default function ReviewCard({
     setEditMode(false);
     setWorkingText(message);
     setWorkingRating(rating);
-    setReviewMessage(message);
-    setReviewRating(rating);
     setHoveredRating(null);
     setRatingError(false);
   };
@@ -112,7 +111,6 @@ export default function ReviewCard({
   const handleStarClick = (index: number) => {
     if (!editMode) return;
     setWorkingRating(index + 1);
-    setReviewRating(index + 1);
   };
 
   const renderStars = () => {
@@ -179,63 +177,127 @@ export default function ReviewCard({
     return (
       <div
         ref={cardRef}
-        className={`review-card ${workingRating === 5 ? "five-stars" : ""}`}
+        className={`review-card`}
+        style={{ overflowY: "auto" }}
       >
-        <div className="review-header">
-          <h4>{username}</h4>
-          <div className="icon-buttons">
-            <Pen className="icon" onClick={() => setEditMode(true)} />
-            <Trash2 className="icon" onClick={handleDelete} />
+        {workingRating === 5 ? (
+          <div
+            className="five-stars"
+            style={{ padding: "1rem", minHeight: "calc(200px - 2rem)" }}
+          >
+            <div className="review-header">
+              <h4>{username}</h4>
+              <div className="icon-buttons">
+                <Pen className="icon" onClick={() => setEditMode(true)} />
+                <Trash2 className="icon" onClick={handleDelete} />
+              </div>
+            </div>
+
+            {renderStars()}
+
+            <p className="review-message">
+              <em>{message}</em>
+            </p>
           </div>
-        </div>
+        ) : (
+          <div style={{ padding: "1rem", minHeight: "calc(200px - 2rem)" }}>
+            <div className="review-header">
+              <h4>{username}</h4>
+              <div className="icon-buttons">
+                <Pen className="icon" onClick={() => setEditMode(true)} />
+                <Trash2 className="icon" onClick={handleDelete} />
+              </div>
+            </div>
 
-        {renderStars()}
+            {renderStars()}
 
-        <p className="review-message">
-          <em>{message}</em>
-        </p>
+            <p className="review-message">
+              <em>{message}</em>
+            </p>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div
-      ref={cardRef}
-      className={`review-card editing ${
-        workingRating === 5 ? "five-stars" : ""
-      }`}
-    >
-      <div className="review-header">
-        <h4>{username}</h4>
-        <div className="icon-buttons">
-          <Save
-            className={`icon save-icon ${workingRating > 0 ? "" : "disabled"}`}
-            onClick={handleSaveClick}
+    <div ref={cardRef} className={`review-card editing `}>
+      {workingRating === 5 ? (
+        <div
+          className="five-stars"
+          style={{ padding: "1rem", minHeight: "calc(200px - 2rem)" }}
+        >
+          <div className="review-header">
+            <h4>{username}</h4>
+            <div className="icon-buttons">
+              <Save
+                className={`icon save-icon ${
+                  workingRating > 0 ? "" : "disabled"
+                }`}
+                onClick={handleSaveClick}
+              />
+              <X className="icon" onClick={handleCancel} />
+            </div>
+          </div>
+
+          {renderStars()}
+
+          <textarea
+            ref={textareaRef}
+            className="edit-textarea"
+            placeholder="Type your review"
+            value={workingText}
+            onChange={(e) => {
+              setWorkingText(e.target.value);
+              const el = e.target as HTMLTextAreaElement;
+              el.style.height = "auto";
+              el.style.height = el.scrollHeight + "px";
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSaveClick();
+              }
+            }}
           />
-          <X className="icon" onClick={handleCancel} />
         </div>
-      </div>
+      ) : (
+        <div style={{ padding: "1rem", minHeight: "calc(200px - 2rem)" }}>
+          <div className="review-header">
+            <h4>{username}</h4>
+            <div className="icon-buttons">
+              <Save
+                className={`icon save-icon ${
+                  workingRating > 0 ? "" : "disabled"
+                }`}
+                onClick={handleSaveClick}
+              />
+              <X className="icon" onClick={handleCancel} />
+            </div>
+          </div>
 
-      {renderStars()}
+          {renderStars()}
 
-      <textarea
-        ref={textareaRef}
-        className="edit-textarea"
-        placeholder="Type your review"
-        value={workingText}
-        onChange={(e) => {
-          setWorkingText(e.target.value);
-          const el = e.target as HTMLTextAreaElement;
-          el.style.height = "auto";
-          el.style.height = el.scrollHeight + "px";
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            handleSaveClick();
-          }
-        }}
-      />
+          <textarea
+            ref={textareaRef}
+            className="edit-textarea"
+            placeholder="Type your review"
+            value={workingText}
+            onChange={(e) => {
+              setWorkingText(e.target.value);
+              const el = e.target as HTMLTextAreaElement;
+              el.style.height = "auto";
+              el.style.height = el.scrollHeight + "px";
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSaveClick();
+              }
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

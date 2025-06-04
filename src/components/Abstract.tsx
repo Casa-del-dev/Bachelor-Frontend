@@ -529,7 +529,7 @@ const Abstract: React.FC = ({}) => {
       if (firstItem) {
         firstItem.scrollIntoView({
           behavior: "auto",
-          inline: "center",
+          inline: "nearest",
           block: "nearest",
         });
       }
