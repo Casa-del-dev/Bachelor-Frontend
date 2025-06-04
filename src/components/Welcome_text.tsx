@@ -91,11 +91,11 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   }, [videoDone]);
 
   const stepTexts = [
-    "Identify the problem and desired outcome.",
-    "Break the solution into logical steps.",
-    "Implement each step incrementally.",
-    "Test and verify at each stage.",
-    "Refine and optimize your code.",
+    "Beginner-Friendly Focus",
+    "Problem Decomposition Support",
+    "Guidance Without Giving Answers",
+    "Learning Curve Improvement",
+    "Thoughtful UX Design (via animation logic)",
   ];
 
   return (
@@ -114,9 +114,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
             showWelcomeContent ? "visible" : ""
           }`}
         >
-          <h1 className="welcome-text-title">
-            T E x<sup>T</sup>
-          </h1>
+          <h1 className="welcome-text-title">Decomposition Box</h1>
           <div className="welcome-text-buttons">
             <button className="getStarted-welcome">
               <a href="/start">Get Started</a>
@@ -135,7 +133,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
             heading.isIntersecting && showDetails ? "slide-in" : ""
           }`}
         >
-          Welcome to the Step Tree Guide
+          Welcome to Decomposition Box!
         </h2>
         <div
           ref={description.ref}
@@ -143,16 +141,25 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
             description.isIntersecting && showDetails ? "slide-in" : ""
           }`}
         >
-          This page is designed to help beginners develop a structured,
-          solution-oriented mindset... This page is designed to help beginners
-          develop a structured, solution-oriented mindset...This page is
-          designed to help beginners develop a structured, solution-oriented
-          mindset...This page is designed to help beginners develop a
-          structured, solution-oriented mindset...This page is designed to help
-          beginners develop a structured, solution-oriented mindset...This page
-          is designed to help beginners develop a structured, solution-oriented
-          mindset...This page is designed to help beginners develop a
-          structured, solution-oriented mindset...
+          Struggling to solve coding problems as a beginner? You're not alone.
+          Many students find it hard to spot edge cases, understand the full
+          scope of a problem, or simply get stuck halfway through.
+          <br />
+          <br />
+          <strong>Decomposition Box</strong> is here to help.
+          <br />
+          This platform guides early-stage learners in building their own
+          autonomous coding solutions by breaking complex problems into
+          manageable steps— with the support of a powerful language model (LLM).
+          <br />
+          <br />
+          By organizing your thoughts step-by-step, you gain a clearer path to
+          your solution. This approach not only improves your problem-solving
+          efficiency, but also builds stronger computational thinking skills
+          over time.
+          <br />
+          <br />
+          Start thinking like a developer—one step at a time.
         </div>
         <div
           ref={steps.ref}

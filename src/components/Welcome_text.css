@@ -169,7 +169,7 @@ body.dark-mode {
 /* --------------------------------------------- */
 
 .welcome-heading {
-  font-size: 5rem;
+  font-size: 5em;
   margin-top: 20vh;
   margin-bottom: 3rem; /* more space below */
   line-height: 1.2; /* tighter vertical spacing */
@@ -388,3 +388,9 @@ body.dark-mode {
 /* ————————————————
    Your inner “review-boxes”
    ———————————————— */
+
+@media (max-width: 768px) {
+  .welcome-heading {
+    font-size: 3em;
+  }
+}
