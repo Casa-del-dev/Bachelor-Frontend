@@ -52,7 +52,7 @@ const Reviews = ({ condition }: { condition: boolean }) => {
     async function fetchAndPickReviews() {
       try {
         const token = localStorage.getItem("authToken");
-        if (!token) throw new Error("Not authenticated");
+        if (!token) return;
         const res = await fetch(
           "https://bachelor-backend.erenhomburg.workers.dev/review/v1/all",
           {
