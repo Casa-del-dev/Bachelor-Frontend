@@ -485,7 +485,13 @@ export default function PythonPlayground({
     if (!isNetworkDisabled) return;
 
     // record where we hovered
-    const x = e.clientX - 220;
+    let leftShift = 0;
+    if (localStorage.getItem("authToken") === null) {
+      leftShift = 140;
+    } else {
+      leftShift = 220;
+    }
+    const x = e.clientX - leftShift;
     const y = e.clientY + 15; // a little “below” the cursor
 
     // start a 2 second timer.
@@ -520,7 +526,9 @@ export default function PythonPlayground({
             zIndex: 1000,
           }}
         >
-          Select a valid file with code first.
+          {localStorage.getItem("authToken") === null
+            ? "Please Login first"
+            : "Select a valid file with code first"}
         </div>
       )}
       <div className="title-middle-programming">

@@ -245,7 +245,7 @@ Modal layout END
 
 .tooltip {
   background-color: var(--seg-btn-active-bg);
-  color: red;
+  color: rgb(226, 40, 40);
   padding: 0.3rem 0.6rem;
   font-size: 1.5vw;
   border-radius: 3px;
