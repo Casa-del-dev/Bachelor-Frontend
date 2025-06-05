@@ -117,7 +117,7 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
           <h1 className="welcome-text-title">Decomposition Box</h1>
           <div className="welcome-text-buttons">
             <button className="getStarted-welcome">
-              <a href="/start">Get Started</a>
+              <a href="/problem">Get Started</a>
             </button>
             <span>|</span>
             <button className="tutorial-welcome">Tutorial</button>

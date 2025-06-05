@@ -39,8 +39,6 @@ interface StepNode {
 interface AbstractionItem {
   id: string;
   steps: { id: string }[][];
-  general_hint: string;
-  detailed_hint: string;
   correct_answer: {
     stepsTree: Record<string, StepNode>;
   };
@@ -1567,16 +1565,108 @@ const Abstract: React.FC = ({}) => {
         if (res.status === 404) {
           setAbstractions([]);
         } else {
-          const data = (await res.json()) as AbstractionItem[];
+          /*           const data = (await res.json()) as AbstractionItem[];
+           */ const testData: AbstractionItem[] = [
+            {
+              id: "abstraction-1748260426981-83469",
+              steps: [
+                [
+                  { id: "step-1748855935470-1128" },
+                  { id: "step-1748855935470-3631" },
+                ],
+                [{ id: "step-1748855935470-1795" }],
+                [{ id: "step-1748855935470-681" }],
+              ],
+              correct_answer: {
+                stepsTree: {
+                  R: {
+                    content: "Generalized iteration and processing",
+                    general_hint:
+                      "Generalized iteration and processing of characters",
+                    detailed_hint:
+                      "This step involves iterating over characters and performing a processing action.",
+                    substeps: {
+                      R1: {
+                        content: "Iterate over characters",
+                        general_hint: "Iterate over characters",
+                        detailed_hint:
+                          "This substep involves iterating over each character in a sequence.",
+                        substeps: {},
+                      },
+                      R2: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              id: "abstraction-1748260426981-6579",
+              steps: [
+                [
+                  { id: "step-1748855935470-1128" },
+                  { id: "step-1748855935470-3631" },
+                ],
+              ],
+              correct_answer: {
+                stepsTree: {
+                  R: {
+                    content: "Generalized iteration and processing",
+                    general_hint:
+                      "Generalized iteration and processing of characters",
+                    detailed_hint:
+                      "This step involves iterating over characters and performing a processing action.",
+                    substeps: {
+                      R1: {
+                        content: "Iterate over characters",
+                        general_hint: "Iterate over characters",
+                        detailed_hint:
+                          "This substep involves iterating over each character in a sequence.",
+                        substeps: {},
+                      },
+                      R2: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
+                      R3: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
+                      R4: {
+                        content: "Process character",
+                        general_hint: "Process character",
+                        detailed_hint:
+                          "This substep involves processing the current character.",
+                        substeps: {},
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ];
 
-          setAbstractions(data || []);
+          setAbstractions(testData);
+          /*           setAbstractions(data || []);
+           */
 
           //here we create the arrays that are easily accessable
 
           const abstractionToSteps: Record<string, string[]> = {};
           const stepToAbstractions: Record<string, string[]> = {};
 
-          for (const abstraction of data) {
+          for (const abstraction of testData) {
             const abstractionId = abstraction.id;
             const stepIds: string[] = [];
 
