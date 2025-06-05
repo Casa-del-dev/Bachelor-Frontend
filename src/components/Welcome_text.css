@@ -392,4 +392,38 @@ body.dark-mode {
   .welcome-heading {
     font-size: 3em;
   }
+  .description-welcome {
+    font-size: 0.8rem;
+  }
+
+  .details-section.visible {
+    padding: 1rem;
+  }
+
+  .welcome-steps li {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 410px) {
+  .welcome-heading {
+    font-size: 2em;
+  }
+}
+
+@media (max-width: 510px) {
+  .welcome-text-title {
+    font-size: 2em;
+  }
+}
+
+@media (max-width: 380px) {
+  .welcome-text-title {
+    font-size: 1.5em;
+  }
+
+  .welcome-text-buttons button {
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+  }
 }
