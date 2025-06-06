@@ -231,12 +231,12 @@ export default function ReviewCard({
             <h4>{username}</h4>
             <div className="icon-buttons">
               <Save
-                className={`icon save-icon ${
+                className={`icon-rev save-icon ${
                   workingRating > 0 ? "" : "disabled"
                 }`}
                 onClick={handleSaveClick}
               />
-              <X className="icon" onClick={handleCancel} />
+              <X className="icon-rev" onClick={handleCancel} />
             </div>
           </div>
 

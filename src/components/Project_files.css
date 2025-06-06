@@ -381,6 +381,10 @@ body.dark-mode {
 /*=============================================
 =            TREE CONNECTORS                  =
 =============================================*/
+.tree {
+  overflow-y: auto;
+}
+
 .tree,
 .tree ul {
   list-style: none;
@@ -401,7 +405,7 @@ body.dark-mode {
 .tree li {
   box-sizing: border-box;
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Vertical lines */

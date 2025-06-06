@@ -275,6 +275,11 @@ const ProjectFiles = ({
       setCodeForFile(currentFile, "");
     }
 
+    idsToRemove.forEach((id) => {
+      // This sets the code for that file to null, effectively removing it client-side.
+      setCodeForFile(id, null);
+    });
+
     handleUpdateFiles(updatedFiles);
     setPendingDeleteId(null);
   }
