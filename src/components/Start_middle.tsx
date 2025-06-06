@@ -150,8 +150,8 @@ export default function ResizableSplitView({
               inputBuffer.current.slice(oldPos);
             cursorPos.current = newPos;
 
-            term.current?.write("\x1b[H\x1b[J");
-
+            const promptRow = startRow.current + 1;
+            term.current?.write(`\x1b[${promptRow};1H\x1b[J`);
             term.current?.write(PROMPT + inputBuffer.current);
 
             previousCursorPos.current = oldPos;
