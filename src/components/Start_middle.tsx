@@ -13,13 +13,6 @@ import {
   testCode,
 } from "./BuildingBlocks/PythonCompiler";
 
-interface FileItem {
-  id: number;
-  name: string;
-  type: "file" | "folder";
-  children?: FileItem[];
-}
-
 interface PythonPlaygroundProps {
   setHoveredStep: (step: Step | null) => void;
   loading: boolean;
@@ -111,43 +104,89 @@ export default function ResizableSplitView({
       }
     }, 300);
 
-    term.current.onKey(({ domEvent }) => {
+    term.current?.onKey(({ domEvent }) => {
       const key = domEvent.key;
+      const isCtrl = domEvent.ctrlKey || domEvent.metaKey;
+
       switch (key) {
         case "Backspace":
-          if (cursorPos.current > 0) {
-            inputBuffer.current =
-              inputBuffer.current.slice(0, cursorPos.current - 1) +
-              inputBuffer.current.slice(cursorPos.current);
-
-            cursorPos.current--;
-
-            const promptLength = PROMPT.length;
-            const termWidth = terminalCols();
-            const col = (promptLength + cursorPos.current) % termWidth;
-
-            if (col === termWidth - 1) {
-              // We crossed into the previous line
-              term.current?.write("\x1b[A"); // move up one line
-              term.current?.write(`\x1b[${termWidth}G`); // go to last column
-            } else {
-              term.current?.write("\x1b[D"); // move left normally
+          if (isCtrl) {
+            if (cursorPos.current === 0) {
+              term.current?.write("\x07"); // bell
+              break;
             }
 
-            // Save cursor
-            term.current?.write("\x1b[s");
+            eraseCursorBar();
 
-            // Write rest of the text after the deleted character + space
-            const afterCursor = inputBuffer.current.slice(cursorPos.current);
-            term.current?.write(afterCursor + " ");
+            const oldPos = cursorPos.current;
+            let newPos = oldPos;
 
-            // Restore cursor
-            term.current?.write("\x1b[u");
+            // STEP 1: Skip whitespace
+            while (
+              newPos > 0 &&
+              /\s/.test(inputBuffer.current.charAt(newPos - 1))
+            ) {
+              newPos--;
+            }
+
+            // STEP 2: If punctuation comes before, skip it too (like --__ etc)
+            while (
+              newPos > 0 &&
+              /[^\w\s]/.test(inputBuffer.current.charAt(newPos - 1))
+            ) {
+              newPos--;
+            }
+
+            // STEP 3: Now skip actual word characters
+            while (
+              newPos > 0 &&
+              /\w/.test(inputBuffer.current.charAt(newPos - 1))
+            ) {
+              newPos--;
+            }
+
+            inputBuffer.current =
+              inputBuffer.current.slice(0, newPos) +
+              inputBuffer.current.slice(oldPos);
+            cursorPos.current = newPos;
+
+            const promptRow = startRow.current + 1;
+            term.current?.write(`\x1b[${promptRow};1H\x1b[J`);
+            term.current?.write(PROMPT + inputBuffer.current);
+
+            previousCursorPos.current = oldPos;
+            refreshCursor();
           } else {
-            term.current?.write("\x07"); // bell if can't backspace
-          }
+            // Single-character Backspace
+            if (cursorPos.current > 0) {
+              inputBuffer.current =
+                inputBuffer.current.slice(0, cursorPos.current - 1) +
+                inputBuffer.current.slice(cursorPos.current);
+              cursorPos.current--;
 
-          refreshCursor();
+              const promptLength = PROMPT.length;
+              const termWidth = terminalCols();
+              const col = (promptLength + cursorPos.current) % termWidth;
+
+              if (col === termWidth - 1) {
+                term.current?.write("\x1b[A");
+                term.current?.write(`\x1b[${termWidth}G`);
+              } else {
+                term.current?.write("\x1b[D");
+              }
+
+              term.current?.write("\x1b[s"); // save
+
+              const afterCursor = inputBuffer.current.slice(cursorPos.current);
+              term.current?.write(afterCursor + " ");
+
+              term.current?.write("\x1b[u"); // restore
+
+              refreshCursor();
+            } else {
+              term.current?.write("\x07");
+            }
+          }
           break;
 
         case "Delete":
@@ -224,40 +263,44 @@ export default function ResizableSplitView({
             printLinesAndReanchor(["⚠️ Please log in first."]);
             return;
           }
-          const snippet = inputBuffer.current.trim();
+
+          // 1) Erase the inverted‐bar before we move to a new line
           eraseCursorBar();
 
-          // otherwise fall back to normal newline + prompt logic
+          // 2) Move down one line (so user sees their own input line)
           term.current?.write("\r\n");
+
+          // 3) Capture exactly what was typed (don’t trim internal spaces; only remove leading/trailing)
+          const snippet = inputBuffer.current.trim();
+
+          // 4) Clear buffer and reset cursor positions immediately
           inputBuffer.current = "";
           cursorPos.current = 0;
           previousCursorPos.current = 0;
-          const baseH = term.current!.buffer.active.cursorY;
 
+          // 5) If user just pressed Enter on an empty line, emit a blank prompt and return
           if (!snippet) {
             term.current?.writeln(PROMPT);
             term.current?.write(PROMPT);
-            startRow.current = term.current!.buffer.active.cursorY + 2;
+            startRow.current = term.current!.buffer.active.cursorY + 1;
             return;
           }
 
-          let linesPrinted = 0;
+          // 6) Otherwise, run the snippet and display its output
+          const baseRow = term.current!.buffer.active.cursorY;
           runCode(snippet).then((output) => {
-            output.split("\n").forEach((line) => {
-              if (line === "✅ Code ran successfully.") {
-                term.current?.writeln(`${PROMPT}`);
-                linesPrinted++;
-                return;
-              }
-              const lineLength = PROMPT.length + line.length;
-              const lineWraps = Math.ceil(lineLength / terminalCols());
-              linesPrinted += lineWraps > 0 ? lineWraps : 1;
+            // Split on newline, print each non-empty line
+            const lines = output.split("\n");
+            let linesPrinted = 0;
+            for (const line of lines) {
+              if (line.trim() === "") continue;
               term.current?.writeln(`${PROMPT}${line}`);
-            });
+              linesPrinted++;
+            }
 
+            // 7) Now show a fresh prompt on the next line
             term.current?.write(PROMPT);
-
-            startRow.current = baseH + linesPrinted + 1;
+            startRow.current = baseRow + linesPrinted + 1;
             cursorPos.current = previousCursorPos.current = 0;
           });
           return;
@@ -420,23 +463,23 @@ export default function ResizableSplitView({
     return () => obs.disconnect();
   }, []);
 
-  //look if a file is selected
-  const isNetworkDisabled =
-    currentFile === null ||
-    codeMap[currentFile]?.trim() === "" ||
-    currentFile === -1 ||
-    findItemById(fileTree, currentFile)?.type === "folder" ||
-    currentFile === undefined;
-
-  function findItemById(tree: FileItem[], targetId: number): FileItem | null {
-    for (const item of tree) {
-      if (item.id === targetId) return item;
-      if (item.type === "folder" && item.children) {
-        const found = findItemById(item.children, targetId);
-        if (found) return found;
-      }
+  function collectIdsFromTree(node: any): string[] {
+    // If this node has a `rootNode` wrapper, dive in:
+    if (node.rootNode) {
+      return collectIdsFromTree(node.rootNode.children);
     }
-    return null;
+
+    // If this is an array of items, flatten each child:
+    if (Array.isArray(node)) {
+      return node.flatMap((item) => collectIdsFromTree(item));
+    }
+
+    // Otherwise it’s a single FileItem:
+    const ids = [String(node.id)];
+    if (node.children && node.children.length > 0) {
+      ids.push(...collectIdsFromTree(node.children));
+    }
+    return ids;
   }
 
   const handleRunClick = async () => {
@@ -447,29 +490,42 @@ export default function ResizableSplitView({
       return;
     }
 
-    if (isNetworkDisabled) {
-      term.current?.write("\x1b[3J");
-      term.current?.clear();
-      printLinesAndReanchor(["⚠️ Please select a file first."]);
-      return;
-    }
+    console.log(codeMap);
 
-    if (!currentFile) return;
-    const code = codeMap[currentFile]!;
+    const validIds = collectIdsFromTree(fileTree);
+
+    const runnableFiles = Object.entries(codeMap).filter(
+      ([id, code]) => code != null && validIds.includes(id) && id !== "4"
+    );
 
     // Clear the terminal before running code
     term.current?.write("\x1b[3J");
     term.current?.clear();
 
-    term.current?.writeln("🚀 Running code...");
-    const out = await runCode(code);
+    term.current?.writeln("Running code...");
+
     let linesPrinted = 0;
-    out.split("\n").forEach((line) => {
-      const visualLength = PROMPT.length + line.length;
-      const wraps = Math.ceil(visualLength / terminalCols());
-      linesPrinted += wraps > 0 ? wraps : 1;
-      term.current?.writeln(`${PROMPT}${line}`);
-    });
+
+    for (const [fileId, code] of runnableFiles) {
+      if (fileId === "4" || code == null) continue;
+
+      try {
+        const out = await runCode(code as string);
+        const lines = out.split("\n");
+
+        lines.forEach((line: string) => {
+          if (line.trim() !== "") {
+            term.current?.writeln(`${PROMPT}${line}`);
+            linesPrinted++;
+          }
+        });
+      } catch (e: any) {
+        const errorMsg = e.message ?? e.toString();
+        errorMsg.split("\n").forEach((line: string) => {
+          term.current?.writeln(`${PROMPT}${line}`);
+        });
+      }
+    }
 
     term.current?.write(PROMPT);
 
@@ -485,30 +541,55 @@ export default function ResizableSplitView({
       return;
     }
 
-    if (isNetworkDisabled) {
+    const validIds = collectIdsFromTree(fileTree);
+
+    const allFiles = Object.entries(codeMap).filter(
+      ([fileId, code]) =>
+        code != null && validIds.includes(fileId) && fileId !== "4"
+    );
+
+    if (allFiles.length === 0) {
       term.current?.write("\x1b[3J");
       term.current?.clear();
-      printLinesAndReanchor(["⚠️ Please select a file first."]);
+      printLinesAndReanchor(["⚠️ No files to compile."]);
       return;
     }
-
-    if (!currentFile) return;
 
     term.current?.write("\x1b[3J");
     term.current?.clear();
 
-    term.current?.writeln("🔍 Checking syntax...");
-    const out = await compileCode(codeMap[currentFile]!);
     let linesPrinted = 0;
-    out.split("\n").forEach((line) => {
-      const visualLength = PROMPT.length + line.length;
-      const wraps = Math.ceil(visualLength / terminalCols());
-      linesPrinted += wraps > 0 ? wraps : 1;
-      term.current?.writeln(`${PROMPT}${line}`);
-    });
+
+    let allSucceeded = true;
+
+    for (const [_, code] of allFiles) {
+      try {
+        const out = await compileCode(code as string);
+        if (out.startsWith("❌")) {
+          out.split("\n").forEach((line: string) => {
+            term.current?.writeln(`${PROMPT}${line}`);
+            linesPrinted++;
+          });
+          allSucceeded = false;
+          break;
+        }
+      } catch (e: any) {
+        const errorMsg = e.message ?? e.toString();
+        errorMsg.split("\n").forEach((line: string) => {
+          term.current?.writeln(`${PROMPT}${line}`);
+          linesPrinted++;
+        });
+        allSucceeded = false;
+        break;
+      }
+    }
+
+    if (allSucceeded) {
+      term.current?.writeln(`✓ Code compiles without errors.`);
+      linesPrinted++;
+    }
 
     term.current?.write(PROMPT);
-
     startRow.current = term.current!.buffer.active.cursorY + linesPrinted;
     cursorPos.current = previousCursorPos.current = 0;
   };
@@ -521,32 +602,31 @@ export default function ResizableSplitView({
       return;
     }
 
-    if (isNetworkDisabled) {
-      term.current?.write("\x1b[3J");
-      term.current?.clear();
-      printLinesAndReanchor(["⚠️ Please select a file first."]);
-      return;
-    }
+    const validIds = collectIdsFromTree(fileTree);
 
-    if (!currentFile) return;
-    const code = codeMap[currentFile]!;
+    const allSources = Object.entries(codeMap)
+      .filter(([fileId, code]) => code != null && validIds.includes(fileId))
+      .map(([_, code]) => code as string);
 
-    // Clear the terminal before running code
+    // Clear the terminal
     term.current?.write("\x1b[3J");
     term.current?.clear();
+    term.current?.writeln("🧪 Running tests…");
 
-    term.current?.writeln("🧪 Running tests...");
-    const out = await testCode(code, test);
     let linesPrinted = 0;
-    out.split("\n").forEach((line) => {
-      const visualLength = PROMPT.length + line.length;
-      const wraps = Math.ceil(visualLength / terminalCols());
-      linesPrinted += wraps > 0 ? wraps : 1;
-      term.current?.writeln(`${PROMPT}${line}`);
-    });
+    // Pass the array of all file‐texts plus the single 'test' string:
+    const out = await testCode(allSources, test);
+
+    // Print each nonempty line exactly once:
+    out
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .forEach((line: string) => {
+        term.current?.writeln(`${PROMPT}${line}`);
+        linesPrinted++;
+      });
 
     term.current?.write(PROMPT);
-
     startRow.current = term.current!.buffer.active.cursorY + linesPrinted;
     cursorPos.current = previousCursorPos.current = 0;
   };

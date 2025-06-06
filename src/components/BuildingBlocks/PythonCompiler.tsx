@@ -1,6 +1,7 @@
 import { loadPyodide, PyodideInterface } from "pyodide";
 
 let pyodide: PyodideInterface | null = null;
+let persistentNs: any = null;
 
 async function getPyodide() {
   if (!pyodide) {
@@ -14,36 +15,66 @@ async function getPyodide() {
   return pyodide;
 }
 
-// Run arbitrary code, capturing its return or print output
 export async function runCode(code: string): Promise<string> {
   const py = await getPyodide();
   let out = "";
   let err = "";
-  // capture stdout and stderr
+
+  // 1) On first call, create a persistent namespace (_persistent_ns) in Python
+  if (!persistentNs) {
+    await py.runPythonAsync(`
+import builtins
+_persistent_ns = { "__builtins__": builtins, "__name__": "__main__" }
+`);
+    persistentNs = py.globals.get("_persistent_ns");
+  }
+
+  // 2) Capture stdout / stderr into our JS strings
   py.setStdout({ batched: (s) => (out += s) });
   py.setStderr({ batched: (s) => (err += s) });
+
+  // 3) Escape triple quotes so we can wrap the snippet safely
+  const safe = code.replace(/"""/g, '\\"\\"\\"');
+
+  // 4) Build a wrapper that:
+  //    - Tries eval(...) on the snippet in _persistent_ns
+  //    - If it returns something non‐None, print it
+  //    - If eval raises SyntaxError, fallback to exec(...)
+  const wrapper = `
+try:
+    _res = eval("""${safe}""", _persistent_ns, _persistent_ns)
+    if _res is not None:
+        print(_res)
+except SyntaxError:
+    exec("""${safe}""", _persistent_ns, _persistent_ns)
+`;
+
   try {
-    const result = await py.runPythonAsync(code);
-    if (err) return `❌ Runtime Error:\n${err.trim()}`;
-    if (out) return out.trim();
-    if (result !== undefined) return String(result);
-    return "✅ Code ran successfully.";
+    // 5) Run the wrapper. Any prints go into `out`.
+    await py.runPythonAsync(wrapper);
+
+    if (err) {
+      const cleanErr = err.replace(/\n+$/, "");
+      return `❌ Error:\n${cleanErr}`;
+    }
+    if (out) {
+      return out.replace(/\n+$/, "");
+    }
+    return "";
   } catch (e: any) {
-    return `❌ Runtime Error: ${e.toString()}`;
+    const msg = e.toString().replace(/\n+$/, "");
+    return `❌ Runtime Error: ${msg}`;
   } finally {
-    // restore console hooks
+    // 6) Restore stdout/stderr to console
     py.setStdout({ batched: (s) => console.log(s) });
     py.setStderr({ batched: (s) => console.error(s) });
   }
 }
 
-// Check syntax without executing (compile phase only)
 export async function compileCode(code: string): Promise<string> {
   const py = await getPyodide();
-  // escape triple-quotes
   const safe = code.replace(/"""/g, '\\"\\"\\"');
   try {
-    // compile(...)
     await py.runPythonAsync(`compile("""${safe}""", "<input>", "exec")`);
     return "✅ Code compiles without errors.";
   } catch (err: any) {
@@ -51,22 +82,34 @@ export async function compileCode(code: string): Promise<string> {
   }
 }
 
-// Execute unittest-based tests
-export async function testCode(code: string, tests: string): Promise<string> {
+export async function testCode(
+  sources: string[],
+  tests: string
+): Promise<string> {
   const py = await getPyodide();
   let out = "";
   let err = "";
-  // capture test-runner stdout & stderr
+
+  await py.runPythonAsync(`
+globals().clear()
+import builtins
+globals()["__builtins__"] = builtins
+`);
+
   py.setStdout({ batched: (s) => (out += s) });
   py.setStderr({ batched: (s) => (err += s) });
 
-  const safeCode = code.replace(/"""/g, '\\"\\"\\"');
-  const safeTests = tests.replace(/"""/g, '\\"\\"\\"');
+  const escapedSources = sources.map((c) => c.replace(/"""/g, '\\"\\"\\"'));
+  const escapedTests = tests.replace(/"""/g, '\\"\\"\\"');
+
   const runner = `
 import sys, unittest, types
 _namespace = {}
-exec("""${safeCode}""", _namespace)
-exec("""${safeTests}""", _namespace)
+
+${escapedSources.map((src) => `exec("""${src}""", _namespace)`).join("\n")}
+
+exec("""${escapedTests}""", _namespace)
+
 loader = unittest.TestLoader()
 suite  = loader.loadTestsFromModule(types.SimpleNamespace(**_namespace))
 runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2)
@@ -74,14 +117,18 @@ result = runner.run(suite)
 if result.failures or result.errors:
     sys.exit(1)
 `;
+
   try {
     await py.runPythonAsync(runner);
-    if (err) return `❌ Runtime Error:\n${err.trim()}`;
-    return out.trim() || "✅ All tests passed!";
+    if (err.trim().length > 0) {
+      const cleanErr = err.replace(/\n+$/, "");
+      return `❌ Runtime Error:\n${cleanErr}`;
+    }
+    return out.trim() || "[OK] All tests passed!";
   } catch (e: any) {
-    return `❌ Test failed: ${e.toString()}`;
+    const msg = e.toString().replace(/\n+$/, "");
+    return `❌ Test failed: ${msg}`;
   } finally {
-    // restore console.log behavior
     py.setStdout({ batched: (s) => console.log(s) });
     py.setStderr({ batched: (s) => console.error(s) });
   }

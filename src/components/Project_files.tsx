@@ -276,7 +276,7 @@ const ProjectFiles = ({
     }
 
     idsToRemove.forEach((id) => {
-      // This sets the code for that file to null, effectively removing it client-side.
+      // remobing the code files in the backend too
       setCodeForFile(id, null);
     });
 

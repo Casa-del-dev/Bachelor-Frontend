@@ -5,11 +5,11 @@ export default function getDefaultFileCode(problemId: string): string {
     # TODO: implement
     pass`;
     case "Problem 2":
-      return `def searchInsert(nums: List[int], target: int) -> int:
+      return `def searchInsert(nums: list[int], target: int) -> int:
     # TODO: implement
     pass`;
     case "Problem 3":
-      return `def plusOne(digits: List[int]) -> List[int]:
+      return `def plusOne(digits: list[int]) -> list[int]:
     # TODO: implement
     pass`;
     case "Problem 4":
@@ -17,11 +17,11 @@ export default function getDefaultFileCode(problemId: string): string {
     # TODO: implement
     pass`;
     case "Problem 5":
-      return `def maxProfit(prices: List[int]) -> int:
+      return `def maxProfit(prices: list[int]) -> int:
     # TODO: implement
     pass`;
     case "Problem 6":
-      return `def countBits(n: int) -> List[int]:
+      return `def countBits(n: int) -> list[int]:
     # TODO: implement
     pass`;
     case "Problem 7":
@@ -29,11 +29,11 @@ export default function getDefaultFileCode(problemId: string): string {
     # TODO: implement
     pass`;
     case "Problem 8":
-      return `def largestDivisibleSubset(nums: List[int]) -> List[int]:
+      return `def largestDivisibleSubset(nums: list[int]) -> list[int]:
     # TODO: implement
     pass`;
     case "Problem 9":
-      return `def majorityElement(nums: List[int]) -> int:
+      return `def majorityElement(nums: list[int]) -> int:
     # TODO: implement
     pass`;
     default:
