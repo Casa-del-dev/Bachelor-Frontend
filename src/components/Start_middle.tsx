@@ -150,8 +150,8 @@ export default function ResizableSplitView({
               inputBuffer.current.slice(oldPos);
             cursorPos.current = newPos;
 
-            const promptRow = startRow.current + 1;
-            term.current?.write(`\x1b[${promptRow};1H\x1b[J`);
+            term.current?.write("\x1b[H\x1b[J");
+
             term.current?.write(PROMPT + inputBuffer.current);
 
             previousCursorPos.current = oldPos;
@@ -498,11 +498,17 @@ export default function ResizableSplitView({
       ([id, code]) => code != null && validIds.includes(id) && id !== "4"
     );
 
+    inputBuffer.current = "";
+    cursorPos.current = 0;
+    previousCursorPos.current = 0;
+
+    term.current?.write("\x1b[H\x1b[J");
+
     // Clear the terminal before running code
     term.current?.write("\x1b[3J");
     term.current?.clear();
 
-    term.current?.writeln("Running code...");
+    term.current?.writeln(`${PROMPT}Running code...`);
 
     let linesPrinted = 0;
 
@@ -564,6 +570,12 @@ export default function ResizableSplitView({
       return;
     }
 
+    inputBuffer.current = "";
+    cursorPos.current = 0;
+    previousCursorPos.current = 0;
+
+    term.current?.write("\x1b[H\x1b[J");
+
     term.current?.write("\x1b[3J");
     term.current?.clear();
 
@@ -598,7 +610,7 @@ export default function ResizableSplitView({
     }
 
     if (allSucceeded) {
-      const line = "✓ Code compiles without errors.";
+      const line = `${PROMPT}✓ Code compiles without errors.`;
       term.current?.writeln(line);
       const visualLength = PROMPT.length + line.length;
       const wraps = Math.ceil(visualLength / terminalCols());
@@ -624,10 +636,16 @@ export default function ResizableSplitView({
       .filter(([fileId, code]) => code != null && validIds.includes(fileId))
       .map(([_, code]) => code as string);
 
+    inputBuffer.current = "";
+    cursorPos.current = 0;
+    previousCursorPos.current = 0;
+
+    term.current?.write("\x1b[H\x1b[J");
+
     // Clear the terminal
     term.current?.write("\x1b[3J");
     term.current?.clear();
-    term.current?.writeln("🧪 Running tests…");
+    term.current?.writeln(`${PROMPT}Running tests…`);
 
     let linesPrinted = 0;
     // Pass the array of all file‐texts plus the single 'test' string:
