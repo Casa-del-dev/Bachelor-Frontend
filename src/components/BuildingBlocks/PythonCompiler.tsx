@@ -1,7 +1,6 @@
 import { loadPyodide, PyodideInterface } from "pyodide";
 
 let pyodide: PyodideInterface | null = null;
-let persistentNs: any = null;
 
 async function getPyodide() {
   if (!pyodide) {
@@ -20,27 +19,21 @@ export async function runCode(code: string): Promise<string> {
   let out = "";
   let err = "";
 
-  // 1) On first call, create a persistent namespace (_persistent_ns) in Python
-  if (!persistentNs) {
-    await py.runPythonAsync(`
-import builtins
-_persistent_ns = { "__builtins__": builtins, "__name__": "__main__" }
-`);
-    persistentNs = py.globals.get("_persistent_ns");
-  }
+  // ─── 1) Always hook stdout/stderr, re‐appending a "\n" to each batched chunk ───
+  py.setStdout({ batched: (s) => (out += s + "\n") });
+  py.setStderr({ batched: (s) => (err += s + "\n") });
 
-  // 2) Capture stdout / stderr into our JS strings
-  py.setStdout({ batched: (s) => (out += s) });
-  py.setStderr({ batched: (s) => (err += s) });
-
-  // 3) Escape triple quotes so we can wrap the snippet safely
+  // ─── 2) Escape triple‐quotes in the user code so we can wrap it safely ───
   const safe = code.replace(/"""/g, '\\"\\"\\"');
 
-  // 4) Build a wrapper that:
-  //    - Tries eval(...) on the snippet in _persistent_ns
-  //    - If it returns something non‐None, print it
-  //    - If eval raises SyntaxError, fallback to exec(...)
+  // ─── 3) The wrapper: make sure _persistent_ns exists every call, then eval/exec ───
   const wrapper = `
+try:
+    _persistent_ns
+except NameError:
+    import builtins
+    _persistent_ns = { "__builtins__": builtins, "__name__": "__main__" }
+
 try:
     _res = eval("""${safe}""", _persistent_ns, _persistent_ns)
     if _res is not None:
@@ -50,22 +43,19 @@ except SyntaxError:
 `;
 
   try {
-    // 5) Run the wrapper. Any prints go into `out`.
     await py.runPythonAsync(wrapper);
 
-    if (err) {
-      const cleanErr = err.replace(/\n+$/, "");
-      return `❌ Error:\n${cleanErr}`;
+    // If Python wrote to stderr, return that as an “Error” block
+    if (err.trim().length > 0) {
+      return `❌ Error:\n${err.trim()}`;
     }
-    if (out) {
-      return out.replace(/\n+$/, "");
-    }
-    return "";
+    // Otherwise, return whatever was printed
+    return out;
   } catch (e: any) {
-    const msg = e.toString().replace(/\n+$/, "");
-    return `❌ Runtime Error: ${msg}`;
+    // In case runPythonAsync itself threw (e.g. runtime error)
+    return `❌ Runtime Error: ${e}`;
   } finally {
-    // 6) Restore stdout/stderr to console
+    // ─── 4) Restore Pyodide’s default stdout/stderr hooks ───
     py.setStdout({ batched: (s) => console.log(s) });
     py.setStderr({ batched: (s) => console.error(s) });
   }

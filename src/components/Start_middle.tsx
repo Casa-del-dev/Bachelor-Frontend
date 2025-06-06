@@ -294,8 +294,10 @@ export default function ResizableSplitView({
             let linesPrinted = 0;
             for (const line of lines) {
               if (line.trim() === "") continue;
+              const visualLength = PROMPT.length + line.length;
+              const wraps = Math.ceil(visualLength / terminalCols());
+              linesPrinted += wraps > 0 ? wraps : 1;
               term.current?.writeln(`${PROMPT}${line}`);
-              linesPrinted++;
             }
 
             // 7) Now show a fresh prompt on the next line
@@ -490,8 +492,6 @@ export default function ResizableSplitView({
       return;
     }
 
-    console.log(codeMap);
-
     const validIds = collectIdsFromTree(fileTree);
 
     const runnableFiles = Object.entries(codeMap).filter(
@@ -511,24 +511,33 @@ export default function ResizableSplitView({
 
       try {
         const out = await runCode(code as string);
+
+        // Split on newline and preserve all lines including empty ones
         const lines = out.split("\n");
 
-        lines.forEach((line: string) => {
-          if (line.trim() !== "") {
+        // Write each line with PROMPT prefix
+        for (const line of lines) {
+          if (line !== "") {
+            const visualLength = PROMPT.length + line.length;
+            const wraps = Math.ceil(visualLength / terminalCols());
+            linesPrinted += wraps > 0 ? wraps : 1;
             term.current?.writeln(`${PROMPT}${line}`);
-            linesPrinted++;
           }
-        });
+        }
       } catch (e: any) {
         const errorMsg = e.message ?? e.toString();
+        // Split error message by newlines and preserve all lines
         errorMsg.split("\n").forEach((line: string) => {
+          const visualLength = PROMPT.length + line.length;
+          const wraps = Math.ceil(visualLength / terminalCols());
+          linesPrinted += wraps > 0 ? wraps : 1;
           term.current?.writeln(`${PROMPT}${line}`);
         });
       }
     }
 
+    // Write new prompt and update positions
     term.current?.write(PROMPT);
-
     startRow.current = term.current!.buffer.active.cursorY + linesPrinted;
     cursorPos.current = previousCursorPos.current = 0;
   };
@@ -567,8 +576,10 @@ export default function ResizableSplitView({
         const out = await compileCode(code as string);
         if (out.startsWith("❌")) {
           out.split("\n").forEach((line: string) => {
+            const visualLength = PROMPT.length + line.length;
+            const wraps = Math.ceil(visualLength / terminalCols());
+            linesPrinted += wraps > 0 ? wraps : 1;
             term.current?.writeln(`${PROMPT}${line}`);
-            linesPrinted++;
           });
           allSucceeded = false;
           break;
@@ -576,8 +587,10 @@ export default function ResizableSplitView({
       } catch (e: any) {
         const errorMsg = e.message ?? e.toString();
         errorMsg.split("\n").forEach((line: string) => {
+          const visualLength = PROMPT.length + line.length;
+          const wraps = Math.ceil(visualLength / terminalCols());
+          linesPrinted += wraps > 0 ? wraps : 1;
           term.current?.writeln(`${PROMPT}${line}`);
-          linesPrinted++;
         });
         allSucceeded = false;
         break;
@@ -585,8 +598,11 @@ export default function ResizableSplitView({
     }
 
     if (allSucceeded) {
-      term.current?.writeln(`✓ Code compiles without errors.`);
-      linesPrinted++;
+      const line = "✓ Code compiles without errors.";
+      term.current?.writeln(line);
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
     }
 
     term.current?.write(PROMPT);
@@ -622,8 +638,10 @@ export default function ResizableSplitView({
       .split("\n")
       .filter((line) => line.trim().length > 0)
       .forEach((line: string) => {
+        const visualLength = PROMPT.length + line.length;
+        const wraps = Math.ceil(visualLength / terminalCols());
+        linesPrinted += wraps > 0 ? wraps : 1;
         term.current?.writeln(`${PROMPT}${line}`);
-        linesPrinted++;
       });
 
     term.current?.write(PROMPT);
