@@ -96,11 +96,12 @@ export function Header() {
 
   const { isAuthenticated, logout } = useAuth();
 
-  const isHomePage = window.location.pathname === "/";
-  const isProfilePage = window.location.pathname.startsWith("/profile");
+  const contentPaths = ["/problem", "/start", "/abstract"];
+  const path = window.location.pathname;
+  const isContentPage = contentPaths.some((p) => path.startsWith(p));
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const showIndicator =
-    !isProfilePage || !isHomePage || menuOpen || hoveredIndex !== null;
+
+  const showIndicator = menuOpen || hoveredIndex !== null || isContentPage;
   const [showHome, setShowHome] = useState(false);
 
   /* --------------------------------------------

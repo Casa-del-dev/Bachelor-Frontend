@@ -1,64 +1,87 @@
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import "./InformationToolTip.css";
 
 interface InfoWithTooltipProps {
-  children: ReactNode; // your icon
-  tooltip: ReactNode; // the content to show
+  children: ReactNode;
+  tooltip: ReactNode;
 }
 
 export function InfoWithTooltip({ children, tooltip }: InfoWithTooltipProps) {
   const [visible, setVisible] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const timerRef = useRef<number>(undefined);
+  const [coords, setCoords] = useState({ left: 0, top: 0 });
+  const timerRef = useRef<number | null>(null);
+  const wrapperRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
-    // capture initial position
-    setPos({ x: e.clientX, y: e.clientY });
-    // after 2s, show tooltip
+  const handleMouseEnter = () => {
     timerRef.current = window.setTimeout(() => setVisible(true), 1000);
-    // track mouse moves so we can reposition
-    window.addEventListener("mousemove", handleMouseMove);
   };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    setPos({ x: e.clientX, y: e.clientY });
-  };
-
   const handleMouseLeave = () => {
-    // hide & cleanup
-    clearTimeout(timerRef.current);
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+    }
     setVisible(false);
-    window.removeEventListener("mousemove", handleMouseMove);
   };
 
-  // cleanup on unmount
+  // When the tooltip actually appears, measure and clamp to viewport:
+  useLayoutEffect(() => {
+    if (!visible || !wrapperRef.current || !tooltipRef.current) return;
+
+    const iconRect = wrapperRef.current.getBoundingClientRect();
+    const tipRect = tooltipRef.current.getBoundingClientRect();
+    const { innerWidth, innerHeight } = window;
+
+    // default: right & vertically centered
+    let left = iconRect.right + 8;
+    let top = iconRect.top + (iconRect.height - tipRect.height) / 2;
+
+    // flip if it would overflow
+    if (left + tipRect.width > innerWidth)
+      left = iconRect.left - tipRect.width - 8;
+    if (top + tipRect.height > innerHeight)
+      top = innerHeight - tipRect.height - 8;
+    if (top < 8) top = 8;
+
+    setCoords({ left, top });
+  }, [visible]);
+
   useEffect(() => {
     return () => {
-      clearTimeout(timerRef.current);
-      window.removeEventListener("mousemove", handleMouseMove);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
     };
   }, []);
 
   return (
-    <span
-      className="info-tooltip-wrapper"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      {children}
-      {visible && (
-        <div
-          className="tooltip-box"
-          style={{
-            position: "fixed",
-            left: pos.x + 8,
-            top: pos.y + 16,
-            pointerEvents: "none",
-          }}
-        >
-          {tooltip}
-        </div>
-      )}
-    </span>
+    <>
+      <span
+        ref={wrapperRef}
+        className="info-tooltip-wrapper"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {children}
+      </span>
+
+      {visible &&
+        createPortal(
+          <div
+            ref={tooltipRef}
+            className="tooltip-box"
+            style={{
+              position: "fixed",
+              left: coords.left,
+              top: coords.top,
+              zIndex: "1000000",
+              pointerEvents: "none",
+            }}
+          >
+            {tooltip}
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
