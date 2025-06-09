@@ -258,9 +258,23 @@ export default function ResizableSplitView({
 
         case "Enter": {
           if (!isAuthenticated) {
+            let linesPrinted = 0;
+
+            inputBuffer.current = "";
+            cursorPos.current = 0;
+            previousCursorPos.current = 0;
+
+            term.current?.write("\x1b[H\x1b[J");
             term.current?.write("\x1b[3J");
             term.current?.clear();
+
+            const line = "⚠️ Please log in first.";
+            const visualLength = PROMPT.length + line.length;
+            const wraps = Math.ceil(visualLength / terminalCols());
+            linesPrinted += wraps > 0 ? wraps : 1;
             printLinesAndReanchor(["⚠️ Please log in first."]);
+            startRow.current = linesPrinted;
+
             return;
           }
 
@@ -486,9 +500,23 @@ export default function ResizableSplitView({
 
   const handleRunClick = async () => {
     if (!isAuthenticated) {
+      let linesPrinted = 0;
+
+      inputBuffer.current = "";
+      cursorPos.current = 0;
+      previousCursorPos.current = 0;
+
+      term.current?.write("\x1b[H\x1b[J");
       term.current?.write("\x1b[3J");
       term.current?.clear();
+
+      const line = "⚠️ Please log in first.";
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
       printLinesAndReanchor(["⚠️ Please log in first."]);
+      startRow.current = linesPrinted;
+
       return;
     }
 
@@ -550,9 +578,23 @@ export default function ResizableSplitView({
 
   const handleCompileClick = async () => {
     if (!isAuthenticated) {
+      let linesPrinted = 0;
+
+      inputBuffer.current = "";
+      cursorPos.current = 0;
+      previousCursorPos.current = 0;
+
+      term.current?.write("\x1b[H\x1b[J");
       term.current?.write("\x1b[3J");
       term.current?.clear();
+
+      const line = "⚠️ Please log in first.";
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
       printLinesAndReanchor(["⚠️ Please log in first."]);
+      startRow.current = linesPrinted;
+
       return;
     }
 
@@ -624,9 +666,23 @@ export default function ResizableSplitView({
 
   const handleTestClick = async () => {
     if (!isAuthenticated) {
+      let linesPrinted = 0;
+
+      inputBuffer.current = "";
+      cursorPos.current = 0;
+      previousCursorPos.current = 0;
+
+      term.current?.write("\x1b[H\x1b[J");
       term.current?.write("\x1b[3J");
       term.current?.clear();
+
+      const line = "⚠️ Please log in first.";
+      const visualLength = PROMPT.length + line.length;
+      const wraps = Math.ceil(visualLength / terminalCols());
+      linesPrinted += wraps > 0 ? wraps : 1;
       printLinesAndReanchor(["⚠️ Please log in first."]);
+      startRow.current = linesPrinted;
+
       return;
     }
 
