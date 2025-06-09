@@ -129,7 +129,12 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
               <a href="/problem">Get Started</a>
             </button>
             <span>|</span>
-            <button className="tutorial-welcome" onClick={startFullTutorial}>
+            <button
+              className="tutorial-welcome"
+              onClick={() => {
+                window.location.href = `${tutorialRoutes[0]}?tutorial=1`;
+              }}
+            >
               Tutorial
             </button>
           </div>

@@ -14,6 +14,7 @@ import { useAuth } from "../AuthContext";
 import Profile from "./Profile";
 import WhiteLogo from "../assets/PeachLogoWhite.svg";
 import { InfoWithTooltip } from "./BuildingBlocks/InformationToolTip";
+import { useLocation } from "react-router-dom";
 
 export function ProfilePage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -97,7 +98,8 @@ export function Header() {
   const { isAuthenticated, logout } = useAuth();
 
   const contentPaths = ["/problem", "/start", "/abstract"];
-  const path = window.location.pathname;
+  const location = useLocation();
+  const path = location.pathname;
   const isContentPage = contentPaths.some((p) => path.startsWith(p));
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
