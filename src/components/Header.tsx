@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { HiMenu, HiX, HiUserCircle, HiMoon, HiSun } from "react-icons/hi";
+import {
+  HiMenu,
+  HiX,
+  HiUserCircle,
+  HiMoon,
+  HiSun,
+  HiInformationCircle,
+} from "react-icons/hi";
 import Logo from "../assets/Peachlab.svg";
 import "./Header.css";
 import Login from "./Login";
 import { useAuth } from "../AuthContext";
 import Profile from "./Profile";
 import WhiteLogo from "../assets/PeachLogoWhite.svg";
+import { InfoWithTooltip } from "./BuildingBlocks/InformationToolTip";
 
 export function ProfilePage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -89,8 +97,10 @@ export function Header() {
   const { isAuthenticated, logout } = useAuth();
 
   const isHomePage = window.location.pathname === "/";
+  const isProfilePage = window.location.pathname.startsWith("/profile");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const showIndicator = !isHomePage || menuOpen || hoveredIndex !== null;
+  const showIndicator =
+    !isProfilePage || !isHomePage || menuOpen || hoveredIndex !== null;
   const [showHome, setShowHome] = useState(false);
 
   /* --------------------------------------------
@@ -178,7 +188,7 @@ export function Header() {
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [hoveredIndex, activeIndex]);
+  }, [hoveredIndex, activeIndex, menuOpen]);
 
   /* --------------------------------------------
   Needed for button animation in header END
@@ -284,6 +294,14 @@ export function Header() {
     document.body.classList.toggle("dark-mode", isDarkMode);
   }, [isDarkMode]);
 
+  const tooltips: Record<string, string> = {
+    Problems: "Browse and select coding problems to solve in this section.",
+    Start:
+      "Start solving problems right away. Use the Decomposition Box to organize your thoughts, break down the problem, and strengthen your problem-solving skills as a coder.",
+    Abstract:
+      "Refine your code using generalization techniques commonly practiced in the coding community.",
+  };
+
   return (
     <>
       <header className="header">
@@ -328,7 +346,9 @@ export function Header() {
                 <li key={item.href}>
                   <a
                     href={item.href}
-                    className={activeIndex === originalIdx ? "active" : ""}
+                    className={`linksToDifferentPages ${
+                      activeIndex === originalIdx ? "active" : ""
+                    }`}
                     ref={(el) => {
                       navRefs.current[originalIdx] = el;
                     }}
@@ -342,6 +362,13 @@ export function Header() {
                     }}
                   >
                     {item.name}
+                    {item.name !== "Home" && (
+                      <InfoWithTooltip
+                        tooltip={tooltips[item.name] || "More info"}
+                      >
+                        <HiInformationCircle className="info-icon" />
+                      </InfoWithTooltip>
+                    )}
                   </a>
                 </li>
               );

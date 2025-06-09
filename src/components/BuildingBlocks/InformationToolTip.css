@@ -1,0 +1,27 @@
+:root {
+  --box-shadow: rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode {
+  --box-shadow: rgba(255, 255, 255, 0.2);
+}
+
+.info-tooltip-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip-box {
+  background: rgb(139, 139, 139);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  border: 1px solid black;
+  max-width: 200px;
+  z-index: 10000000;
+  white-space: pre-wrap;
+  box-shadow: 0 4px 12px var(--box-shadow);
+}

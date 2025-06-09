@@ -49,7 +49,7 @@ body.dark-mode {
   background-color: var(--main-background) !important;
 }
 
-.Network:hover {
+.Network:not(.disabled):hover {
   color: grey;
   cursor: pointer;
 }

@@ -229,6 +229,14 @@ Dropdown when screen to narrow END
   margin: 0;
 }
 
+.linksToDifferentPages {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 .profile-dropdown ul li a {
   display: block;
   padding: 1vh 2vh;
