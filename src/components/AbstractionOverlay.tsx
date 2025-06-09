@@ -2089,7 +2089,11 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         className="building-abstraction-container"
         ref={mainContainerRef}
         onClick={(e) => e.stopPropagation()}
+        style={{ position: "relative" }}
       >
+        <div className="container-tutorial-problem">
+          <div className="Tutorial-Problem">?</div>
+        </div>
         <div ref={zoomContentRef} className="zoom-content">
           {renderTree(getPreviewSteps())}
         </div>

@@ -1,27 +1,258 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Problem.css";
 import Problem_left from "./Problem_left";
 import Problem_details from "./Problem_detail";
+import { X } from "lucide-react";
 
-const Problem = () => {
+import tutorialSteps, {
+  TutorialStep,
+} from "./BuildingBlocks/TutorialStepsProblem";
+import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
+
+const SPACING = 10; // px between hole and modal
+
+export default function Problem() {
+  const navigate = useNavigate();
+  const { search, pathname } = useLocation();
+  const query = new URLSearchParams(search);
+  const tutorialParam = query.get("tutorial");
+
   const [selectedProblem, setSelectedProblem] = useState<string>("");
+  const [stepIndex, setStepIndex] = useState<number>(
+    Number(localStorage.getItem("tutorialStep") || 0)
+  );
+  const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
+  const [animate, setAnimate] = useState<boolean>(true);
+
+  // 1) If the new URL *doesn't* have ?tutorial=1, wipe out any lingering tutorialStep
+  useEffect(() => {
+    if (tutorialParam !== "1" && stepIndex !== 0) {
+      setStepIndex(0);
+      localStorage.removeItem("tutorialStep");
+    }
+  }, [pathname, search]);
+
+  // refs must match targetKey in tutorialSteps
+  const refs: Record<
+    TutorialStep["targetKey"],
+    React.RefObject<HTMLDivElement>
+  > = {
+    left: useRef<HTMLDivElement>(null!),
+    sep: useRef<HTMLDivElement>(null!),
+    right: useRef<HTMLDivElement>(null!),
+  };
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
+
+  // persist/clear tutorialStep
+  useEffect(() => {
+    if (stepIndex > 0) localStorage.setItem("tutorialStep", String(stepIndex));
+    else localStorage.removeItem("tutorialStep");
+  }, [stepIndex]);
+
+  // auto-start if arrived with ?tutorial=1
+  useEffect(() => {
+    if (tutorialParam === "1" && stepIndex === 0) {
+      setAnimate(true);
+      setStepIndex(1);
+    }
+  }, [tutorialParam]);
+
+  const TOTAL_STEPS = tutorialSteps.length;
+  const current = tutorialSteps[stepIndex - 1] || null;
+
+  // measure the highlighted hole
+  const measureHole = () => {
+    if (current) {
+      const r =
+        refs[current.targetKey].current?.getBoundingClientRect() || null;
+      setHoleRect(r);
+    } else {
+      setHoleRect(null);
+    }
+  };
+
+  // measure the modal
+  const measureModal = () => {
+    if (modalRef.current) {
+      const r = modalRef.current.getBoundingClientRect();
+      setModalSize({ width: r.width, height: r.height });
+    }
+  };
+
+  // re-measure when step changes
+  useEffect(measureHole, [stepIndex]);
+  useLayoutEffect(measureModal, [holeRect, stepIndex]);
+
+  // on resize or scroll, disable anim + re-measure
+  useEffect(() => {
+    const onChange = () => {
+      setAnimate(false);
+      measureHole();
+      measureModal();
+    };
+    window.addEventListener("resize", onChange);
+    window.addEventListener("scroll", onChange, true);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onChange);
+    }
+    return () => {
+      window.removeEventListener("resize", onChange);
+      window.removeEventListener("scroll", onChange, true);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", onChange);
+      }
+    };
+  }, [stepIndex]);
+
+  // navigation handlers
+  const start = () => {
+    setAnimate(true);
+    setStepIndex(1);
+  };
+
+  // “Finish” by going to next page IN the full‐app tutorial
+  const nextFinish = () => {
+    setStepIndex(0);
+    if (tutorialParam === "1") {
+      const idx = tutorialRoutes.indexOf(pathname);
+      const next = tutorialRoutes[idx + 1];
+      if (next) navigate(`${next}?tutorial=1`);
+    }
+  };
+
+  // “Cancel” just ends tutorial here & strips ?tutorial=1
+  const cancelTutorial = () => {
+    setStepIndex(0);
+    localStorage.removeItem("tutorialStep");
+    // navigate to same path but without any query
+    navigate(pathname, { replace: true });
+  };
+
+  const go = (idx: number, animated: boolean) => {
+    setAnimate(animated);
+    if (idx < 1 || idx > TOTAL_STEPS) {
+      nextFinish();
+    } else {
+      setStepIndex(idx);
+    }
+  };
+
+  // overlay blocks around hole
+  const blocks = holeRect
+    ? [
+        { top: 0, left: 0, width: "100vw", height: holeRect.top },
+        {
+          top: holeRect.bottom,
+          left: 0,
+          width: "100vw",
+          height: `calc(100vh - ${holeRect.bottom}px)`,
+        },
+        {
+          top: holeRect.top,
+          left: 0,
+          width: holeRect.left,
+          height: holeRect.height,
+        },
+        {
+          top: holeRect.top,
+          left: holeRect.right,
+          width: `calc(100vw - ${holeRect.right}px)`,
+          height: holeRect.height,
+        },
+      ]
+    : [];
+
+  // compute modal position with flip logic
+  let modalTop = 0,
+    modalLeft = 0;
+  const hdr = window.innerHeight * 0.1;
+  if (holeRect) {
+    if (holeRect.height >= window.innerHeight) {
+      modalTop = hdr + (window.innerHeight - hdr - modalSize.height) / 2;
+    } else {
+      modalTop = holeRect.bottom + SPACING;
+      if (holeRect.top < hdr + SPACING) modalTop = holeRect.bottom + SPACING;
+      if (modalTop + modalSize.height > window.innerHeight) {
+        modalTop = holeRect.top - SPACING - modalSize.height;
+      }
+    }
+    if (modalTop < hdr + SPACING) modalTop = hdr + SPACING;
+
+    modalLeft = holeRect.right + SPACING;
+    if (modalLeft + modalSize.width > window.innerWidth) {
+      modalLeft = holeRect.left - SPACING - modalSize.width;
+    }
+    if (modalLeft < SPACING) modalLeft = SPACING;
+  }
 
   return (
     <div className="container-problem">
-      {/* Left Side: Problem List */}
-      <Problem_left onSelect={setSelectedProblem} />
-
-      {/* Separator */}
-      <div className="container-separator-problem">
-        <div className="custom-line"></div>
+      <div ref={refs.left}>
+        <Problem_left onSelect={setSelectedProblem} />
       </div>
-
-      {/* Right Side: Problem Details */}
-      <div className="right-side-problem">
+      <div className="container-separator-problem" ref={refs.sep}>
+        <div className="custom-line" />
+      </div>
+      <div className="right-side-problem" ref={refs.right}>
         <Problem_details selectedProblem={selectedProblem} />
       </div>
+
+      <div className="container-tutorial-problem">
+        <div className="Tutorial-Problem" onClick={start}>
+          ?
+        </div>
+      </div>
+
+      {holeRect && current && (
+        <div
+          className={`tutorial-overlay ${animate ? "with-anim" : "no-anim"}`}
+        >
+          {blocks.map((s, i) => (
+            <div key={i} className="overlay-block" style={s} />
+          ))}
+
+          <div
+            className="overlay-hole"
+            style={{
+              top: holeRect.top,
+              left: holeRect.left,
+              width: holeRect.width,
+              height: holeRect.height,
+            }}
+            onClick={() => go(stepIndex + 1, true)}
+          />
+
+          <div
+            ref={modalRef}
+            className="tutorial-step-container"
+            style={{ position: "absolute", top: modalTop, left: modalLeft }}
+          >
+            <X
+              className="close-button-tutorial"
+              onClick={cancelTutorial}
+              size={20}
+              style={{ position: "absolute", top: 5, right: 2 }}
+            />
+            <div className="tutorial-header">{current.title}</div>
+            <div className="tutorial-content">
+              <p>{current.content}</p>
+            </div>
+            <div className="tutorial-footer">
+              <button
+                disabled={stepIndex === 1}
+                onClick={() => go(stepIndex - 1, false)}
+              >
+                Back
+              </button>
+              <button onClick={() => go(stepIndex + 1, false)}>
+                {stepIndex < TOTAL_STEPS ? "Next" : "Finish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default Problem;
+}

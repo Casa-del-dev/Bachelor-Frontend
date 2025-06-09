@@ -2731,6 +2731,10 @@ const Abstract: React.FC = ({}) => {
           />
         </div>
       )}
+
+      <div className="container-tutorial-problem abstract">
+        <div className="Tutorial-Problem">?</div>
+      </div>
     </div>
   );
 };

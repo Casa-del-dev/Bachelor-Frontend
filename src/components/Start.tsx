@@ -406,6 +406,10 @@ const Start: React.FC = () => {
         >
           {startRightComponent}
         </div>
+
+        <div className="container-tutorial-problem">
+          <div className="Tutorial-Problem">?</div>
+        </div>
       </div>
     </div>
   );

@@ -6,6 +6,8 @@ import { useInView } from "./BuildingBlocks/useInView";
 import Reviews from "./BuildingBlocks/Reviews";
 import Team from "./BuildingBlocks/Team";
 import Footer from "./BuildingBlocks/Footer";
+import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
+import { useNavigate } from "react-router-dom";
 
 export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
   const [welcomeText, setWelcomeText] = useState(false);
@@ -98,6 +100,13 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
     "Thoughtful UX Design (via animation logic)",
   ];
 
+  //used for tutorial steps
+  const navigate = useNavigate();
+
+  const startFullTutorial = () => {
+    navigate(`${tutorialRoutes[0]}?tutorial=1`);
+  };
+
   return (
     <section className="welcome-container">
       {/* Hero Section */}
@@ -120,7 +129,9 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
               <a href="/problem">Get Started</a>
             </button>
             <span>|</span>
-            <button className="tutorial-welcome">Tutorial</button>
+            <button className="tutorial-welcome" onClick={startFullTutorial}>
+              Tutorial
+            </button>
           </div>
         </div>
       </div>
