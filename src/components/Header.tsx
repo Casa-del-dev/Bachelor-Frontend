@@ -182,7 +182,7 @@ export function Header() {
   // initialize on mount & whenever menu toggles
   useLayoutEffect(() => {
     updateIndicator(activeIndex);
-  }, [activeIndex, menuOpen]);
+  }, [activeIndex, menuOpen, showHome]);
 
   useEffect(() => {
     const handleResize = () => {
