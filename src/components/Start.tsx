@@ -644,6 +644,13 @@ const Start: React.FC = () => {
     }
   }, [stepIndex, selectedSection]);
 
+  useLayoutEffect(() => {
+    if (!holeRect || !modalRef.current) return;
+    // measure modal BEFORE paint
+    const r = modalRef.current.getBoundingClientRect();
+    setModalSize({ width: r.width, height: r.height });
+  }, [holeRect]);
+
   return (
     <div className={`slide-wrapper ${animateRightToLeft ? "slide-left" : ""}`}>
       <div className="container-main" ref={refs.first}>
