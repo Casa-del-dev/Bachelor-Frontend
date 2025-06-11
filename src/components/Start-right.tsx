@@ -465,7 +465,10 @@ const StartRight: React.FC<StartRightProps> = ({
   }, [stepTree]);
 
   useEffect(() => {
-    if (pendingStepTreeUpdate.current) {
+    if (
+      pendingStepTreeUpdate.current &&
+      !localStorage.getItem("tutorialStep")
+    ) {
       setStepTree(pendingStepTreeUpdate.current);
       pendingStepTreeUpdate.current = null;
     }
@@ -744,7 +747,7 @@ Checking Code and Tree END
     const fetchStepsData = () => {
       if (getChanged()) {
         const newStepsData = getStepsData();
-        if (!newStepsData) return;
+        if (!newStepsData || localStorage.getItem("tutorialStep")) return;
 
         try {
           const stepsArray = transformStepsObject(newStepsData);
@@ -4031,19 +4034,6 @@ TUTORIAL START
       setSteps([]);
     }
   }, [stepIndexTutorial]);
-
-  useEffect(() => {
-    if (loading) {
-      if (!localStorage.getItem("tutorialStep") && stepIndexTutorial !== 0) {
-        setLoading(false);
-      }
-    }
-    if (steps) {
-      if (!localStorage.getItem("tutorialStep") && stepIndexTutorial !== 0) {
-        setSteps([]);
-      }
-    }
-  }, [loading, setSteps, stepIndexTutorial]);
 
   /* ------------------------------------
 TUTORIAL END

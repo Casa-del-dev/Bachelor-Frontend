@@ -512,11 +512,16 @@ const Start: React.FC = () => {
   const cancelTutorial = () => {
     setStepIndex(0);
     localStorage.removeItem("tutorialStep");
+    console.log(stepTree);
+    setStepTree((old) => [...old]);
+    setLoading(false);
     navigate(pathname, { replace: true });
   };
 
   const nextFinish = () => {
     setStepIndex(0);
+    setStepTree((old) => [...old]);
+    setLoading(false);
     if (tutorialParam === "2") {
       const idx = tutorialRoutes.indexOf(pathname);
       const next = tutorialRoutes[idx + 1];

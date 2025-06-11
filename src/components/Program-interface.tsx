@@ -834,7 +834,8 @@ export default function PythonPlayground({
           </div>
         </div>
       </div>
-      {isAuthenticated ? (
+      {isAuthenticated &&
+      !(localStorage.getItem("tutorialStep") && currentFile) ? (
         currentFile !== null &&
         currentFile !== undefined &&
         codeMap[currentFile] !== null ? (
