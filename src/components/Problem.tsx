@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Problem.css";
 import Problem_left from "./Problem_left";
 import Problem_details from "./Problem_detail";
 import { Check, X } from "lucide-react";
 
-import tutorialSteps, {
-  TutorialStep,
-} from "./BuildingBlocks/TutorialStepsProblem";
+import tutorialSteps from "./BuildingBlocks/TutorialStepsProblem";
 import tutorialStepsStart from "./BuildingBlocks/TutorialStepsStart";
 import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
 
@@ -35,15 +33,12 @@ export default function Problem() {
   }, [pathname, search]);
 
   // refs must match targetKey in tutorialSteps
-  const refs: Record<
-    TutorialStep["targetKey"],
-    React.RefObject<HTMLDivElement>
-  > = {
+  const refs = {
     first: useRef<HTMLDivElement>(null!),
     second: useRef<HTMLDivElement>(null!),
     third: useRef<HTMLDivElement>(null!),
     fourth: useRef<HTMLDivElement>(null!),
-    fifth: useRef<HTMLDivElement>(null!),
+    fifth: useRef<HTMLButtonElement>(null!),
   };
   const modalRef = useRef<HTMLDivElement>(null);
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });

@@ -2,7 +2,7 @@ import "./Problem_detail.css";
 
 type ProblemDetailsProps = {
   selectedProblem: string;
-  refFirst: any;
+  refFirst: React.Ref<HTMLButtonElement>;
 };
 
 export const problemDetailsMap: { [key: string]: string } = {
