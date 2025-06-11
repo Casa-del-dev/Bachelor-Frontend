@@ -631,7 +631,7 @@ const Start: React.FC = () => {
       // delay measurement by 1ms
       const id = window.setTimeout(() => {
         measureHole();
-      }, 500);
+      }, 50);
       return () => window.clearTimeout(id);
     } else {
       // normal immediate measurement
