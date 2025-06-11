@@ -1,10 +1,25 @@
 import "./Start.css";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import StartLeft from "./Start-left";
 import StartRight from "./Start-right";
 import StartMiddle from "./Start_middle";
-import { CodeProvider, useCodeContext } from "../CodeContext";
+import { CodeProvider, FileItem, useCodeContext } from "../CodeContext";
 import { useAuth } from "../AuthContext";
+import { Check, X } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
+import tutorialSteps from "./BuildingBlocks/TutorialStepsProblem";
+import tutorialStepsStart, {
+  TutorialStepStart,
+} from "./BuildingBlocks/TutorialStepsStart";
+
+const SPACING = 10;
 
 export interface Step {
   id: string; // unique ID for each step
@@ -43,6 +58,7 @@ interface LayoutState {
 
 const MIN_LEFT = 15; // Minimum width for left column
 const MIN_RIGHT = 20; // Minimum width for right column
+const MIN_RIGHT_PX = 500;
 
 const Start: React.FC = () => {
   const rightRef = useRef<HTMLDivElement>(null);
@@ -185,6 +201,20 @@ const Start: React.FC = () => {
     localStorage.setItem("layoutDimensions", JSON.stringify(layout));
   }, [layout]);
 
+  const enforceRightWidthPx = useCallback(() => {
+    const totalW = window.innerWidth;
+    if (totalW < MIN_RIGHT_PX) {
+      return false; // cannot enforce
+    }
+    const newRightPercent = (MIN_RIGHT_PX / totalW) * 100;
+    const sumLM = layout.left + layout.middle;
+    const leftover = 100 - newRightPercent;
+    const newLeft = (layout.left / sumLM) * leftover;
+    const newMiddle = leftover - newLeft;
+    setLayout({ left: newLeft, middle: newMiddle, right: newRightPercent });
+    return true;
+  }, [layout.left, layout.middle]);
+
   // Set selected problem from URL or local storage
   useEffect(() => {
     const stored = localStorage.getItem("selectedProblem");
@@ -324,6 +354,234 @@ const Start: React.FC = () => {
 
   // STARTRIGht component
 
+  //TUTORIAL START
+  //TUTORIAL START
+
+  const navigate = useNavigate();
+  const { search, pathname } = useLocation();
+  const query = new URLSearchParams(search);
+  const tutorialParam = query.get("tutorial");
+
+  // Tutorial state
+  const [stepIndex, setStepIndex] = useState<number>(
+    Number(localStorage.getItem("tutorialStep") || 0)
+  );
+  const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
+  const [animate, setAnimate] = useState<boolean>(true);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
+
+  // Clean up if tutorial=2 is not active
+  useEffect(() => {
+    if (tutorialParam !== "2" && stepIndex !== 0) {
+      setStepIndex(0);
+      localStorage.removeItem("tutorialStep");
+    }
+  }, [pathname, search]);
+
+  // Auto-start when arriving with ?tutorial=2
+  useEffect(() => {
+    if (!enforceRightWidthPx()) return;
+
+    if (tutorialParam === "2") {
+      setCurrentFile(null);
+      setAnimate(true);
+      setStepIndex(1);
+    }
+  }, [tutorialParam]);
+
+  // Persist tutorial progress
+  useEffect(() => {
+    if (stepIndex > 0) {
+      localStorage.setItem("tutorialStep", String(stepIndex));
+    } else {
+      localStorage.removeItem("tutorialStep");
+    }
+  }, [stepIndex]);
+
+  const baseSteps = tutorialStepsStart.length;
+  const urlSteps =
+    tutorialParam === "2" ? tutorialSteps.length + baseSteps : baseSteps;
+
+  const TOTAL_STEPS = urlSteps;
+  const current = tutorialStepsStart[stepIndex - 1] || null;
+
+  // Measure the highlighted hole
+  const measureHole = () => {
+    if (current) {
+      const r =
+        refs[current.targetKey].current?.getBoundingClientRect() || null;
+      setHoleRect(r);
+    } else {
+      setHoleRect(null);
+    }
+  };
+
+  // Measure the modal size
+  const measureModal = () => {
+    if (modalRef.current) {
+      const r = modalRef.current.getBoundingClientRect();
+      setModalSize({ width: r.width, height: r.height });
+    }
+  };
+
+  const [selectedSection, setSelectedSection] = useState<
+    "Project" | "Problem" | "Blocks"
+  >("Project");
+
+  // Disable animations & re-measure on resize/scroll
+  useEffect(() => {
+    const onChange = () => {
+      setAnimate(false);
+      measureHole();
+      measureModal();
+    };
+    window.addEventListener("resize", onChange);
+    window.addEventListener("scroll", onChange, true);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onChange);
+    }
+    return () => {
+      window.removeEventListener("resize", onChange);
+      window.removeEventListener("scroll", onChange, true);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", onChange);
+      }
+    };
+  }, [stepIndex]);
+
+  const refs: Record<
+    TutorialStepStart["targetKey"],
+    React.RefObject<HTMLDivElement>
+  > = {
+    first: useRef<HTMLDivElement>(null!),
+    second: useRef<HTMLDivElement>(null!),
+    third: useRef<HTMLDivElement>(null!),
+    fourth: useRef<HTMLDivElement>(null!),
+    fifth: useRef<HTMLDivElement>(null!),
+    sixth: useRef<HTMLDivElement>(null!),
+    seventh: useRef<HTMLDivElement>(null!),
+    eigth: useRef<HTMLDivElement>(null!),
+    nine: useRef<HTMLDivElement>(null!),
+    ten: useRef<HTMLDivElement>(null!),
+    eleven: useRef<HTMLDivElement>(null!),
+    twelve: useRef<HTMLDivElement>(null!),
+    thirteen: useRef<HTMLDivElement>(null!),
+    fourteen: useRef<HTMLDivElement>(null!),
+    fifthteen: useRef<HTMLDivElement>(null!),
+    sixthteen: useRef<HTMLDivElement>(null!),
+    seventeen: useRef<HTMLDivElement>(null!),
+    eighteen: useRef<HTMLDivElement>(null!),
+    nineteen: useRef<HTMLDivElement>(null!),
+    twenty: useRef<HTMLDivElement>(null!),
+    twentyone: useRef<HTMLDivElement>(null!),
+    twentytwo: useRef<HTMLDivElement>(null!),
+    twentythree: useRef<HTMLDivElement>(null!),
+    twentyfour: useRef<HTMLDivElement>(null!),
+    twentyfive: useRef<HTMLDivElement>(null!),
+    twentysix: useRef<HTMLDivElement>(null!),
+    twentyseven: useRef<HTMLDivElement>(null!),
+    twentyeight: useRef<HTMLDivElement>(null!),
+    twentynine: useRef<HTMLDivElement>(null!),
+    thirty: useRef<HTMLDivElement>(null!),
+    thirtyone: useRef<HTMLDivElement>(null!),
+    thirtytwo: useRef<HTMLDivElement>(null!),
+    thirtythree: useRef<HTMLDivElement>(null!),
+    thirtyfour: useRef<HTMLDivElement>(null!),
+    thirtyfive: useRef<HTMLDivElement>(null!),
+    thirtysix: useRef<HTMLDivElement>(null!),
+    thirtyseven: useRef<HTMLDivElement>(null!),
+  };
+
+  const startTutorial = () => {
+    if (!enforceRightWidthPx()) return;
+    setCurrentFile(null);
+    setAnimate(true);
+    setStepIndex(1);
+  };
+
+  const go = (idx: number, animated: boolean) => {
+    setAnimate(animated);
+    if (idx < 1 || idx > TOTAL_STEPS) {
+      nextFinish();
+    } else {
+      setStepIndex(idx);
+    }
+  };
+
+  const cancelTutorial = () => {
+    setStepIndex(0);
+    localStorage.removeItem("tutorialStep");
+    navigate(pathname, { replace: true });
+  };
+
+  const nextFinish = () => {
+    setStepIndex(0);
+    if (tutorialParam === "2") {
+      const idx = tutorialRoutes.indexOf(pathname);
+      const next = tutorialRoutes[idx + 1];
+      if (next) navigate(`${next}?tutorial=3`);
+    }
+  };
+
+  // Blocks for overlay
+  const blocks = holeRect
+    ? [
+        { top: 0, left: 0, width: "100vw", height: holeRect.top },
+        {
+          top: holeRect.bottom,
+          left: 0,
+          width: "100vw",
+          height: `calc(100vh - ${holeRect.bottom}px)`,
+        },
+        {
+          top: holeRect.top,
+          left: 0,
+          width: holeRect.left,
+          height: holeRect.height,
+        },
+        {
+          top: holeRect.top,
+          left:
+            holeRect.right +
+            (stepIndex === 17 || stepIndex === 21 || stepIndex === 23
+              ? 10000000000
+              : 0),
+          width: `calc(100vw - ${holeRect.right}px)`,
+          height: holeRect.height,
+        },
+      ]
+    : [];
+
+  // Compute modal flip logic
+  let modalTop = 0,
+    modalLeft = 0;
+  const hdr = window.innerHeight * 0.1;
+  if (holeRect) {
+    if (holeRect.height >= window.innerHeight) {
+      modalTop = hdr + (window.innerHeight - hdr - modalSize.height) / 2;
+    } else {
+      modalTop = holeRect.bottom + SPACING;
+      if (holeRect.top < hdr + SPACING) modalTop = holeRect.bottom + SPACING;
+      if (modalTop + modalSize.height > window.innerHeight) {
+        modalTop = holeRect.top - SPACING - modalSize.height;
+      }
+    }
+    if (modalTop < hdr + SPACING) modalTop = hdr + SPACING;
+
+    modalLeft =
+      holeRect.right +
+      SPACING +
+      (stepIndex === 17 || stepIndex === 21 || stepIndex === 23
+        ? 10000000000
+        : 0);
+
+    if (modalLeft + modalSize.width > window.innerWidth) {
+      modalLeft = holeRect.left - SPACING - modalSize.width;
+    }
+    if (modalLeft < SPACING) modalLeft = SPACING;
+  }
+
   const startRightComponent = (
     <StartRight
       fontSize={rightFontSize}
@@ -338,16 +596,55 @@ const Start: React.FC = () => {
       stepTree={stepTree}
       setStepTree={setStepTree}
       fileTree={fileTree}
+      ref1={refs.nineteen}
+      ref2={refs.twenty}
+      ref3={refs.twentyfour}
+      ref4={refs.twentyfive}
+      stepIndexTutorial={stepIndex}
     />
   );
 
+  const initialFiles: FileItem[] = [
+    {
+      id: 1,
+      name: "src",
+      type: "folder",
+      children: [{ id: 2, name: "Solution.py", type: "file" }],
+    },
+    { id: 4, name: "Tests.py", type: "file" },
+  ];
+
+  useLayoutEffect(() => {
+    if (stepIndex === 19) {
+      // delay measurement by 1ms
+      const id = window.setTimeout(() => {
+        measureHole();
+      }, 350);
+      return () => window.clearTimeout(id);
+    } else if (stepIndex === 5 || stepIndex === 8 || stepIndex === 25) {
+      // delay measurement by 1ms
+      const id = window.setTimeout(() => {
+        measureHole();
+      }, 0);
+      return () => window.clearTimeout(id);
+    } else {
+      // normal immediate measurement
+      measureHole();
+    }
+  }, [stepIndex, selectedSection]);
+
   return (
     <div className={`slide-wrapper ${animateRightToLeft ? "slide-left" : ""}`}>
-      <div className="container-main">
+      <div className="container-main" ref={refs.first}>
         {/* Left Column */}
         <div
           className="left-column"
-          ref={leftRef}
+          ref={(el: HTMLDivElement | null) => {
+            leftRef.current = el;
+            if (el) {
+              refs.second.current = el;
+            }
+          }}
           style={{
             width: `${layout.left}%`,
             ["--step-font-size" as any]: leftFontSize,
@@ -362,6 +659,18 @@ const Start: React.FC = () => {
             setFileTree={setFileTree}
             problemId={problemId}
             setProblemId={setProblemId}
+            ref1={refs.third}
+            ref2={refs.fourth}
+            ref3={refs.fifth}
+            ref4={refs.sixth}
+            ref5={refs.seventh}
+            ref6={refs.eigth}
+            ref7={refs.nine}
+            ref8={refs.ten}
+            currentIndex={stepIndex}
+            initialFiles={initialFiles}
+            selectedSection={selectedSection}
+            setSelectedSection={setSelectedSection}
           />
         </div>
 
@@ -384,6 +693,18 @@ const Start: React.FC = () => {
               fileTree={fileTree}
               problemId={problemId}
               stepTree={stepTree}
+              ref1={refs.eleven}
+              ref2={refs.twelve}
+              ref3={refs.thirteen}
+              ref4={refs.fourteen}
+              ref5={refs.fifthteen}
+              ref6={refs.sixthteen}
+              ref7={refs.seventeen}
+              ref8={refs.eighteen}
+              ref9={refs.twentyone}
+              ref10={refs.twentytwo}
+              ref11={refs.twentythree}
+              currentIndex={stepIndex}
             />
           </CodeProvider>
         </div>
@@ -396,9 +717,12 @@ const Start: React.FC = () => {
         />
 
         {/* Right Column */}
+
         <div
           className={`right-column`}
-          ref={rightRef}
+          ref={(el: HTMLDivElement | null) => {
+            rightRef.current = el;
+          }}
           style={{
             ["--step-font-size" as any]: rightFontSize,
             ["--right-width" as any]: `${layout.right}%`,
@@ -408,8 +732,109 @@ const Start: React.FC = () => {
         </div>
 
         <div className="container-tutorial-problem">
-          <div className="Tutorial-Problem">?</div>
+          <div className="Tutorial-Problem" onClick={startTutorial}>
+            ?
+          </div>
         </div>
+
+        {holeRect && current && (
+          <div
+            className={`tutorial-overlay ${animate ? "with-anim" : "no-anim"}`}
+          >
+            {blocks.map((s, i) => (
+              <div key={i} className="overlay-block" style={s} />
+            ))}
+
+            <div
+              className={`overlay-hole ${
+                stepIndex === 23 ? "hover-enabled" : ""
+              }`}
+              style={{
+                top: holeRect.top,
+                left: holeRect.left,
+                width:
+                  holeRect.width +
+                  (stepIndex === 17 || stepIndex === 21 || stepIndex === 23
+                    ? 10000000000
+                    : 0),
+                height: holeRect.height,
+              }}
+              onClick={() => go(stepIndex + 1, animate)}
+            />
+
+            <div
+              ref={modalRef}
+              className="tutorial-step-container"
+              style={
+                holeRect && current?.targetKey === "first"
+                  ? {
+                      position: "absolute",
+                      top: holeRect.top + holeRect.height / 2,
+                      left: holeRect.left + holeRect.width / 2,
+                      transform: "translate(-50%, -50%)",
+                    }
+                  : { position: "absolute", top: modalTop, left: modalLeft }
+              }
+            >
+              <X
+                className="close-button-tutorial"
+                onClick={cancelTutorial}
+                size={20}
+                style={{ position: "absolute", top: 5, right: 2 }}
+              />
+              <div className="tutorial-header">{current.title}</div>
+              <div className="tutorial-progress-container">
+                <div className="tutorial-progress-bar">
+                  <div
+                    className="tutorial-progress-fill"
+                    style={{
+                      width: `${
+                        ((stepIndex +
+                          (tutorialParam === "2" ? tutorialSteps.length : 0)) /
+                          TOTAL_STEPS) *
+                        100
+                      }%`,
+                    }}
+                  >
+                    <span className="tutorial-progress-number">
+                      {stepIndex +
+                        (tutorialParam === "2" ? tutorialSteps.length : 0)}
+                    </span>
+                  </div>
+                  <span className="tutorial-progress-total">
+                    / {TOTAL_STEPS}
+                  </span>
+                </div>
+              </div>
+              <div className="tutorial-content">
+                <p>{current.content}</p>
+              </div>
+              <div className="tutorial-footer">
+                <button
+                  disabled={stepIndex === 1}
+                  onClick={() => go(stepIndex - 1, animate)}
+                >
+                  Back
+                </button>
+                <button
+                  className="skip-button-tutorial"
+                  style={{ backgroundColor: "var(--dropdown-border)" }}
+                  onClick={() => setAnimate((prev) => !prev)}
+                >
+                  {animate ? (
+                    <X color={"red"} size={15} />
+                  ) : (
+                    <Check className="check-icon-tutorial" size={15} />
+                  )}
+                  Skip
+                </button>
+                <button onClick={() => go(stepIndex + 1, animate)}>
+                  {stepIndex < TOTAL_STEPS ? "Next" : "Finish"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

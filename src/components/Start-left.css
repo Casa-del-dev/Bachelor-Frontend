@@ -72,6 +72,7 @@ body.dark-mode {
   margin: 0 calc(var(--step-font-size, 1vw) * 0.8);
   margin-top: 2vh;
   box-sizing: border-box;
+  align-items: center;
 }
 
 .segmented-button {

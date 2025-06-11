@@ -62,7 +62,7 @@
   font-size: 1vw;
   border-radius: 0.5vw;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
+  transition: background-color 0.3s ease-in-out;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
   text-transform: none;
 }

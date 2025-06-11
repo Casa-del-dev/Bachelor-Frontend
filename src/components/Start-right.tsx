@@ -35,6 +35,178 @@ export interface FileItem {
   children?: FileItem[];
 }
 
+const tutorialStepTree1: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: `# Step 1
+    roman_map = {
+        'I': 1, 'V': 5, 'X': 10, 'L': 50,
+        'C': 100, 'D': 500, 'M': 1000
+    }`,
+    content: "Create a mapping of Roman numerals to their integer values.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-2602",
+    code: `# Step 2
+    total = 0
+    prev_value = 0`,
+    content: "Initialize total and previous value variables.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-1176",
+    code: `# Step 3
+    for char in reversed(s):`,
+    content:
+      "Iterate over the characters in the reversed Roman numeral string.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "Consider breaking down the iteration process into smaller steps.",
+    detailed_hint:
+      "Each iteration involves multiple actions: retrieving the value, comparing it, and updating the total and previous value.",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-224",
+    code: `# Step 4
+    return total`,
+    content: "Return the total integer value.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-8468",
+    code: `# Step 3.1
+        value = roman_map[char]`,
+    content:
+      "Retrieve the integer value for the current Roman numeral character.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-9166",
+    code: `# Step 3.2
+        if value < prev_value:
+            total -= value  # Subtract if a smaller value precedes a larger one
+        else:
+            total += value
+            prev_value = value`,
+    content:
+      "Compare the current value with the previous value to decide whether to add or subtract.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
 function Collapsible({
   isOpen,
   children,
@@ -227,6 +399,12 @@ interface StartRightProps {
 
   stepTree: Step[];
   setStepTree: React.Dispatch<React.SetStateAction<Step[]>>;
+
+  ref1: any;
+  ref2: React.RefObject<HTMLDivElement>;
+  ref3: React.RefObject<HTMLDivElement>;
+  ref4: React.RefObject<HTMLDivElement>;
+  stepIndexTutorial: number;
 }
 
 const StartRight: React.FC<StartRightProps> = ({
@@ -242,6 +420,12 @@ const StartRight: React.FC<StartRightProps> = ({
   stepTree,
   setStepTree,
   fileTree,
+
+  ref1,
+  ref2,
+  ref3,
+  ref4,
+  stepIndexTutorial,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
@@ -3830,8 +4014,51 @@ Biggest render Tree ever recored START
 Biggest render Tree ever recored END
 ------------------------------------ */
 
+  /* ------------------------------------
+TUTORIAL START
+------------------------------------ */
+
+  useEffect(() => {
+    if (stepIndexTutorial === 1) {
+      setSteps([]);
+    }
+    if (stepIndexTutorial === 19) {
+      setLoading(true);
+    } else if (stepIndexTutorial === 20) {
+      setLoading(false);
+      setSteps(tutorialStepTree1);
+    } else if (stepIndexTutorial === 25) {
+      setSteps([]);
+    }
+  }, [stepIndexTutorial]);
+
+  useEffect(() => {
+    if (loading) {
+      if (!localStorage.getItem("tutorialStep") && stepIndexTutorial !== 0) {
+        setLoading(false);
+      }
+    }
+    if (steps) {
+      if (!localStorage.getItem("tutorialStep") && stepIndexTutorial !== 0) {
+        setSteps([]);
+      }
+    }
+  }, [loading, setSteps, stepIndexTutorial]);
+
+  /* ------------------------------------
+TUTORIAL END
+------------------------------------ */
+
   return (
-    <div className="Right-Side-main" ref={stepBoxRef}>
+    <div
+      className="Right-Side-main"
+      ref={(el: HTMLDivElement | null) => {
+        stepBoxRef.current = el;
+        if (el) {
+          ref2.current = el;
+        }
+      }}
+    >
       {hoveredStepId && <div className="hovered-step-indicator"></div>}
       <div className="right-sidecontent-main">
         <div className="right-header-main">
@@ -3849,13 +4076,22 @@ Biggest render Tree ever recored END
                     : async () => HandleImplemented()
                 }
               />
-              <Trash
-                size={"1vw"}
-                strokeWidth={1}
-                cursor="pointer"
-                onClick={HandleDeleteTree}
-                className="trash-icon header-trash"
-              />
+              <div
+                ref={ref3}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyItems: "center",
+                }}
+              >
+                <Trash
+                  size={"1vw"}
+                  strokeWidth={1}
+                  cursor="pointer"
+                  onClick={HandleDeleteTree}
+                  className="trash-icon header-trash"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -3892,7 +4128,10 @@ Biggest render Tree ever recored END
                 {renderTree(steps)}
               </>
             ) : (
-              <div className={`input-container ${loading ? "loading" : ""}`}>
+              <div
+                ref={ref4}
+                className={`input-container ${loading ? "loading" : ""}`}
+              >
                 <div className="textarea-wrapper">
                   {!loading && (
                     <textarea
@@ -3909,6 +4148,7 @@ Biggest render Tree ever recored END
                     style={{ cursor: loading ? "default" : "pointer" }}
                     onClick={() => handleGenerateWithChatGPT("From Prompt")}
                     disabled={loading}
+                    ref={ref1}
                   >
                     {loading ? (
                       <span className="spinner" style={{ cursor: "default" }}>

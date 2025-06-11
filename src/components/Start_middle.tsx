@@ -26,6 +26,19 @@ interface PythonPlaygroundProps {
   test: string;
   problemId: string;
   stepTree: any;
+  ref1?: React.RefObject<HTMLDivElement>;
+  ref2?: React.RefObject<HTMLDivElement>;
+  ref3?: React.RefObject<HTMLDivElement>;
+  ref4?: any;
+  ref5?: any;
+  ref6?: any;
+  ref7?: React.RefObject<HTMLDivElement>;
+  ref8?: React.RefObject<HTMLDivElement>;
+  ref9?: React.RefObject<HTMLDivElement>;
+  ref10?: React.RefObject<HTMLDivElement>;
+  ref11?: React.RefObject<HTMLDivElement>;
+
+  currentIndex?: number;
 }
 
 export default function ResizableSplitView({
@@ -41,6 +54,18 @@ export default function ResizableSplitView({
   fileTree,
   problemId,
   stepTree,
+  ref1,
+  ref2,
+  ref3,
+  ref4,
+  ref5,
+  ref6,
+  ref7,
+  ref8,
+  ref9,
+  ref10,
+  ref11,
+  currentIndex,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -754,8 +779,19 @@ export default function ResizableSplitView({
     <div
       className="container"
       style={{ display: "flex", flexDirection: "column" }}
+      ref={(el) => {
+        if (el) {
+          ref7!.current = el;
+          ref9!.current = el;
+          ref11!.current = el;
+        }
+      }}
     >
-      <div className="top-section" style={{ height: `${topHeight}%` }}>
+      <div
+        className="top-section"
+        style={{ height: `${topHeight}%` }}
+        ref={ref1}
+      >
         <PythonPlayground
           setHoveredStep={setHoveredStep}
           loading={loading}
@@ -768,28 +804,62 @@ export default function ResizableSplitView({
           fileTree={fileTree}
           problemId={problemId}
           stepTree={stepTree}
+          currentIndex={currentIndex}
+          ref1={ref8}
+          ref2={ref10}
         />
       </div>
 
       <div className="resizer" onMouseDown={handleMouseDown} />
 
-      <div className="bottom-section" style={{ height: `${100 - topHeight}%` }}>
-        <div className="icon-terminal">
-          <FaPlay
-            className="icons-for-terminal"
-            size="1.5vw"
-            onClick={handleRunClick}
-          />
-          <FaCog
-            className="icons-for-terminal"
-            size="1.5vw"
-            onClick={handleCompileClick}
-          />
-          <FaHourglassHalf
-            className="icons-for-terminal"
-            size="1.5vw"
-            onClick={handleTestClick}
-          />
+      <div
+        className="bottom-section"
+        style={{ height: `${100 - topHeight}%` }}
+        ref={ref2}
+      >
+        <div className="icon-terminal" ref={ref3}>
+          <div
+            ref={ref4}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <FaPlay
+              className="icons-for-terminal"
+              size="1.5vw"
+              onClick={handleRunClick}
+            />
+          </div>
+          <div
+            ref={ref5}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <FaCog
+              className="icons-for-terminal"
+              size="1.5vw"
+              onClick={handleCompileClick}
+            />
+          </div>
+          <div
+            ref={ref6}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <FaHourglassHalf
+              className="icons-for-terminal"
+              size="1.5vw"
+              onClick={handleTestClick}
+            />
+          </div>
         </div>
         <div className="simple-line" />
         <div className="bottom-terminal-start">

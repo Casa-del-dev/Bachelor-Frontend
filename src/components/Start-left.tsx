@@ -3,6 +3,7 @@ import "./Problem_detail";
 import "./Start-left.css";
 import Project_files from "./Project_files";
 import { problemDetailsMap } from "./Problem_detail";
+import { FileItem } from "../CodeContext";
 
 interface StartLeftInput {
   codeMap: Record<number, string | null>;
@@ -13,6 +14,18 @@ interface StartLeftInput {
   setFileTree: any;
   problemId: string;
   setProblemId: (newId: string) => void;
+  ref1: React.RefObject<HTMLDivElement>;
+  ref2: React.RefObject<HTMLDivElement>;
+  ref3: React.RefObject<HTMLDivElement>;
+  ref4: React.RefObject<HTMLDivElement>;
+  ref5: React.RefObject<HTMLDivElement>;
+  ref6: React.RefObject<HTMLDivElement>;
+  ref7: React.RefObject<HTMLDivElement>;
+  ref8: React.RefObject<HTMLDivElement>;
+  currentIndex: number;
+  initialFiles: FileItem[];
+  selectedSection: "Project" | "Problem" | "Blocks";
+  setSelectedSection: (section: "Project" | "Problem" | "Blocks") => void;
 }
 
 const StartLeft = ({
@@ -24,11 +37,19 @@ const StartLeft = ({
   setFileTree,
   problemId,
   setProblemId,
+  ref1,
+  ref2,
+  ref3,
+  ref4,
+  ref5,
+  ref6,
+  ref7,
+  ref8,
+  currentIndex,
+  initialFiles,
+  selectedSection,
+  setSelectedSection,
 }: StartLeftInput) => {
-  const [selectedSection, setSelectedSection] = useState<
-    "Project" | "Problem" | "Blocks"
-  >("Project");
-
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string>("Project");
@@ -81,6 +102,16 @@ const StartLeft = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (currentIndex === 5) {
+      selectSection("Problem");
+      setSelected("Problem");
+    } else if (currentIndex === 8) {
+      selectSection("Project");
+      setSelected("Project");
+    }
+  }, [currentIndex]);
+
   // Render content depending on the selected section.
   const renderContent = () => {
     switch (selectedSection) {
@@ -95,15 +126,21 @@ const StartLeft = ({
             setFileTree={setFileTree}
             openFolders={openFolders}
             setOpenFolders={setOpenFolders}
+            ref1={ref6}
+            ref2={ref7}
+            ref3={ref8}
+            currentIndex={currentIndex}
+            initialFiles={initialFiles}
           />
         );
       case "Problem":
         return (
-          <div className="container-problem-left">
+          <div className="container-problem-left" ref={ref3}>
             <div className={`problem-title-left`} ref={problemDropdownRef}>
               <div
                 className={`title-dropdown-trigger  ${menuOpen ? "open" : ""}`}
                 onClick={() => setMenuOpen((prev) => !prev)}
+                ref={ref4}
               >
                 {storedProblem || "Select Problem"}{" "}
                 <span className={`arrow-icon ${menuOpen ? "rotated" : ""}`}>
@@ -144,7 +181,7 @@ const StartLeft = ({
   return (
     <div className="left-main">
       <div className="left-content-main">
-        <div className="button-group">
+        <div className="button-group" ref={ref1}>
           <div
             className={`segmented-button ${
               selected === "Project" ? "active" : ""
@@ -153,6 +190,7 @@ const StartLeft = ({
               selectSection("Project");
               setSelected("Project");
             }}
+            ref={ref5}
           >
             Project <br /> system files
           </div>
@@ -164,6 +202,7 @@ const StartLeft = ({
               selectSection("Problem");
               setSelected("Problem");
             }}
+            ref={ref2}
           >
             Problem
           </div>

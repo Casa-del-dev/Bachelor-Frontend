@@ -355,7 +355,7 @@ Textarea for starting prompt END
 .right-header-main {
   position: sticky;
   top: 1vh;
-  z-index: 10000;
+  z-index: 1000;
   background-color: var(--second-background);
   padding: 0.5vw 1vw;
   font-size: calc(var(--step-font-size, 1vw) * 1);

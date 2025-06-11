@@ -1,3 +1,11 @@
+:root {
+  --checkMark-tutorial: green;
+}
+
+body.dark-mode {
+  --checkMark-tutorial: lightgreen;
+}
+
 .container-problem {
   position: relative;
   width: 100%;
@@ -86,6 +94,10 @@
   pointer-events: all;
 }
 
+.overlay-hole.hover-enabled {
+  pointer-events: none;
+}
+
 /* animate transitions */
 .tutorial-overlay.with-anim .overlay-block {
   transition: all 0.4s ease;
@@ -127,7 +139,8 @@
 
 .tutorial-footer {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .tutorial-footer button {
@@ -136,19 +149,33 @@
 
 .tutorial-footer button {
   width: 100px;
-  padding: 8px 16px;
+  padding: 4px 16px;
   font-size: 0.7vw;
   cursor: pointer;
   outline: none;
   border: 1px solid grey;
+  transition: transform 0.3s ease;
+}
+
+.skip-button-tutorial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 2px;
+  color: var(--text-color);
+}
+
+.check-icon-tutorial {
+  color: var(--checkMark-tutorial);
 }
 
 .tutorial-footer button.active {
   outline: none;
 }
 
-.tutorial-footer button:hover {
-  border: none;
+.tutorial-footer button:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 
 .tutorial-footer button:disabled {
@@ -164,4 +191,120 @@
 .tutorial-overlay.no-anim .tutorial-step-container {
   transition: none;
 }
+
+/* loading bar START */
+.tutorial-progress-container {
+  margin-bottom: 16px;
+}
+
+.tutorial-progress-bar {
+  position: relative;
+  height: 15px;
+  border: 2px solid black;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  font-family: monospace;
+}
+
+.tutorial-progress-fill {
+  background-color: #27ae60;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  transition: width 0.4s ease;
+  color: black;
+  font-weight: bold;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Wave animation */
+.tutorial-progress-fill::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: waveFlow 4s linear infinite;
+  transform: translateX(-100%);
+  mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg"><path d="M0,10 q25,-15 50,0 t50,0 q25,15 50,0" fill="none" stroke="white" stroke-width="2"/></svg>');
+  mask-size: 100px 100%;
+  mask-repeat: repeat-x;
+}
+
+@keyframes waveFlow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* Colorful dots animation */
+.impulse-dots {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.impulse-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: dotFlow 4s linear infinite;
+  filter: brightness(1.2);
+  opacity: 0.8;
+}
+
+@keyframes dotFlow {
+  0% {
+    transform: translateX(-20px) translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    transform: translateX(0) translateY(-3px) scale(1);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateX(80%) translateY(2px) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(100%) translateY(0) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.tutorial-progress-number {
+  z-index: 1;
+  font-size: 10px;
+  font-weight: normal;
+  color: var(--text-color);
+}
+
+.tutorial-progress-total {
+  position: absolute;
+  right: 8px;
+  font-size: 10px;
+  color: black;
+  color: var(--text-color);
+}
+
+/* loading bar END */
+
 /* END OF TUTORIAL CSS */

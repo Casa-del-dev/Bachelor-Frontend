@@ -20,6 +20,11 @@ interface InputProps {
   setFileTree: any;
   openFolders: Record<number, boolean>;
   setOpenFolders: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
+  ref1: any;
+  ref2: React.RefObject<HTMLDivElement>;
+  ref3: React.RefObject<HTMLDivElement>;
+  currentIndex: number;
+  initialFiles: FileItem[];
 }
 
 const ProjectFiles = ({
@@ -31,6 +36,11 @@ const ProjectFiles = ({
   setFileTree,
   openFolders,
   setOpenFolders,
+  ref1,
+  ref2,
+  ref3,
+  currentIndex,
+  initialFiles,
 }: InputProps) => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
@@ -427,6 +437,12 @@ const ProjectFiles = ({
     const value = Math.ceil((searchedHeight / totalCount) * 100);
     return value;
   }
+  //tutprial stuff
+  useEffect(() => {
+    if (currentIndex === 11) {
+      setCurrentFile(2);
+    }
+  }, [currentIndex]);
 
   function renderTree(tree: FileItem[]): JSX.Element {
     return (
@@ -523,7 +539,17 @@ const ProjectFiles = ({
           }
 
           return (
-            <li key={item.id} className={liClass} style={styleObj}>
+            <li
+              key={item.id}
+              className={liClass}
+              style={styleObj}
+              ref={
+                localStorage.getItem("tutorialStep") &&
+                liClass === "pseudo-root-li"
+                  ? ref1
+                  : null
+              }
+            >
               {item.id === -1 ? (
                 <div
                   className="pseudo-root-header"
@@ -591,6 +617,11 @@ const ProjectFiles = ({
                   className="file-item"
                   onMouseEnter={() => setHoveredItemId(item.id)}
                   onMouseLeave={() => setHoveredItemId(null)}
+                  ref={
+                    localStorage.getItem("tutorialStep") && item.id === 2
+                      ? ref3
+                      : null
+                  }
                 >
                   {editingId === item.id ? (
                     <span className={`${item.type} edit`}>
@@ -765,7 +796,35 @@ const ProjectFiles = ({
     are treated as root (null) and removed before saving.
   */}
         {!isAuthenticated ? (
-          <div className="blank-file-selector" />
+          localStorage.getItem("tutorialStep") ? (
+            // — tutorial mode: show initialFiles —
+            (() => {
+              const count = initialFiles.length;
+              const allButLast = initialFiles.slice(0, Math.max(0, count - 1));
+              const lastChild = count > 0 ? initialFiles[count - 1] : null;
+              return (
+                <>
+                  {renderTree([
+                    {
+                      id: -1,
+                      name: "Project Files",
+                      type: "folder",
+                      children: allButLast,
+                    },
+                  ])}
+                  {lastChild && (
+                    <div className="separate-last-child" ref={ref2}>
+                      <div className="title-test-fileTree">Test File</div>
+                      {renderTree([lastChild])}
+                    </div>
+                  )}
+                </>
+              );
+            })()
+          ) : (
+            // — not in tutorial yet, and not auth → blank placeholder —
+            <div className="blank-file-selector" />
+          )
         ) : (
           (() => {
             const count = fileTree.length;

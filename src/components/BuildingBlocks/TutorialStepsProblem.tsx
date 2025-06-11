@@ -1,24 +1,34 @@
 export interface TutorialStep {
   /** key must match one of your refs below */
-  targetKey: "left" | "sep" | "right";
+  targetKey: "first" | "second" | "third" | "fourth" | "fifth";
   title: string;
   content: string;
 }
 
 const tutorialSteps: TutorialStep[] = [
   {
-    targetKey: "left",
-    title: "Tutorial Step 1/3",
+    targetKey: "first",
+    title: "Tutorial Step",
     content: "This is the list of problems.",
   },
   {
-    targetKey: "sep",
-    title: "Tutorial Step 2/3",
+    targetKey: "second",
+    title: "Tutorial Step",
     content: "This thin line separates list from details.",
   },
   {
-    targetKey: "right",
-    title: "Tutorial Step 3/3",
+    targetKey: "third",
+    title: "Tutorial Step",
+    content: "Here you see the details of your selection.",
+  },
+  {
+    targetKey: "fourth",
+    title: "Tutorial Step",
+    content: "Here you see the details of your selection.",
+  },
+  {
+    targetKey: "fifth",
+    title: "Tutorial Step",
     content: "Here you see the details of your selection.",
   },
   // … add as many steps as you like here

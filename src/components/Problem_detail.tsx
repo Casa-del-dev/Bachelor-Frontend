@@ -2,6 +2,7 @@ import "./Problem_detail.css";
 
 type ProblemDetailsProps = {
   selectedProblem: string;
+  refFirst: any;
 };
 
 export const problemDetailsMap: { [key: string]: string } = {
@@ -190,7 +191,10 @@ Input: nums = [2,2,1,1,1,2,2]
 Output: 2`,
 };
 
-const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
+const Problem_details = ({
+  selectedProblem,
+  refFirst,
+}: ProblemDetailsProps) => {
   // Check if selectedProblem is empty (initial state)
   const isInitial = !selectedProblem;
 
@@ -213,7 +217,11 @@ const Problem_details = ({ selectedProblem }: ProblemDetailsProps) => {
         <>
           <div className="problem-title">
             {selectedProblem}
-            <button className="check-button" onClick={handleCheckClick}>
+            <button
+              className="check-button"
+              ref={refFirst}
+              onClick={handleCheckClick}
+            >
               Solve
             </button>
           </div>

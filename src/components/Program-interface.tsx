@@ -17,6 +17,223 @@ import { setStepsData, setChanged } from "./BuildingBlocks/StepsData.tsx";
 import "./Program-interface.css";
 import { Step } from "./Start.tsx";
 
+const stepTutorialHope: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: `# Step 1
+    roman_map = {
+        'I': 1, 'V': 5, 'X': 10, 'L': 50,
+        'C': 100, 'D': 500, 'M': 1000
+    }`,
+    content: "Create a mapping of Roman numerals to their integer values.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-2602",
+    code: `# Step 2
+    total = 0
+    prev_value = 0`,
+    content: "Initialize total and previous value variables.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-1176",
+    code: `# Step 3
+    for char in reversed(s):`,
+    content:
+      "Iterate over the characters in the reversed Roman numeral string.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "Consider breaking down the iteration process into smaller steps.",
+    detailed_hint:
+      "Each iteration involves multiple actions: retrieving the value, comparing it, and updating the total and previous value.",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-224",
+    code: `# Step 4
+    return total`,
+    content: "Return the total integer value.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-8468",
+    code: `# Step 3.1
+        value = roman_map[char]`,
+    content:
+      "Retrieve the integer value for the current Roman numeral character.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-9166",
+    code: `# Step 3.2
+        if value < prev_value:
+            total -= value  # Subtract if a smaller value precedes a larger one
+        else:
+            total += value
+            prev_value = value`,
+    content:
+      "Compare the current value with the previous value to decide whether to add or subtract.",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const tutorialFile = `def roman_to_int(s):
+    roman_map = {
+        'I': 1, 'V': 5, 'X': 10, 'L': 50,
+        'C': 100, 'D': 500, 'M': 1000
+    }
+    
+    total = 0
+    prev_value = 0
+
+    for char in reversed(s):
+        value = roman_map[char]
+        if value < prev_value:
+            total -= value  # Subtract if a smaller value precedes a larger one
+        else:
+            total += value
+            prev_value = value
+
+    return total`;
+
+const tutorialFileCommented = `def roman_to_int(s):
+    # Step 1
+    roman_map = {
+        'I': 1, 'V': 5, 'X': 10, 'L': 50,
+        'C': 100, 'D': 500, 'M': 1000
+    }
+    
+    # Step 2
+    total = 0
+    prev_value = 0
+
+    # Step 3
+    for char in reversed(s):
+        # Step 3.1
+        value = roman_map[char]
+        # Step 3.2
+        if value < prev_value:
+            total -= value  # Subtract if a smaller value precedes a larger one
+        else:
+            total += value
+            prev_value = value
+
+    # Step 4
+    return total
+`;
+
 interface FileItem {
   id: number;
   name: string;
@@ -47,6 +264,9 @@ interface PythonPlaygroundProps {
   fileTree: FileItem[];
   problemId: string;
   stepTree: any;
+  currentIndex?: number;
+  ref1?: React.RefObject<HTMLDivElement>;
+  ref2?: React.RefObject<HTMLDivElement>;
 }
 
 export default function PythonPlayground({
@@ -61,6 +281,9 @@ export default function PythonPlayground({
   fileTree,
   problemId,
   stepTree,
+  currentIndex,
+  ref1,
+  ref2,
 }: PythonPlaygroundProps) {
   const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -97,14 +320,15 @@ export default function PythonPlayground({
 
   const editorExtensions = useMemo(() => {
     const extensions = [python(), EditorView.lineWrapping];
-
     if (!colorMode) {
-      extensions.push(createStepHighlightPlugin(setHoveredStep, loadStepsTree));
+      extensions.push(
+        createStepHighlightPlugin(setHoveredStep, loadStepsTree, currentIndex)
+      );
     }
 
     return extensions;
     // note: include stepTree here so plugin sees new value
-  }, [colorMode, setHoveredStep, stepTree]);
+  }, [colorMode, setHoveredStep, stepTree, currentIndex]);
 
   function findMatchingStepForLine(
     lineText: string,
@@ -128,7 +352,8 @@ export default function PythonPlayground({
 
   function createStepHighlightPlugin(
     onHoverStep: (step: Step | null) => void,
-    loadStepsTree: () => Step[]
+    loadStepsTree: () => Step[],
+    currentIndex: number = 0
   ) {
     return ViewPlugin.fromClass(
       class {
@@ -156,7 +381,14 @@ export default function PythonPlayground({
 
           const line = this.view.state.doc.lineAt(pos);
           const steps = loadStepsTree();
-          const match = findMatchingStepForLine(line.text, steps);
+          const match = findMatchingStepForLine(
+            line.text,
+            localStorage.getItem("tutorialStep") &&
+              currentIndex! < 25 &&
+              23 <= currentIndex!
+              ? stepTutorialHope
+              : steps
+          );
 
           if (!match) {
             if (this.hoveredLine !== null) {
@@ -514,6 +746,22 @@ export default function PythonPlayground({
     }
   };
 
+  const [tutorialFileActually, setTutorialFileActually] = useState<string>("");
+  useEffect(() => {
+    if (currentIndex === 1) {
+      setColorMode(true);
+    }
+    if (currentIndex === 11) {
+      setTutorialFileActually(tutorialFile);
+    }
+    if (currentIndex === 20) {
+      setTutorialFileActually(tutorialFileCommented);
+    }
+    if (currentIndex === 23) {
+      setColorMode(false);
+    }
+  }, [currentIndex]);
+
   return (
     <div className="container-programming-bro">
       {tooltip.visible && (
@@ -536,36 +784,54 @@ export default function PythonPlayground({
           {selectedProblemName} - {currentFileName}
         </div>
         <div className="middlepart-title-right">
-          <Paintbrush
-            className="Network"
+          <div
+            ref={ref2}
             style={{
-              padding: "0.5vw",
-              cursor: "pointer",
-              color: colorMode ? "#999" : "#0077cc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-            size={"1.5vw"}
-            onClick={() => {
-              setColorMode((prev) => {
-                const newValue = !prev;
-                if (newValue) {
-                  setHoveredStep(null);
+          >
+            <Paintbrush
+              className="Network"
+              style={{
+                padding: "0.5vw",
+                cursor: "pointer",
+                color: colorMode ? "#999" : "#0077cc",
+              }}
+              size={"1.5vw"}
+              onClick={() => {
+                setColorMode((prev) => {
+                  const newValue = !prev;
+                  if (newValue) {
+                    setHoveredStep(null);
+                  }
+                  return newValue;
+                });
+              }}
+            />
+          </div>
+          <div
+            ref={ref1}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Network
+              className={`Network ${isNetworkDisabled ? "disabled" : ""}`}
+              style={{ padding: "0.5vw" }}
+              size={"1.5vw"}
+              onMouseEnter={handleMouseEnterNetwork}
+              onMouseLeave={handleMouseLeaveNetwork}
+              onClick={() => {
+                if (!isNetworkDisabled) {
+                  handleGenerateStepTree();
                 }
-                return newValue;
-              });
-            }}
-          />
-          <Network
-            className={`Network ${isNetworkDisabled ? "disabled" : ""}`}
-            style={{ padding: "0.5vw" }}
-            size={"1.5vw"}
-            onMouseEnter={handleMouseEnterNetwork}
-            onMouseLeave={handleMouseLeaveNetwork}
-            onClick={() => {
-              if (!isNetworkDisabled) {
-                handleGenerateStepTree();
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
       </div>
       {isAuthenticated ? (
@@ -589,6 +855,17 @@ export default function PythonPlayground({
         ) : (
           <div className="blank-file-selector">Select A File</div>
         )
+      ) : localStorage.getItem("tutorialStep") && currentFile ? (
+        <CodeMirror
+          className="ILoveEprogg"
+          value={tutorialFileActually || ""}
+          extensions={[editorExtensions]}
+          theme={isDarkMode === "dark" ? "dark" : "light"}
+          basicSetup={{
+            lineNumbers: true,
+            foldGutter: true,
+          }}
+        />
       ) : (
         <div className="blank-file-selector">Login Needed</div>
       )}

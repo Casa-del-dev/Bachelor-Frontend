@@ -37,6 +37,13 @@ body.dark-mode {
   padding: 0.5vw;
 }
 
+.middlepart-title-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+}
+
 .ILoveEprogg {
   background-color: transparent;
   color: black;

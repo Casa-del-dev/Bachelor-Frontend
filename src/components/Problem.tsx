@@ -3,11 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./Problem.css";
 import Problem_left from "./Problem_left";
 import Problem_details from "./Problem_detail";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 import tutorialSteps, {
   TutorialStep,
 } from "./BuildingBlocks/TutorialStepsProblem";
+import tutorialStepsStart from "./BuildingBlocks/TutorialStepsStart";
 import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
 
 const SPACING = 10; // px between hole and modal
@@ -38,9 +39,11 @@ export default function Problem() {
     TutorialStep["targetKey"],
     React.RefObject<HTMLDivElement>
   > = {
-    left: useRef<HTMLDivElement>(null!),
-    sep: useRef<HTMLDivElement>(null!),
-    right: useRef<HTMLDivElement>(null!),
+    first: useRef<HTMLDivElement>(null!),
+    second: useRef<HTMLDivElement>(null!),
+    third: useRef<HTMLDivElement>(null!),
+    fourth: useRef<HTMLDivElement>(null!),
+    fifth: useRef<HTMLDivElement>(null!),
   };
   const modalRef = useRef<HTMLDivElement>(null);
   const [modalSize, setModalSize] = useState({ width: 0, height: 0 });
@@ -59,7 +62,10 @@ export default function Problem() {
     }
   }, [tutorialParam]);
 
-  const TOTAL_STEPS = tutorialSteps.length;
+  const baseSteps = tutorialSteps.length;
+  const urlSteps =
+    tutorialParam === "1" ? tutorialStepsStart.length + baseSteps : baseSteps;
+  const TOTAL_STEPS = urlSteps;
   const current = tutorialSteps[stepIndex - 1] || null;
 
   // measure the highlighted hole
@@ -112,13 +118,30 @@ export default function Problem() {
     setStepIndex(1);
   };
 
+  useLayoutEffect(() => {
+    if (stepIndex === 1 && refs.first.current) {
+      const el = refs.first.current;
+      const rect = el.getBoundingClientRect();
+      const scrollY =
+        window.scrollY + rect.top - window.innerHeight / 2 + rect.height / 2;
+      const scrollX =
+        window.scrollX + rect.left - window.innerWidth / 2 + rect.width / 2;
+      window.scrollTo({
+        top: scrollY,
+        left: scrollX,
+        behavior: "smooth",
+      });
+    }
+  }, [stepIndex]);
+
   // “Finish” by going to next page IN the full‐app tutorial
   const nextFinish = () => {
     setStepIndex(0);
     if (tutorialParam === "1") {
       const idx = tutorialRoutes.indexOf(pathname);
-      const next = tutorialRoutes[idx + 1];
-      if (next) navigate(`${next}?tutorial=1`);
+      const next = tutorialRoutes[idx + 1] + "/Problem%201";
+
+      if (next) window.location.href = `${next}?tutorial=2`;
     }
   };
 
@@ -133,6 +156,8 @@ export default function Problem() {
   const go = (idx: number, animated: boolean) => {
     setAnimate(animated);
     if (idx < 1 || idx > TOTAL_STEPS) {
+      nextFinish();
+    } else if (tutorialParam === "1" && idx > tutorialSteps.length) {
       nextFinish();
     } else {
       setStepIndex(idx);
@@ -187,16 +212,33 @@ export default function Problem() {
     if (modalLeft < SPACING) modalLeft = SPACING;
   }
 
+  const [tutorialPass, setTutorialPass] = useState<string>("");
+  const [tutorialFinal, setTutorialFinal] = useState<boolean>(false);
+
+  const handleCheckClick = () => {
+    localStorage.setItem("selectedProblem", selectedProblem);
+    localStorage.setItem("selectedSection", "Problem");
+    setTutorialFinal(true);
+  };
+
   return (
-    <div className="container-problem">
-      <div ref={refs.left}>
-        <Problem_left onSelect={setSelectedProblem} />
-      </div>
-      <div className="container-separator-problem" ref={refs.sep}>
+    <div className="container-problem" ref={refs.first}>
+      <Problem_left
+        onSelect={setSelectedProblem}
+        firstRef={refs.second}
+        secondRef={refs.third}
+        tutorial={tutorialPass}
+        tutorialPass={tutorialFinal}
+      />
+
+      <div className="container-separator-problem">
         <div className="custom-line" />
       </div>
-      <div className="right-side-problem" ref={refs.right}>
-        <Problem_details selectedProblem={selectedProblem} />
+      <div className="right-side-problem" ref={refs.fourth}>
+        <Problem_details
+          selectedProblem={selectedProblem}
+          refFirst={refs.fifth}
+        />
       </div>
 
       <div className="container-tutorial-problem">
@@ -221,13 +263,35 @@ export default function Problem() {
               width: holeRect.width,
               height: holeRect.height,
             }}
-            onClick={() => go(stepIndex + 1, true)}
+            onClick={() => {
+              if (stepIndex === 3) {
+                setTutorialPass("Problem 1");
+              } else if (stepIndex === 5) {
+                handleCheckClick();
+              }
+              go(stepIndex + 1, animate);
+            }}
           />
 
           <div
             ref={modalRef}
             className="tutorial-step-container"
-            style={{ position: "absolute", top: modalTop, left: modalLeft }}
+            style={
+              holeRect && current?.targetKey === "first"
+                ? {
+                    position: "absolute",
+                    // position at hole center:
+                    top: holeRect.top + holeRect.height / 2,
+                    left: holeRect.left + holeRect.width / 2,
+                    // shift back by half the modal's size
+                    transform: "translate(-50%, -50%)",
+                  }
+                : {
+                    position: "absolute",
+                    top: modalTop,
+                    left: modalLeft,
+                  }
+            }
           >
             <X
               className="close-button-tutorial"
@@ -236,17 +300,49 @@ export default function Problem() {
               style={{ position: "absolute", top: 5, right: 2 }}
             />
             <div className="tutorial-header">{current.title}</div>
+            <div className="tutorial-progress-container">
+              <div className="tutorial-progress-bar">
+                <div
+                  className="tutorial-progress-fill"
+                  style={{ width: `${(stepIndex / TOTAL_STEPS) * 100}%` }}
+                >
+                  <span className="tutorial-progress-number">{stepIndex}</span>
+                </div>
+                <span className="tutorial-progress-total">/ {TOTAL_STEPS}</span>
+              </div>
+            </div>
             <div className="tutorial-content">
               <p>{current.content}</p>
             </div>
             <div className="tutorial-footer">
               <button
                 disabled={stepIndex === 1}
-                onClick={() => go(stepIndex - 1, false)}
+                onClick={() => go(stepIndex - 1, animate)}
               >
                 Back
               </button>
-              <button onClick={() => go(stepIndex + 1, false)}>
+              <button
+                className="skip-button-tutorial"
+                style={{ backgroundColor: "var(--dropdown-border)" }}
+                onClick={() => setAnimate((prev) => !prev)}
+              >
+                {animate ? (
+                  <X color={"red"} size={15} />
+                ) : (
+                  <Check className="check-icon-tutorial" size={15} />
+                )}
+                Skip
+              </button>
+              <button
+                onClick={() => {
+                  if (stepIndex === 3) {
+                    setTutorialPass("Problem 1");
+                  } else if (stepIndex === 5) {
+                    handleCheckClick();
+                  }
+                  go(stepIndex + 1, animate);
+                }}
+              >
                 {stepIndex < TOTAL_STEPS ? "Next" : "Finish"}
               </button>
             </div>

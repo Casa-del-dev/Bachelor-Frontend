@@ -1,8 +1,12 @@
-import { forwardRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Problem_left.css";
 
 type ProblemLeftProps = {
   onSelect: (problem: string) => void;
+  firstRef?: React.Ref<HTMLDivElement>;
+  secondRef?: React.Ref<HTMLDivElement>;
+  tutorial?: string;
+  tutorialPass?: boolean;
 };
 
 const problems = [
@@ -17,43 +21,58 @@ const problems = [
   "Problem 9",
 ];
 
-const Problem_left = forwardRef<HTMLDivElement, ProblemLeftProps>(
-  ({ onSelect }, ref) => {
-    const [selected, setSelected] = useState<string>("");
-    const [theChosen, setTheChosen] = useState<string>("");
+const Problem_left = ({
+  onSelect,
+  firstRef,
+  secondRef,
+  tutorial,
+  tutorialPass,
+}: ProblemLeftProps) => {
+  const [selected, setSelected] = useState<string>("");
+  const [theChosen, setTheChosen] = useState<string>("");
 
-    useEffect(() => {
-      const stored = localStorage.getItem("selectedProblem");
-      if (stored) {
-        setTheChosen(stored);
-        onSelect(stored);
-      }
-    }, []);
+  useEffect(() => {
+    if (tutorial) {
+      onSelect(tutorial);
+      setSelected(tutorial);
+    }
+    if (tutorialPass) {
+      setTheChosen("Problem 1");
+    }
+  }, [tutorial, tutorialPass]);
 
-    const handleClick = (problem: string) => {
-      setSelected(problem);
-      onSelect(problem);
-    };
+  useEffect(() => {
+    const stored = localStorage.getItem("selectedProblem");
+    if (stored) {
+      setTheChosen(stored);
+      onSelect(stored);
+    }
+  }, []);
 
-    return (
-      <div className="left-side" ref={ref}>
-        <div className="left-side-content">
-          {problems.map((p, index) => (
-            <div
-              key={index}
-              className={`general-button 
+  const handleClick = (problem: string) => {
+    setSelected(problem);
+    onSelect(problem);
+  };
+
+  return (
+    <div className="left-side" ref={firstRef}>
+      <div className="left-side-content">
+        {problems.map((p, index) => (
+          <div
+            key={index}
+            ref={index === 0 ? secondRef : null}
+            className={`general-button 
                 ${theChosen === p ? "activeA" : ""} 
                 ${selected === p && theChosen !== p ? "activeB" : ""}
               `}
-              onClick={() => handleClick(p)}
-            >
-              {p}
-            </div>
-          ))}
-        </div>
+            onClick={() => handleClick(p)}
+          >
+            {p}
+          </div>
+        ))}
       </div>
-    );
-  }
-);
+    </div>
+  );
+};
 
 export default Problem_left;
