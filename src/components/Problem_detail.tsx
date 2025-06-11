@@ -1,8 +1,8 @@
 import "./Problem_detail.css";
 
-type ProblemDetailsProps111 = {
+type ProblemDetailsProps = {
   selectedProblem: string;
-  refFirst: React.Ref<HTMLButtonElement>;
+  refFirst?: React.Ref<HTMLButtonElement>;
 };
 
 export const problemDetailsMap: { [key: string]: string } = {
@@ -194,7 +194,7 @@ Output: 2`,
 const Problem_details = ({
   selectedProblem,
   refFirst,
-}: ProblemDetailsProps111) => {
+}: ProblemDetailsProps) => {
   // Check if selectedProblem is empty (initial state)
   const isInitial = !selectedProblem;
 
