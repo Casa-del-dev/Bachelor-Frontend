@@ -795,37 +795,32 @@ const ProjectFiles = ({
     This pseudo-root is only used for display; any actions using parentId = -1
     are treated as root (null) and removed before saving.
   */}
-        {!isAuthenticated ? (
-          localStorage.getItem("tutorialStep") ? (
-            // — tutorial mode: show initialFiles —
-            (() => {
-              const count = initialFiles.length;
-              const allButLast = initialFiles.slice(0, Math.max(0, count - 1));
-              const lastChild = count > 0 ? initialFiles[count - 1] : null;
-              return (
-                <>
-                  {renderTree([
-                    {
-                      id: -1,
-                      name: "Project Files",
-                      type: "folder",
-                      children: allButLast,
-                    },
-                  ])}
-                  {lastChild && (
-                    <div className="separate-last-child" ref={ref2}>
-                      <div className="title-test-fileTree">Test File</div>
-                      {renderTree([lastChild])}
-                    </div>
-                  )}
-                </>
-              );
-            })()
-          ) : (
-            // — not in tutorial yet, and not auth → blank placeholder —
-            <div className="blank-file-selector" />
-          )
-        ) : (
+        {localStorage.getItem("tutorialStep") ? (
+          // — tutorial mode: show initialFiles —
+          (() => {
+            const count = initialFiles.length;
+            const allButLast = initialFiles.slice(0, Math.max(0, count - 1));
+            const lastChild = count > 0 ? initialFiles[count - 1] : null;
+            return (
+              <>
+                {renderTree([
+                  {
+                    id: -1,
+                    name: "Project Files",
+                    type: "folder",
+                    children: allButLast,
+                  },
+                ])}
+                {lastChild && (
+                  <div className="separate-last-child" ref={ref2}>
+                    <div className="title-test-fileTree">Test File</div>
+                    {renderTree([lastChild])}
+                  </div>
+                )}
+              </>
+            );
+          })()
+        ) : !isAuthenticated ? (
           (() => {
             const count = fileTree.length;
             const allButLast = fileTree.slice(0, Math.max(0, count - 1));
@@ -853,6 +848,9 @@ const ProjectFiles = ({
               </>
             );
           })()
+        ) : (
+          // — not in tutorial yet, and not auth → blank placeholder —
+          <div className="blank-file-selector" />
         )}
       </div>
     </div>
