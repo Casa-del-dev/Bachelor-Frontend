@@ -4097,7 +4097,6 @@ TUTORIAL END
         </div>
         <div className="right-main-main">
           <div
-            ref={ref4}
             className={`container-step-tree
               ${fadeInTree ? "fade-in-tree" : ""} 
               ${!sentPrompt ? "height100" : ""}`}
@@ -4129,7 +4128,10 @@ TUTORIAL END
                 {renderTree(steps)}
               </>
             ) : (
-              <div className={`input-container ${loading ? "loading" : ""}`}>
+              <div
+                className={`input-container ${loading ? "loading" : ""}`}
+                ref={ref4}
+              >
                 <div className="textarea-wrapper">
                   {!loading && (
                     <textarea

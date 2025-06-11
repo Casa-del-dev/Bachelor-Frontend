@@ -621,11 +621,17 @@ const Start: React.FC = () => {
         measureHole();
       }, 350);
       return () => window.clearTimeout(id);
-    } else if (stepIndex === 5 || stepIndex === 8 || stepIndex === 25) {
+    } else if (stepIndex === 5 || stepIndex === 8) {
       // delay measurement by 1ms
       const id = window.setTimeout(() => {
         measureHole();
       }, 0);
+      return () => window.clearTimeout(id);
+    } else if (stepIndex === 25) {
+      // delay measurement by 1ms
+      const id = window.setTimeout(() => {
+        measureHole();
+      }, 10);
       return () => window.clearTimeout(id);
     } else {
       // normal immediate measurement

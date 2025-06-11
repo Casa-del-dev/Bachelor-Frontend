@@ -821,6 +821,9 @@ const ProjectFiles = ({
             );
           })()
         ) : !isAuthenticated ? (
+          <div className="blank-file-selector" />
+        ) : (
+          // — not in tutorial yet, and not auth → blank placeholder —
           (() => {
             const count = fileTree.length;
             const allButLast = fileTree.slice(0, Math.max(0, count - 1));
@@ -848,9 +851,6 @@ const ProjectFiles = ({
               </>
             );
           })()
-        ) : (
-          // — not in tutorial yet, and not auth → blank placeholder —
-          <div className="blank-file-selector" />
         )}
       </div>
     </div>
