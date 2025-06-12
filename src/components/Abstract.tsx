@@ -5620,7 +5620,14 @@ const Abstract: React.FC = ({}) => {
 
   const go = (idx: number, animated: boolean) => {
     setAnimate(animated);
-    if (idx < 1 || idx > TOTAL_STEPS) {
+    if (
+      idx < 1 ||
+      idx +
+        (Number(tutorialParam || -1) === 3
+          ? tutorialSteps.length + tutorialStepsStart.length
+          : 0) >
+        TOTAL_STEPS
+    ) {
       nextFinish();
     } else {
       setStepIndex(idx);
@@ -5657,7 +5664,39 @@ const Abstract: React.FC = ({}) => {
     navigate(pathname, { replace: true });
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const inTutorial =
+        stepIndex !== 0 && !!localStorage.getItem("tutorialStep");
+      if (e.key === "Escape" && inTutorial) {
+        cancelTutorial();
+      } else if (e.key === "ArrowRight" && inTutorial) {
+        // same as clicking "Next"
+        go(stepIndex + 1, true);
+      } else if (e.key === "ArrowLeft" && inTutorial) {
+        if (tutorialParam === "3" && stepIndex === 1) {
+          localStorage.setItem(
+            "tutorialStep",
+            String(-1) // last Problem step
+          );
+
+          window.location.href = `${tutorialRoutes[1]}/Problem%201?tutorial=2`;
+        } else {
+          go(stepIndex - 1, animate);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [stepIndex, go, cancelTutorial]);
+
   const nextFinish = () => {
+    setStepIndex(0);
+    localStorage.removeItem("tutorialStep");
+    setShowHoverOverlay(false);
     if (!isAuthenticated.isAuthenticated) {
       setSteps([]);
     } else {
@@ -5678,8 +5717,9 @@ const Abstract: React.FC = ({}) => {
           });
       }
     }
-    setStepIndex(0);
-    localStorage.removeItem("tutorialStep");
+    setHoverPolys([]);
+    setHoverGroupIds([]);
+    setCentralHub(null);
     navigate(pathname, { replace: true });
   };
 
@@ -6368,7 +6408,13 @@ const Abstract: React.FC = ({}) => {
                 Skip
               </button>
               <button onClick={() => go(stepIndex + 1, animate)}>
-                {stepIndex < TOTAL_STEPS ? "Next" : "Finish"}
+                {stepIndex +
+                  (Number(tutorialParam || -1) === 3
+                    ? tutorialSteps.length + tutorialStepsStart.length
+                    : 0) <
+                TOTAL_STEPS
+                  ? "Next"
+                  : "Finish"}
               </button>
             </div>
           </div>

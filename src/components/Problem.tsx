@@ -165,6 +165,16 @@ export default function Problem() {
   }, [stepIndex]);
 
   // “Finish” by going to next page IN the full‐app tutorial
+  const go = (idx: number, animated: boolean) => {
+    setAnimate(animated);
+    if (idx < 1 || idx > TOTAL_STEPS) {
+      nextFinish();
+    } else if (tutorialParam === "1" && idx > tutorialSteps.length) {
+      nextFinish();
+    } else {
+      setStepIndex(idx);
+    }
+  };
   const nextFinish = () => {
     setStepIndex(0);
     if (tutorialParam === "1") {
@@ -183,16 +193,26 @@ export default function Problem() {
     navigate(pathname, { replace: true });
   };
 
-  const go = (idx: number, animated: boolean) => {
-    setAnimate(animated);
-    if (idx < 1 || idx > TOTAL_STEPS) {
-      nextFinish();
-    } else if (tutorialParam === "1" && idx > tutorialSteps.length) {
-      nextFinish();
-    } else {
-      setStepIndex(idx);
-    }
-  };
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const inTutorial =
+        stepIndex !== 0 && !!localStorage.getItem("tutorialStep");
+      if (e.key === "Escape" && inTutorial) {
+        cancelTutorial();
+      } else if (e.key === "ArrowRight" && inTutorial) {
+        // same as clicking "Next"
+        go(stepIndex + 1, true);
+      } else if (e.key === "ArrowLeft" && inTutorial) {
+        // same as clicking "Back"
+        go(stepIndex - 1, true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [stepIndex, go, cancelTutorial]);
 
   // overlay blocks around hole
   const blocks = holeRect

@@ -356,7 +356,6 @@ const Start: React.FC = () => {
   // STARTRIGht component
 
   //TUTORIAL START
-  //TUTORIAL START
 
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
@@ -550,11 +549,13 @@ const Start: React.FC = () => {
   };
 
   const go = (idx: number, animated: boolean) => {
-    console.log("go", idx, tutorialStepsStart.length);
     setAnimate(animated);
-    if (idx < 1 || idx > TOTAL_STEPS) {
-      nextFinish();
-    } else if (tutorialParam === "2" && idx > tutorialStepsStart.length) {
+    if (
+      idx < 1 ||
+      idx + (Number(tutorialParam || -1) === 2 ? tutorialSteps.length : 0) >
+        TOTAL_STEPS -
+          (Number(tutorialParam || -1) === 2 ? tutorialStepsAbstract.length : 0)
+    ) {
       nextFinish();
     } else {
       setStepIndex(idx);
@@ -569,6 +570,36 @@ const Start: React.FC = () => {
     setLoading(false);
     navigate(pathname, { replace: true });
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const inTutorial =
+        stepIndex !== 0 && !!localStorage.getItem("tutorialStep");
+      if (e.key === "Escape" && inTutorial) {
+        cancelTutorial();
+      } else if (e.key === "ArrowRight" && inTutorial) {
+        // same as clicking "Next"
+        go(stepIndex + 1, true);
+      } else if (e.key === "ArrowLeft" && inTutorial) {
+        // same as clicking "Back"
+        if (tutorialParam === "2" && stepIndex === 1) {
+          localStorage.setItem(
+            "tutorialStep",
+            String(-1) // last Problem step
+          );
+
+          window.location.href = `${tutorialRoutes[0]}?tutorial=1`;
+        } else {
+          go(stepIndex - 1, animate);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [stepIndex, go, cancelTutorial]);
 
   const nextFinish = () => {
     setStepIndex(0);
