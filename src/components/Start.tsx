@@ -364,7 +364,9 @@ const Start: React.FC = () => {
   const tutorialParam = query.get("tutorial");
 
   // Tutorial state
-  const [stepIndex, setStepIndex] = useState<number>(Number(0));
+  const [stepIndex, setStepIndex] = useState<number>(
+    Number(localStorage.getItem("tutorialStep") || 0) // this localstorage serves as a fallback to when we are actually going back form the prev page
+  );
   const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
   const [animate, setAnimate] = useState<boolean>(true);
   const modalRef = useRef<HTMLDivElement>(null);

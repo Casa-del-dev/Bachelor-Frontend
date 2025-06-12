@@ -2082,6 +2082,7 @@ const Abstract: React.FC = ({}) => {
   }, [problemList]); // problemList is stable, but good practice
 
   useEffect(() => {
+    if (tutorialParam === "3") return;
     if (!isAuthenticated.isAuthenticated) {
       setSteps([]);
     } else {
@@ -4400,10 +4401,7 @@ const Abstract: React.FC = ({}) => {
         /* setStepIndex(49); */
         //last step
       } else {
-        console.log("tutorialParam", tutorialParam);
-        originalStepsRef.current = steps;
         setStepIndex(1);
-        setSteps([...tutorialStepJSON1]);
         setAbstractions([]);
         setAbstractionToSteps({});
         setStepToAbstractions({});
@@ -4446,7 +4444,7 @@ const Abstract: React.FC = ({}) => {
   }, [stepIndex, transform.x, transform.y]);
 
   useLayoutEffect(() => {
-    if (![8, 9, 10].includes(stepIndex)) return;
+    if (![8, 9, 10, 12].includes(stepIndex)) return;
 
     const targetRef = stepIndex === 10 ? refTutorial1 : refTutorial2;
     const el = targetRef.current;
@@ -4579,7 +4577,26 @@ const Abstract: React.FC = ({}) => {
   const cancelTutorial = () => {
     setStepIndex(0);
     localStorage.removeItem("tutorialStep");
-    setSteps(originalStepsRef.current);
+    if (!isAuthenticated.isAuthenticated) {
+      setSteps([]);
+    } else {
+      if (problemId) {
+        loadStepTreeFromBackend(problemId)
+          .then((tree) => {
+            if (tree) {
+              setSteps(tree);
+            } else {
+              console.log(
+                "No tree data returned or error loading for",
+                problemId
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error in loadStepTreeFromBackend promise:", error);
+          });
+      }
+    }
     setAbstractions([]);
     setHoverPolys([]);
     setHoverGroupIds([]);
@@ -4588,7 +4605,26 @@ const Abstract: React.FC = ({}) => {
   };
 
   const nextFinish = () => {
-    setSteps(originalStepsRef.current);
+    if (!isAuthenticated.isAuthenticated) {
+      setSteps([]);
+    } else {
+      if (problemId) {
+        loadStepTreeFromBackend(problemId)
+          .then((tree) => {
+            if (tree) {
+              setSteps(tree);
+            } else {
+              console.log(
+                "No tree data returned or error loading for",
+                problemId
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error in loadStepTreeFromBackend promise:", error);
+          });
+      }
+    }
     setStepIndex(0);
     localStorage.removeItem("tutorialStep");
     navigate(pathname, { replace: true });
@@ -4620,10 +4656,8 @@ const Abstract: React.FC = ({}) => {
 
   // ─── TUTORIAL OVERLAY JSX ────────────────────────────────────
   // place this right before your final `return ( … )` closing brace:
-  const originalStepsRef = useRef<Step[]>([]);
 
   const startTutorial = () => {
-    originalStepsRef.current = steps;
     setStepIndex(1);
     setSteps(tutorialStepJSON1);
     setAbstractions([]);
