@@ -374,7 +374,7 @@ const Start: React.FC = () => {
 
   // Clean up if tutorial=2 is not active
   useEffect(() => {
-    if (tutorialParam !== "2" && stepIndex === 0) {
+    if (tutorialParam !== "2" && stepIndex !== 0) {
       setStepIndex(0);
       localStorage.removeItem("tutorialStep");
     }

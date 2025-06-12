@@ -14,6 +14,263 @@ import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 import apiCallCheckAbstraction from "./AI_EqualityCheck";
 import GradientSpinner from "./BuildingBlocks/GradientSpinner";
 
+const abstractionInbetweenTutorial: Step[] = [
+  {
+    id: "step-0001",
+    code: "",
+    content: "Parent Step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "",
+      can_be_further_divided: "",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    children: [
+      {
+        id: "step-0002",
+        code: "",
+        content: "Child Step 1",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-0003",
+        code: "",
+        content: "Child Step 2",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-0004",
+        code: "",
+        content: "Child Step 3",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-0005",
+        code: "",
+        content: "Child Step 4",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    hasparent: false,
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: true,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+const abstractionInbetweenTutorial2: Step[] = [
+  {
+    id: "step-0001",
+    code: "",
+    content: "Parent Step",
+    correctStep: "a",
+    prompt: "",
+    status: {
+      correctness: "",
+      can_be_further_divided: "",
+    },
+    general_hint: "a",
+    detailed_hint: "a",
+    children: [
+      {
+        id: "step-0002",
+        code: "",
+        content: "Child Step 1",
+        correctStep: "a",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "a",
+        detailed_hint: "a",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-0003",
+        code: "",
+        content: "Child Step 2",
+        correctStep: "a",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "a",
+        detailed_hint: "a",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-0004",
+        code: "",
+        content: "Child Step 3",
+        correctStep: "a",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "a",
+        detailed_hint: "a",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-0005",
+        code: "",
+        content: "Child Step 4",
+        correctStep: "a",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "a",
+        detailed_hint: "a",
+        children: [],
+        hasparent: true,
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: true,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    hasparent: false,
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: true,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
 const BASE =
   "https://bachelor-backend.erenhomburg.workers.dev/abstractionInbetween/v1";
 
@@ -25,6 +282,7 @@ export async function saveAbstractionInbetween(
   allIsAvailable: boolean,
   allIsHinted: boolean
 ): Promise<void> {
+  if (localStorage.getItem("tutorialStep")) return;
   const token = localStorage.getItem("authToken");
   if (!token) throw new Error("Not authenticated");
 
@@ -220,6 +478,19 @@ interface AbstractionOverlayProps {
   abstractionToSteps: Record<string, string[]>;
   stepLabels: string[];
   getType: "Group" | "Recycle";
+  ref1: React.RefObject<HTMLDivElement>;
+  ref2: React.RefObject<HTMLDivElement>;
+  ref3: React.RefObject<HTMLDivElement>;
+  ref4: React.RefObject<HTMLDivElement>;
+  ref5: React.RefObject<HTMLDivElement>;
+  ref6: React.RefObject<HTMLDivElement>;
+  ref7: React.RefObject<HTMLDivElement>;
+  ref8: React.RefObject<HTMLDivElement>;
+  ref9: React.RefObject<HTMLDivElement>;
+  ref10: React.RefObject<HTMLDivElement>;
+  ref11: React.RefObject<HTMLDivElement>;
+  stepIndex: number;
+  setStepIndex: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export interface Step {
@@ -258,6 +529,14 @@ export async function loadAbstractionInbetween(
   allIsAvailable: boolean;
   allIsHinted: boolean;
 }> {
+  if (localStorage.getItem("tutorialStep")) {
+    return {
+      steps: [],
+      isAvailable: false,
+      allIsAvailable: false,
+      allIsHinted: false,
+    };
+  }
   const token = localStorage.getItem("authToken");
   if (!token) throw new Error("Not authenticated");
 
@@ -328,6 +607,19 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   abstractionToSteps,
   stepLabels,
   getType,
+  ref1,
+  ref2,
+  ref3,
+  ref4,
+  ref5,
+  ref6,
+  ref7,
+  ref8,
+  ref9,
+  ref10,
+  ref11,
+  stepIndex,
+  setStepIndex,
 }) => {
   const problemId = localStorage.getItem("selectedProblem")!;
   const abstractionId = abstraction?.id!;
@@ -415,7 +707,9 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
 
   useEffect(() => {
     if (initialCentering.current && steps.length > 0) {
-      const firstItem = document.querySelector(".map-abstract-container");
+      const firstItem = document.querySelector(
+        ".map-abstract-container-overlay"
+      );
       if (firstItem) {
         firstItem.scrollIntoView({
           behavior: "auto", // or "smooth" if you want an animation
@@ -1499,6 +1793,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                         handleGiveHint(path, getNumberForStep(node))
                       }
                       abstract={true}
+                      ref1={node.id === "step-0001" ? ref10 : undefined}
                     />
                     <Trash
                       cursor="pointer"
@@ -2041,8 +2336,29 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   Replacing / Checking Steps END
   ----------------------- */
 
+  useEffect(() => {
+    if (stepIndex === 13) {
+      setSteps([]);
+    }
+    if (stepIndex === 17) {
+      setNumberOfNeededSteps(null);
+    } else if (stepIndex === 18) {
+      setNumberOfNeededSteps(5);
+    } else if (stepIndex === 19) {
+      setNumberOfNeededSteps(5);
+      setSteps([]);
+    } else if (stepIndex === 20) {
+      setNumberOfNeededSteps(0);
+      setSteps(abstractionInbetweenTutorial);
+    } else if (stepIndex === 21) {
+      setSteps(abstractionInbetweenTutorial);
+    } else if (stepIndex === 22) {
+      setSteps(abstractionInbetweenTutorial2);
+    }
+  }, [stepIndex]);
+
   return (
-    <div className="container-abstract-hover-overlay">
+    <div className="container-abstract-hover-overlay" ref={ref1}>
       {draggingNew && ghostPos && (
         <div
           style={{
@@ -2087,11 +2403,20 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       )}
       <div
         className="building-abstraction-container"
-        ref={mainContainerRef}
+        ref={(el) => {
+          if (el) {
+            mainContainerRef.current = el;
+            ref8.current = el;
+          }
+        }}
         onClick={(e) => e.stopPropagation()}
         style={{ position: "relative" }}
       >
-        <div className="container-tutorial-problem">
+        <div
+          className="container-tutorial-problem"
+          onClick={() => setStepIndex(13)}
+          style={{ zIndex: 9999 }}
+        >
           <div className="Tutorial-Problem">?</div>
         </div>
         <div ref={zoomContentRef} className="zoom-content">
@@ -2104,9 +2429,11 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="Right-abstraction-overlay-title">
-          <div className="WhatDoing-title">{getType}</div>
+          <div className="WhatDoing-title" ref={ref2}>
+            {getType}
+          </div>
 
-          <div className="step-labels-wrapper-abstractionOverlay">
+          <div className="step-labels-wrapper-abstractionOverlay" ref={ref3}>
             {StepLabels({ stepLabels })}
           </div>
         </div>
@@ -2127,6 +2454,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               padding: "10px 10px",
               borderRadius: "10px",
             }}
+            ref={ref4}
           >
             <SquarePlus
               className={`square-plus-ab ${
@@ -2137,7 +2465,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
             />
           </div>
 
-          <div className="number-needed-steps-AbstractionOverlay">
+          <div className="number-needed-steps-AbstractionOverlay" ref={ref6}>
             {numberOfNeededSteps ?? "?"}
           </div>
         </div>
@@ -2153,9 +2481,31 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           <div className="container-twoInitial-hints">
             <div
               className={`container-plus-ab-overlay ${
-                allIsAvailable && isAvailable ? "available-ab-overlay" : ""
+                ((allIsAvailable && isAvailable) ||
+                  localStorage.getItem("tutorialStep")) &&
+                !(
+                  stepIndex === 18 ||
+                  stepIndex === 19 ||
+                  stepIndex === 20 ||
+                  stepIndex === 21 ||
+                  stepIndex === 22 ||
+                  stepIndex === 23
+                )
+                  ? "available-ab-overlay"
+                  : ""
               }
-            ${!allIsAvailable || !isAvailable ? "deactivated-ab" : ""}`}
+            ${
+              ((!allIsAvailable || !isAvailable) &&
+                !localStorage.getItem("tutorialStep")) ||
+              stepIndex === 18 ||
+              stepIndex === 19 ||
+              stepIndex === 20 ||
+              stepIndex === 21 ||
+              stepIndex === 22 ||
+              stepIndex === 23
+                ? "deactivated-ab"
+                : ""
+            }`}
               style={{
                 width: "20px",
                 height: "20px",
@@ -2177,15 +2527,32 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                   }
                 }
               }}
+              ref={ref5}
             >
               <Hash className="deactivated-ab" />
             </div>
             <div
               className={`container-plus-ab-overlay ${
-                allIsAvailable ? "available-ab-overlay" : ""
+                (allIsAvailable || localStorage.getItem("tutorialStep")) &&
+                !(
+                  stepIndex === 20 ||
+                  stepIndex === 21 ||
+                  stepIndex === 22 ||
+                  stepIndex === 23
+                )
+                  ? "available-ab-overlay"
+                  : ""
               }
             
-            ${!allIsAvailable ? "deactivated-ab" : ""}
+            ${
+              (!allIsAvailable && !localStorage.getItem("tutorialStep")) ||
+              stepIndex === 20 ||
+              stepIndex === 21 ||
+              stepIndex === 22 ||
+              stepIndex === 23
+                ? "deactivated-ab"
+                : ""
+            }
             `}
               style={{
                 width: "20px",
@@ -2204,16 +2571,26 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                   setNumberOfNeededSteps(0);
                 }
               }}
+              ref={ref7}
             >
               <LayoutTemplate className="deactivated-ab" />
             </div>
           </div>
           <div
             className={`container-plus-ab-overlay ${
-              !allIsAvailable && allIsHinted ? "available-ab-overlay" : ""
+              (!allIsAvailable && allIsHinted) ||
+              stepIndex === 20 ||
+              stepIndex === 21
+                ? "available-ab-overlay"
+                : ""
             }
             
-            ${allIsAvailable || !allIsHinted ? "deactivated-ab" : ""}
+            ${
+              (allIsAvailable || !allIsHinted) &&
+              !(stepIndex === 20 || stepIndex === 21)
+                ? "deactivated-ab"
+                : ""
+            }
             `}
             style={{
               width: "20px",
@@ -2227,6 +2604,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               applyAbstractionHints(steps, abstraction);
               setSteps((prev) => [...prev]);
             }}
+            ref={ref9}
           >
             <Lightbulb className="deactivated-ab" />
           </div>
@@ -2252,6 +2630,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               fontSize: "20px",
             }}
             onClick={() => handleReplaceSteps(steps, abstraction)}
+            ref={ref11}
           >
             {isCheckingAbstractionOverlay ? (
               <GradientSpinner size={20} strokeWidth={3} />

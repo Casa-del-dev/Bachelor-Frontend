@@ -78,7 +78,7 @@ body.dark-mode {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 /* dark blocks around the hole */
@@ -95,7 +95,8 @@ body.dark-mode {
 }
 
 .overlay-hole.hover-enabled {
-  pointer-events: none;
+  pointer-events: all;
+  /* I tried enabeling hovering but it doesn't work */
 }
 
 /* animate transitions */
@@ -115,7 +116,7 @@ body.dark-mode {
   border-radius: 6px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   padding: 16px;
-  z-index: 1001;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   pointer-events: auto;
