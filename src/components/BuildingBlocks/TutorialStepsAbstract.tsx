@@ -1,4 +1,4 @@
-export interface TutorialStepStart {
+export interface TutorialStep {
   /** key must match one of your refs below */
   targetKey:
     | "first"
@@ -6,8 +6,8 @@ export interface TutorialStepStart {
     | "third"
     | "fourth"
     | "fifth"
-    | "sixth"
-    | "seventh"
+    | "six"
+    | "seven"
     | "eigth"
     | "nine"
     | "ten"
@@ -54,7 +54,7 @@ export interface TutorialStepStart {
   content: string;
 }
 
-const tutorialSteps: TutorialStepStart[] = [
+const tutorialStepsAbstract: TutorialStep[] = [
   {
     targetKey: "first",
     title: "Tutorial Step",
@@ -81,12 +81,12 @@ const tutorialSteps: TutorialStepStart[] = [
     content: "Here you see the details of your selection.",
   },
   {
-    targetKey: "sixth",
+    targetKey: "six",
     title: "Tutorial Step",
     content: "Here you see the details of your selection.",
   },
   {
-    targetKey: "seventh",
+    targetKey: "seven",
     title: "Tutorial Step",
     content: "Here you see the details of your selection.",
   },
@@ -303,4 +303,4 @@ const tutorialSteps: TutorialStepStart[] = [
   // … add as many steps as you like here
 ];
 
-export default tutorialSteps;
+export default tutorialStepsAbstract;

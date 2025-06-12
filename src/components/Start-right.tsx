@@ -207,6 +207,424 @@ const tutorialStepTree1: Step[] = [
   },
 ];
 
+const tutorialStepTree2: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: ``,
+    content: "Test with children",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "",
+      can_be_further_divided: "",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1749592767704-9237",
+        code: ``,
+        content: "Child",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: false,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const tutorialStepTree3: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: ``,
+    content: "Test with children",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "",
+      can_be_further_divided: "",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1749592767704-9237",
+        code: ``,
+        content: "Child",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "",
+          can_be_further_divided: "",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: false,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: true,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const tutorialStepTree4: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: ``,
+    content: "Missing step",
+    correctStep: "Correct Step",
+    prompt: "",
+    status: {
+      correctness: "missing",
+      can_be_further_divided: "",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-5928",
+    code: ``,
+    content: "Incorrect step",
+    correctStep: "Correct Step",
+    prompt: "",
+    status: {
+      correctness: "incorrect",
+      can_be_further_divided: "",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-5783",
+    code: ``,
+    content: "Correct but further dividable step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-9126",
+    code: ``,
+    content: "Correct step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const tutorialStepTree5: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: ``,
+    content: "Missing step",
+    correctStep: "Correct Step",
+    prompt: "",
+    status: {
+      correctness: "missing",
+      can_be_further_divided: "",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: true,
+    showDetailedHint1: true,
+    showCorrectStep1: false,
+    showGeneralHint2: true,
+    showDetailedHint2: true,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-5928",
+    code: ``,
+    content: "Incorrect step",
+    correctStep: "Correct Step",
+    prompt: "",
+    status: {
+      correctness: "incorrect",
+      can_be_further_divided: "",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-5783",
+    code: ``,
+    content: "Correct but further dividable step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-9126",
+    code: ``,
+    content: "Correct step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const tutorialStepTree6: Step[] = [
+  {
+    id: "step-1749592767704-5318",
+    code: `aa`,
+    content: "Missing step",
+    correctStep: "Correct Step",
+    prompt: "",
+    status: {
+      correctness: "missing",
+      can_be_further_divided: "",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: true,
+    showDetailedHint1: true,
+    showCorrectStep1: false,
+    showGeneralHint2: true,
+    showDetailedHint2: true,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-5928",
+    code: `aa`,
+    content: "Incorrect step",
+    correctStep: "Correct Step",
+    prompt: "",
+    status: {
+      correctness: "incorrect",
+      can_be_further_divided: "",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-5783",
+    code: `aa`,
+    content: "Correct but further dividable step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint: "General Hint",
+    detailed_hint: "Detailed Hint",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1749592767704-9126",
+    code: `# Step 4
+    return total`,
+    content: "Correct step",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "cannot",
+    },
+    general_hint: "",
+    detailed_hint: "",
+    hasparent: false,
+    children: [],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
 function Collapsible({
   isOpen,
   children,
@@ -400,10 +818,33 @@ interface StartRightProps {
   stepTree: Step[];
   setStepTree: React.Dispatch<React.SetStateAction<Step[]>>;
 
-  ref1: any;
-  ref2: React.RefObject<HTMLDivElement>;
-  ref3: React.RefObject<HTMLDivElement>;
-  ref4: React.RefObject<HTMLDivElement>;
+  ref1?: any;
+  ref2?: React.RefObject<HTMLDivElement>;
+  ref3?: React.RefObject<HTMLDivElement>;
+  ref4?: React.RefObject<HTMLDivElement>;
+  ref5?: React.RefObject<HTMLDivElement>;
+  ref6?: any;
+  ref7?: any;
+  ref8?: React.RefObject<HTMLDivElement>;
+  ref9?: React.RefObject<HTMLDivElement>;
+  ref10?: React.RefObject<HTMLDivElement>;
+  ref11?: React.RefObject<HTMLDivElement>;
+  ref12?: React.RefObject<HTMLDivElement>;
+  ref13?: React.RefObject<HTMLDivElement>;
+  ref14?: React.RefObject<HTMLDivElement>;
+  ref15?: React.RefObject<HTMLDivElement>;
+  ref16?: any;
+  ref17?: any;
+  ref18?: React.RefObject<HTMLDivElement>;
+  ref19?: React.RefObject<HTMLDivElement>;
+  ref20?: React.RefObject<HTMLDivElement>;
+  ref21?: React.RefObject<HTMLDivElement>;
+  ref22?: React.RefObject<HTMLDivElement>;
+  ref23?: React.RefObject<HTMLDivElement>;
+  ref24?: React.RefObject<HTMLDivElement>;
+  ref25?: React.RefObject<HTMLDivElement>;
+  ref26?: any;
+  ref27?: React.RefObject<HTMLDivElement>;
   stepIndexTutorial: number;
 }
 
@@ -425,6 +866,29 @@ const StartRight: React.FC<StartRightProps> = ({
   ref2,
   ref3,
   ref4,
+  ref5,
+  ref6,
+  ref7,
+  ref8,
+  ref9,
+  ref10,
+  ref11,
+  ref12,
+  ref13,
+  ref14,
+  ref15,
+  ref16,
+  ref17,
+  ref18,
+  ref19,
+  ref20,
+  ref21,
+  ref22,
+  ref23,
+  ref24,
+  ref25,
+  ref26,
+  ref27,
   stepIndexTutorial,
 }) => {
   const [text, setText] = useState("");
@@ -459,7 +923,7 @@ const StartRight: React.FC<StartRightProps> = ({
   useEffect(() => {
     if (skipHydration.current) {
       skipHydration.current = false;
-    } else if (stepTree.length >= 0) {
+    } else if (stepTree.length >= 0 && !localStorage.getItem("tutorialStep")) {
       setSteps(stepTree);
     }
   }, [stepTree]);
@@ -3074,6 +3538,7 @@ Editing logic START
           onClick={() =>
             i === currentIndex ? handleTitleClick(substep, currentPath) : ""
           }
+          ref={ref14}
         >
           <div style={innerStyle}>
             {i === currentIndex && (
@@ -3309,6 +3774,31 @@ Biggest render Tree ever recored START
               border: "1px " + getBorder(step) + " black",
               color: getStepBoxTextColor(step),
             }}
+            ref={(el) => {
+              if (el) {
+                if (
+                  stepIndexTutorial === 40 &&
+                  step.id === "step-1749592767704-5318"
+                )
+                  ref19!.current = el;
+                if (
+                  stepIndexTutorial === 43 &&
+                  step.id === "step-1749592767704-5928"
+                )
+                  ref22!.current = el;
+                if (
+                  stepIndexTutorial === 44 &&
+                  step.id === "step-1749592767704-5783"
+                )
+                  ref23!.current = el;
+                if (
+                  stepIndexTutorial === 45 &&
+                  step.id === "step-1749592767704-9126"
+                )
+                  ref24!.current = el;
+                ref27!.current = el;
+              }
+            }}
           >
             <div className="step-title">
               <div className="step-title-inner">{titleLabel}</div>
@@ -3391,6 +3881,8 @@ Biggest render Tree ever recored START
                         }
                         onSplitStep={HandleOnSplitStep(currentPath)}
                         selected={editingPath}
+                        ref1={ref9}
+                        ref2={ref10}
                       />
                     </div>
                     <div className="trash">
@@ -3401,24 +3893,39 @@ Biggest render Tree ever recored START
                         onGiveHint={() =>
                           handleGiveHint(currentPath, hintNumber)
                         }
+                        ref1={ref11}
+                        ref2={
+                          step.id === "step-1749592767704-5318"
+                            ? ref20
+                            : undefined
+                        }
                       />
-                      <Trash
-                        onClick={() => {
-                          const key = `animatedSubsteps-${parentPath.join(
-                            "-"
-                          )}`;
-                          const currentIndex = getInitialIndex(key);
-                          const lastLabel = getLastLabelNumber(titleLabel);
-
-                          if (currentIndex >= lastLabel)
-                            setInitialIndex(key, currentIndex - 1);
-                          handleRemoveStep(step.id);
+                      <div
+                        ref={ref12}
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
                         }}
-                        cursor="pointer"
-                        strokeWidth={"1.2"}
-                        color={getStepBoxTextColor(step)}
-                        className="trash-icon"
-                      />
+                      >
+                        <Trash
+                          onClick={() => {
+                            const key = `animatedSubsteps-${parentPath.join(
+                              "-"
+                            )}`;
+                            const currentIndex = getInitialIndex(key);
+                            const lastLabel = getLastLabelNumber(titleLabel);
+
+                            if (currentIndex >= lastLabel)
+                              setInitialIndex(key, currentIndex - 1);
+                            handleRemoveStep(step.id);
+                          }}
+                          cursor="pointer"
+                          strokeWidth={"1.2"}
+                          color={getStepBoxTextColor(step)}
+                          className="trash-icon"
+                        />
+                      </div>
                     </div>
                   </>
                 )}
@@ -3450,7 +3957,7 @@ Biggest render Tree ever recored START
 
             {step.children && step.children.length > 0 && step.isexpanded ? (
               <div className="orientation-substeps">
-                <div className="orientation">
+                <div className="orientation" ref={ref13}>
                   <div className="orientation-parent">
                     <button className="orientation-buttons middle isEdgeSibling">
                       Parent
@@ -3876,7 +4383,10 @@ Biggest render Tree ever recored START
               </div>
             )}
           </div>
-          <div className="hint-container">
+          <div
+            className="hint-container"
+            ref={step.id === "step-1749592767704-5318" ? ref21 : undefined}
+          >
             {step.detailed_hint && step.showDetailedHint1 && (
               <Collapsible
                 isOpen={step.showDetailedHint2}
@@ -4025,14 +4535,87 @@ TUTORIAL START
     if (stepIndexTutorial === 1) {
       setSteps([]);
     }
+    if (stepIndexTutorial === 18) {
+      setLoading(false);
+    }
     if (stepIndexTutorial === 19) {
       setLoading(true);
+      setSteps([]);
     } else if (stepIndexTutorial === 20) {
       setLoading(false);
       setSteps(tutorialStepTree1);
+    } else if (stepIndexTutorial === 24) {
+      setSteps(tutorialStepTree1);
     } else if (stepIndexTutorial === 25) {
       setSteps([]);
+    } else if (stepIndexTutorial === 27) {
+      setLoading(false);
+    } else if (stepIndexTutorial === 28) {
+      setLoading(true);
+      setSteps([]);
+    } else if (stepIndexTutorial === 29) {
+      setLoading(false);
+      setSteps(tutorialStepTree2);
+    } else if (stepIndexTutorial === 35) {
+      setSteps(tutorialStepTree2);
+    } else if (stepIndexTutorial === 36) {
+      setSteps(tutorialStepTree3);
+    } else if (stepIndexTutorial === 36) {
+      setSteps(tutorialStepTree3);
+    } else if (stepIndexTutorial === 37) {
+      setLoadingCheck(false);
+    } else if (stepIndexTutorial === 38) {
+      setSteps(tutorialStepTree3);
+      setLoadingCheck(true);
+    } else if (stepIndexTutorial === 39) {
+      setSteps(tutorialStepTree4);
+      setLoadingCheck(false);
+    } else if (stepIndexTutorial === 41) {
+      setSteps(tutorialStepTree4);
+    } else if (stepIndexTutorial === 42) {
+      setSteps(tutorialStepTree5);
+    } else if (stepIndexTutorial === 46) {
+      setLoadingCheck(false);
+    } else if (stepIndexTutorial === 47) {
+      setSteps(tutorialStepTree5);
+      setLoadingCheck(true);
+    } else if (stepIndexTutorial === 48) {
+      setSteps(tutorialStepTree6);
+      setLoadingCheck(false);
+    } else if (stepIndexTutorial === 49) {
+      setSteps(tutorialStepTree6);
     }
+  }, [stepIndexTutorial]);
+
+  const tutorialScrollRefs: Record<number, React.RefObject<HTMLDivElement>> = {
+    30: ref9!,
+    31: ref10!,
+    32: ref11!,
+    33: ref12!,
+    34: ref13!,
+    35: ref14!,
+    37: ref16!,
+    40: ref19!,
+    41: ref20!,
+    42: ref21!,
+    43: ref22!,
+    44: ref23!,
+    45: ref24!,
+    47: ref26!,
+    49: ref27!,
+  };
+  useEffect(() => {
+    const scrollRef = tutorialScrollRefs[stepIndexTutorial];
+    if (!scrollRef) return;
+
+    const id = window.setTimeout(() => {
+      scrollRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 0);
+
+    return () => window.clearTimeout(id);
   }, [stepIndexTutorial]);
 
   /* ------------------------------------
@@ -4045,27 +4628,45 @@ TUTORIAL END
       ref={(el: HTMLDivElement | null) => {
         stepBoxRef.current = el;
         if (el) {
-          ref2.current = el;
+          ref2!.current = el;
         }
       }}
     >
       {hoveredStepId && <div className="hovered-step-indicator"></div>}
-      <div className="right-sidecontent-main">
+      <div
+        className="right-sidecontent-main"
+        ref={(el) => {
+          if (el) {
+            ref8!.current = el;
+            ref15!.current = el;
+            ref18!.current = el;
+          }
+        }}
+      >
         <div className="right-header-main">
           Step Tree
           {steps.length > 0 && (
             <div className="trash">
-              <ShieldCheck
-                size={"1vw"}
-                strokeWidth={1}
-                cursor="pointer"
-                className="trash-icon header-shield"
-                onClick={
-                  loading
-                    ? () => console.log("undefined")
-                    : async () => HandleImplemented()
-                }
-              />
+              <div
+                ref={ref25}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyItems: "center",
+                }}
+              >
+                <ShieldCheck
+                  size={"1vw"}
+                  strokeWidth={1}
+                  cursor="pointer"
+                  className="trash-icon header-shield"
+                  onClick={
+                    loading
+                      ? () => console.log("undefined")
+                      : async () => HandleImplemented()
+                  }
+                />
+              </div>
               <div
                 ref={ref3}
                 style={{
@@ -4101,6 +4702,13 @@ TUTORIAL END
                     style={{
                       cursor: loadingCheck ? "not-allowed" : "pointer",
                     }}
+                    ref={(el) => {
+                      if (el) {
+                        ref16!.current = el;
+                        ref17!.current = el;
+                        ref26!.current = el;
+                      }
+                    }}
                   >
                     <div
                       className="Check"
@@ -4120,13 +4728,23 @@ TUTORIAL END
             ) : (
               <div
                 className={`input-container ${loading ? "loading" : ""}`}
-                ref={ref4}
+                ref={(el) => {
+                  if (el) {
+                    ref4!.current = el;
+                    ref5!.current = el;
+                  }
+                }}
               >
                 <div className="textarea-wrapper">
                   {!loading && (
                     <textarea
                       ref={textareaRef}
-                      value={text}
+                      value={
+                        localStorage.getItem("tutorialStep") &&
+                        (stepIndexTutorial === 26 || stepIndexTutorial === 27)
+                          ? "Test input with children"
+                          : text
+                      }
                       onChange={handleInput}
                       className="text-input"
                       placeholder="Enter Your Thoughts"
@@ -4138,7 +4756,13 @@ TUTORIAL END
                     style={{ cursor: loading ? "default" : "pointer" }}
                     onClick={() => handleGenerateWithChatGPT("From Prompt")}
                     disabled={loading}
-                    ref={ref1}
+                    ref={(el) => {
+                      if (el) {
+                        ref1!.current = el;
+                        ref6!.current = el;
+                        ref7!.current = el;
+                      }
+                    }}
                   >
                     {loading ? (
                       <span className="spinner" style={{ cursor: "default" }}>

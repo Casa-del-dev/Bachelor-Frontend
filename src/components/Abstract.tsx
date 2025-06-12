@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import "./Abstract.css";
 import {
   X,
@@ -18,6 +24,14 @@ import CustomLightbulb from "./BuildingBlocks/Custom-Lightbulb";
 import apiCallAbstract from "./AI_Abstract";
 import AbstractionOverlay from "./AbstractionOverlay";
 import GradientSpinner from "./BuildingBlocks/GradientSpinner";
+
+import tutorialStepsAbstract, {
+  TutorialStep,
+} from "./BuildingBlocks/TutorialStepsAbstract";
+import tutorialStepsStart from "./BuildingBlocks/TutorialStepsStart";
+import tutorialSteps from "./BuildingBlocks/TutorialStepsProblem";
+import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // ======================
 // CORRECT STEP OVERLAY
@@ -43,6 +57,1785 @@ interface AbstractionItem {
     stepsTree: Record<string, StepNode>;
   };
 }
+
+const tutorialStepJSON1: Step[] = [
+  {
+    id: "step-1748855935470-1128",
+    code: "",
+    content: "Sort the input array (Incorrect)",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "incorrect",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into receiving the input and sorting it.",
+    detailed_hint:
+      "Divide this step into receiving the input array and sorting it in ascending order.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-3631",
+        code: "",
+        content: "Receive nums, an array of distinct positive integers.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-7564",
+        code: "",
+        content: "Sort nums in ascending order.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-4497",
+        code: "",
+        content: "After sorting, let’s call the resulting array A.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: true,
+    showDetailedHint1: true,
+    showCorrectStep1: false,
+    showGeneralHint2: true,
+    showDetailedHint2: true,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-8536",
+    code: "",
+    content: "Prepare DP and traceback arrays",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into initializing the arrays and setting initial values.",
+    detailed_hint:
+      "Divide this step into initializing the dp and prev arrays and setting their initial values.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-5410",
+        code: "",
+        content: "Let n = A.length.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-7961",
+        code: "",
+        content:
+          "Create an integer array dp[0…n–1], where dp[i] will store the size of the largest divisible subset ending exactly at index i.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-1670",
+        code: "",
+        content:
+          "Create an integer array prev[0…n–1], where prev[i] will store the index of the previous element in the chain that leads to A[i]. If there is no previous element, store –1.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-135",
+        code: "",
+        content:
+          "Initialize each dp[i] = 1 (each element by itself is a subset of size 1).",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-9712",
+        code: "",
+        content: "Initialize each prev[i] = –1 (no predecessor yet).",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-5851",
+    code: "",
+    content: "Iterate through all pairs to fill DP table",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into iterating through pairs and updating dp and prev arrays.",
+    detailed_hint:
+      "Divide this step into iterating through pairs and checking divisibility, then updating dp and prev arrays accordingly.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-1941",
+        code: "",
+        content: "For each i from 0 to n–1:",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "can",
+        },
+        general_hint:
+          "This step can be further divided into iterating through j and checking divisibility.",
+        detailed_hint:
+          "Divide this step into iterating through j and checking if A[i] is divisible by A[j].",
+        hasparent: true,
+        children: [
+          {
+            id: "step-1748855935470-4885",
+            code: "",
+            content: "For each j from 0 to i–1:",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "can",
+            },
+            general_hint:
+              "This step can be further divided into checking divisibility and updating dp and prev arrays.",
+            detailed_hint:
+              "Divide this step into checking if A[i] % A[j] == 0 and updating dp and prev arrays if true.",
+            hasparent: true,
+            children: [
+              {
+                id: "step-1748855935470-4786",
+                code: "",
+                content: "Check if A[i] % A[j] == 0.",
+                correctStep: "",
+                prompt: "",
+                status: {
+                  correctness: "correct",
+                  can_be_further_divided: "can",
+                },
+                general_hint:
+                  "This step can be further divided into computing candidate size and updating dp and prev arrays.",
+                detailed_hint:
+                  "Divide this step into computing candidate size and updating dp and prev arrays if candidate size is greater.",
+                hasparent: true,
+                children: [
+                  {
+                    id: "step-1748855935470-3278",
+                    code: "",
+                    content:
+                      "If yes, then element A[i] can be appended to the best subset ending at j.",
+                    correctStep: "",
+                    prompt: "",
+                    status: {
+                      correctness: "correct",
+                      can_be_further_divided: "can",
+                    },
+                    general_hint:
+                      "This step can be further divided into computing candidate size and updating dp and prev arrays.",
+                    detailed_hint:
+                      "Divide this step into computing candidate size and updating dp and prev arrays if candidate size is greater.",
+                    hasparent: true,
+                    children: [
+                      {
+                        id: "step-1748855935470-7628",
+                        code: "",
+                        content:
+                          "Compute a candidate subset size: candidateSize = dp[j] + 1.",
+                        correctStep: "",
+                        prompt: "",
+                        status: {
+                          correctness: "correct",
+                          can_be_further_divided: "cannot",
+                        },
+                        general_hint: "",
+                        detailed_hint: "",
+                        hasparent: true,
+                        children: [],
+                        isDeleting: false,
+                        showGeneralHint1: false,
+                        showDetailedHint1: false,
+                        showCorrectStep1: false,
+                        showGeneralHint2: false,
+                        showDetailedHint2: false,
+                        isNewlyInserted: false,
+                        isexpanded: true,
+                        isHyperExpanded: false,
+                        selected: false,
+                      },
+                      {
+                        id: "step-1748855935470-5922",
+                        code: "",
+                        content: "If candidateSize > dp[i], then:",
+                        correctStep: "",
+                        prompt: "",
+                        status: {
+                          correctness: "correct",
+                          can_be_further_divided: "can",
+                        },
+                        general_hint:
+                          "This step can be further divided into updating dp and prev arrays.",
+                        detailed_hint:
+                          "Divide this step into updating dp[i] and prev[i] if candidate size is greater.",
+                        hasparent: true,
+                        children: [
+                          {
+                            id: "step-1748855935470-1610",
+                            code: "",
+                            content: "Update dp[i] = candidateSize.",
+                            correctStep: "",
+                            prompt: "",
+                            status: {
+                              correctness: "correct",
+                              can_be_further_divided: "cannot",
+                            },
+                            general_hint: "",
+                            detailed_hint: "",
+                            hasparent: true,
+                            children: [],
+                            isDeleting: false,
+                            showGeneralHint1: false,
+                            showDetailedHint1: false,
+                            showCorrectStep1: false,
+                            showGeneralHint2: false,
+                            showDetailedHint2: false,
+                            isNewlyInserted: false,
+                            isexpanded: true,
+                            isHyperExpanded: false,
+                            selected: false,
+                          },
+                          {
+                            id: "step-1748855935470-7556",
+                            code: "",
+                            content: "Update prev[i] = j.",
+                            correctStep: "",
+                            prompt: "",
+                            status: {
+                              correctness: "correct",
+                              can_be_further_divided: "cannot",
+                            },
+                            general_hint: "",
+                            detailed_hint: "",
+                            hasparent: true,
+                            children: [],
+                            isDeleting: false,
+                            showGeneralHint1: false,
+                            showDetailedHint1: false,
+                            showCorrectStep1: false,
+                            showGeneralHint2: false,
+                            showDetailedHint2: false,
+                            isNewlyInserted: false,
+                            isexpanded: true,
+                            isHyperExpanded: false,
+                            selected: false,
+                          },
+                        ],
+                        isDeleting: false,
+                        showGeneralHint1: false,
+                        showDetailedHint1: false,
+                        showCorrectStep1: false,
+                        showGeneralHint2: false,
+                        showDetailedHint2: false,
+                        isNewlyInserted: false,
+                        isexpanded: true,
+                        isHyperExpanded: false,
+                        selected: false,
+                      },
+                    ],
+                    isDeleting: false,
+                    showGeneralHint1: false,
+                    showDetailedHint1: false,
+                    showCorrectStep1: false,
+                    showGeneralHint2: false,
+                    showDetailedHint2: false,
+                    isNewlyInserted: false,
+                    isexpanded: true,
+                    isHyperExpanded: false,
+                    selected: false,
+                  },
+                ],
+                isDeleting: false,
+                showGeneralHint1: false,
+                showDetailedHint1: false,
+                showCorrectStep1: false,
+                showGeneralHint2: false,
+                showDetailedHint2: false,
+                isNewlyInserted: false,
+                isexpanded: true,
+                isHyperExpanded: false,
+                selected: false,
+              },
+            ],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+        ],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-8112",
+    code: "",
+    content: "Find the maximum‐length ending index",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into initializing variables and iterating to find the maximum.",
+    detailed_hint:
+      "Divide this step into initializing maxSize and maxIndex, then iterating through dp array to find the maximum.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-1795",
+        code: "",
+        content: "Let maxSize = 0 and maxIndex = 0.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-2497",
+        code: "",
+        content: "For each i from 0 to n–1:",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "can",
+        },
+        general_hint:
+          "This step can be further divided into checking and updating maxSize and maxIndex.",
+        detailed_hint:
+          "Divide this step into checking if dp[i] is greater than maxSize and updating maxSize and maxIndex if true.",
+        hasparent: true,
+        children: [
+          {
+            id: "step-1748855935470-599",
+            code: "",
+            content:
+              "If dp[i] > maxSize, then set maxSize = dp[i] and maxIndex = i.",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "cannot",
+            },
+            general_hint: "",
+            detailed_hint: "",
+            hasparent: true,
+            children: [],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+        ],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-1916",
+    code: "",
+    content: "Reconstruct the largest divisible subset via backtracking",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into initializing the answer list and backtracking to reconstruct the subset.",
+    detailed_hint:
+      "Divide this step into creating the answer list, setting cur to maxIndex, and backtracking through prev array to reconstruct the subset.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-8452",
+        code: "",
+        content: "Create an empty list answer = [].",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-6931",
+        code: "",
+        content: "Let cur = maxIndex.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-6703",
+        code: "",
+        content: "While cur != -1:",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "can",
+        },
+        general_hint:
+          "This step can be further divided into appending elements to the answer list and updating cur.",
+        detailed_hint:
+          "Divide this step into appending A[cur] to the answer list and updating cur to prev[cur].",
+        hasparent: true,
+        children: [
+          {
+            id: "step-1748855935470-681",
+            code: "",
+            content: "Prepend A[cur] to the front of answer.",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "cannot",
+            },
+            general_hint: "",
+            detailed_hint: "",
+            hasparent: true,
+            children: [],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+          {
+            id: "step-1748855935470-8861",
+            code: "",
+            content: "Update cur = prev[cur].",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "cannot",
+            },
+            general_hint: "",
+            detailed_hint: "",
+            hasparent: true,
+            children: [],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+        ],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-7413",
+    code: "",
+    content: "Return the result",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into confirming the answer and returning it.",
+    detailed_hint:
+      "Divide this step into confirming that the answer list holds a valid subset and returning it.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-5042",
+        code: "",
+        content: "answer now holds one valid largest divisible subset.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-7772",
+        code: "",
+        content: "Return answer.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const tutorialStepJSON2: Step[] = [
+  {
+    id: "step-1748855935470-1128",
+    code: "",
+    content: "Sort the input array (Correct)",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into receiving the input and sorting it.",
+    detailed_hint:
+      "Divide this step into receiving the input array and sorting it in ascending order.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-3631",
+        code: "",
+        content: "Receive nums, an array of distinct positive integers.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-7564",
+        code: "",
+        content: "Sort nums in ascending order.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-4497",
+        code: "",
+        content: "After sorting, let’s call the resulting array A.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: true,
+    showDetailedHint1: true,
+    showCorrectStep1: false,
+    showGeneralHint2: true,
+    showDetailedHint2: true,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-8536",
+    code: "",
+    content: "Prepare DP and traceback arrays",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into initializing the arrays and setting initial values.",
+    detailed_hint:
+      "Divide this step into initializing the dp and prev arrays and setting their initial values.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-5410",
+        code: "",
+        content: "Let n = A.length.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-7961",
+        code: "",
+        content:
+          "Create an integer array dp[0…n–1], where dp[i] will store the size of the largest divisible subset ending exactly at index i.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-1670",
+        code: "",
+        content:
+          "Create an integer array prev[0…n–1], where prev[i] will store the index of the previous element in the chain that leads to A[i]. If there is no previous element, store –1.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-135",
+        code: "",
+        content:
+          "Initialize each dp[i] = 1 (each element by itself is a subset of size 1).",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-9712",
+        code: "",
+        content: "Initialize each prev[i] = –1 (no predecessor yet).",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-5851",
+    code: "",
+    content: "Iterate through all pairs to fill DP table",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into iterating through pairs and updating dp and prev arrays.",
+    detailed_hint:
+      "Divide this step into iterating through pairs and checking divisibility, then updating dp and prev arrays accordingly.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-1941",
+        code: "",
+        content: "For each i from 0 to n–1:",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "can",
+        },
+        general_hint:
+          "This step can be further divided into iterating through j and checking divisibility.",
+        detailed_hint:
+          "Divide this step into iterating through j and checking if A[i] is divisible by A[j].",
+        hasparent: true,
+        children: [
+          {
+            id: "step-1748855935470-4885",
+            code: "",
+            content: "For each j from 0 to i–1:",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "can",
+            },
+            general_hint:
+              "This step can be further divided into checking divisibility and updating dp and prev arrays.",
+            detailed_hint:
+              "Divide this step into checking if A[i] % A[j] == 0 and updating dp and prev arrays if true.",
+            hasparent: true,
+            children: [
+              {
+                id: "step-1748855935470-4786",
+                code: "",
+                content: "Check if A[i] % A[j] == 0.",
+                correctStep: "",
+                prompt: "",
+                status: {
+                  correctness: "correct",
+                  can_be_further_divided: "can",
+                },
+                general_hint:
+                  "This step can be further divided into computing candidate size and updating dp and prev arrays.",
+                detailed_hint:
+                  "Divide this step into computing candidate size and updating dp and prev arrays if candidate size is greater.",
+                hasparent: true,
+                children: [
+                  {
+                    id: "step-1748855935470-3278",
+                    code: "",
+                    content:
+                      "If yes, then element A[i] can be appended to the best subset ending at j.",
+                    correctStep: "",
+                    prompt: "",
+                    status: {
+                      correctness: "correct",
+                      can_be_further_divided: "can",
+                    },
+                    general_hint:
+                      "This step can be further divided into computing candidate size and updating dp and prev arrays.",
+                    detailed_hint:
+                      "Divide this step into computing candidate size and updating dp and prev arrays if candidate size is greater.",
+                    hasparent: true,
+                    children: [
+                      {
+                        id: "step-1748855935470-7628",
+                        code: "",
+                        content:
+                          "Compute a candidate subset size: candidateSize = dp[j] + 1.",
+                        correctStep: "",
+                        prompt: "",
+                        status: {
+                          correctness: "correct",
+                          can_be_further_divided: "cannot",
+                        },
+                        general_hint: "",
+                        detailed_hint: "",
+                        hasparent: true,
+                        children: [],
+                        isDeleting: false,
+                        showGeneralHint1: false,
+                        showDetailedHint1: false,
+                        showCorrectStep1: false,
+                        showGeneralHint2: false,
+                        showDetailedHint2: false,
+                        isNewlyInserted: false,
+                        isexpanded: true,
+                        isHyperExpanded: false,
+                        selected: false,
+                      },
+                      {
+                        id: "step-1748855935470-5922",
+                        code: "",
+                        content: "If candidateSize > dp[i], then:",
+                        correctStep: "",
+                        prompt: "",
+                        status: {
+                          correctness: "correct",
+                          can_be_further_divided: "can",
+                        },
+                        general_hint:
+                          "This step can be further divided into updating dp and prev arrays.",
+                        detailed_hint:
+                          "Divide this step into updating dp[i] and prev[i] if candidate size is greater.",
+                        hasparent: true,
+                        children: [
+                          {
+                            id: "step-1748855935470-1610",
+                            code: "",
+                            content: "Update dp[i] = candidateSize.",
+                            correctStep: "",
+                            prompt: "",
+                            status: {
+                              correctness: "correct",
+                              can_be_further_divided: "cannot",
+                            },
+                            general_hint: "",
+                            detailed_hint: "",
+                            hasparent: true,
+                            children: [],
+                            isDeleting: false,
+                            showGeneralHint1: false,
+                            showDetailedHint1: false,
+                            showCorrectStep1: false,
+                            showGeneralHint2: false,
+                            showDetailedHint2: false,
+                            isNewlyInserted: false,
+                            isexpanded: true,
+                            isHyperExpanded: false,
+                            selected: false,
+                          },
+                          {
+                            id: "step-1748855935470-7556",
+                            code: "",
+                            content: "Update prev[i] = j.",
+                            correctStep: "",
+                            prompt: "",
+                            status: {
+                              correctness: "correct",
+                              can_be_further_divided: "cannot",
+                            },
+                            general_hint: "",
+                            detailed_hint: "",
+                            hasparent: true,
+                            children: [],
+                            isDeleting: false,
+                            showGeneralHint1: false,
+                            showDetailedHint1: false,
+                            showCorrectStep1: false,
+                            showGeneralHint2: false,
+                            showDetailedHint2: false,
+                            isNewlyInserted: false,
+                            isexpanded: true,
+                            isHyperExpanded: false,
+                            selected: false,
+                          },
+                        ],
+                        isDeleting: false,
+                        showGeneralHint1: false,
+                        showDetailedHint1: false,
+                        showCorrectStep1: false,
+                        showGeneralHint2: false,
+                        showDetailedHint2: false,
+                        isNewlyInserted: false,
+                        isexpanded: true,
+                        isHyperExpanded: false,
+                        selected: false,
+                      },
+                    ],
+                    isDeleting: false,
+                    showGeneralHint1: false,
+                    showDetailedHint1: false,
+                    showCorrectStep1: false,
+                    showGeneralHint2: false,
+                    showDetailedHint2: false,
+                    isNewlyInserted: false,
+                    isexpanded: true,
+                    isHyperExpanded: false,
+                    selected: false,
+                  },
+                ],
+                isDeleting: false,
+                showGeneralHint1: false,
+                showDetailedHint1: false,
+                showCorrectStep1: false,
+                showGeneralHint2: false,
+                showDetailedHint2: false,
+                isNewlyInserted: false,
+                isexpanded: true,
+                isHyperExpanded: false,
+                selected: false,
+              },
+            ],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+        ],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-8112",
+    code: "",
+    content: "Find the maximum‐length ending index",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into initializing variables and iterating to find the maximum.",
+    detailed_hint:
+      "Divide this step into initializing maxSize and maxIndex, then iterating through dp array to find the maximum.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-1795",
+        code: "",
+        content: "Let maxSize = 0 and maxIndex = 0.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-2497",
+        code: "",
+        content: "For each i from 0 to n–1:",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "can",
+        },
+        general_hint:
+          "This step can be further divided into checking and updating maxSize and maxIndex.",
+        detailed_hint:
+          "Divide this step into checking if dp[i] is greater than maxSize and updating maxSize and maxIndex if true.",
+        hasparent: true,
+        children: [
+          {
+            id: "step-1748855935470-599",
+            code: "",
+            content:
+              "If dp[i] > maxSize, then set maxSize = dp[i] and maxIndex = i.",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "cannot",
+            },
+            general_hint: "",
+            detailed_hint: "",
+            hasparent: true,
+            children: [],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+        ],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-1916",
+    code: "",
+    content: "Reconstruct the largest divisible subset via backtracking",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into initializing the answer list and backtracking to reconstruct the subset.",
+    detailed_hint:
+      "Divide this step into creating the answer list, setting cur to maxIndex, and backtracking through prev array to reconstruct the subset.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-8452",
+        code: "",
+        content: "Create an empty list answer = [].",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-6931",
+        code: "",
+        content: "Let cur = maxIndex.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-6703",
+        code: "",
+        content: "While cur != -1:",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "can",
+        },
+        general_hint:
+          "This step can be further divided into appending elements to the answer list and updating cur.",
+        detailed_hint:
+          "Divide this step into appending A[cur] to the answer list and updating cur to prev[cur].",
+        hasparent: true,
+        children: [
+          {
+            id: "step-1748855935470-681",
+            code: "",
+            content: "Prepend A[cur] to the front of answer.",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "cannot",
+            },
+            general_hint: "",
+            detailed_hint: "",
+            hasparent: true,
+            children: [],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+          {
+            id: "step-1748855935470-8861",
+            code: "",
+            content: "Update cur = prev[cur].",
+            correctStep: "",
+            prompt: "",
+            status: {
+              correctness: "correct",
+              can_be_further_divided: "cannot",
+            },
+            general_hint: "",
+            detailed_hint: "",
+            hasparent: true,
+            children: [],
+            isDeleting: false,
+            showGeneralHint1: false,
+            showDetailedHint1: false,
+            showCorrectStep1: false,
+            showGeneralHint2: false,
+            showDetailedHint2: false,
+            isNewlyInserted: false,
+            isexpanded: true,
+            isHyperExpanded: false,
+            selected: false,
+          },
+        ],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+  {
+    id: "step-1748855935470-7413",
+    code: "",
+    content: "Return the result",
+    correctStep: "",
+    prompt: "",
+    status: {
+      correctness: "correct",
+      can_be_further_divided: "can",
+    },
+    general_hint:
+      "The step is correct but can be further divided into confirming the answer and returning it.",
+    detailed_hint:
+      "Divide this step into confirming that the answer list holds a valid subset and returning it.",
+    hasparent: false,
+    children: [
+      {
+        id: "step-1748855935470-5042",
+        code: "",
+        content: "answer now holds one valid largest divisible subset.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+      {
+        id: "step-1748855935470-7772",
+        code: "",
+        content: "Return answer.",
+        correctStep: "",
+        prompt: "",
+        status: {
+          correctness: "correct",
+          can_be_further_divided: "cannot",
+        },
+        general_hint: "",
+        detailed_hint: "",
+        hasparent: true,
+        children: [],
+        isDeleting: false,
+        showGeneralHint1: false,
+        showDetailedHint1: false,
+        showCorrectStep1: false,
+        showGeneralHint2: false,
+        showDetailedHint2: false,
+        isNewlyInserted: false,
+        isexpanded: true,
+        isHyperExpanded: false,
+        selected: false,
+      },
+    ],
+    isDeleting: false,
+    showGeneralHint1: false,
+    showDetailedHint1: false,
+    showCorrectStep1: false,
+    showGeneralHint2: false,
+    showDetailedHint2: false,
+    isNewlyInserted: false,
+    isexpanded: true,
+    isHyperExpanded: false,
+    selected: false,
+  },
+];
+
+const testDataTutorial: AbstractionItem[] = [
+  {
+    id: "abstraction-1748260426981-83469",
+    steps: [
+      [{ id: "step-1748855935470-1128" }, { id: "step-1748855935470-3631" }],
+      [{ id: "step-1748855935470-1795" }],
+      [{ id: "step-1748855935470-681" }],
+    ],
+    correct_answer: {
+      stepsTree: {
+        R: {
+          content: "Generalized iteration and processing",
+          general_hint: "Generalized iteration and processing of characters",
+          detailed_hint:
+            "This step involves iterating over characters and performing a processing action.",
+          substeps: {
+            R1: {
+              content: "Iterate over characters",
+              general_hint: "Iterate over characters",
+              detailed_hint:
+                "This substep involves iterating over each character in a sequence.",
+              substeps: {},
+            },
+            R2: {
+              content: "Process character",
+              general_hint: "Process character",
+              detailed_hint:
+                "This substep involves processing the current character.",
+              substeps: {},
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    id: "abstraction-1748260426981-6579",
+    steps: [
+      [{ id: "step-1748855935470-1128" }, { id: "step-1748855935470-3631" }],
+    ],
+    correct_answer: {
+      stepsTree: {
+        R: {
+          content: "Generalized iteration and processing",
+          general_hint: "Generalized iteration and processing of characters",
+          detailed_hint:
+            "This step involves iterating over characters and performing a processing action.",
+          substeps: {
+            R1: {
+              content: "Iterate over characters",
+              general_hint: "Iterate over characters",
+              detailed_hint:
+                "This substep involves iterating over each character in a sequence.",
+              substeps: {},
+            },
+            R2: {
+              content: "Process character",
+              general_hint: "Process character",
+              detailed_hint:
+                "This substep involves processing the current character.",
+              substeps: {},
+            },
+            R3: {
+              content: "Process character",
+              general_hint: "Process character",
+              detailed_hint:
+                "This substep involves processing the current character.",
+              substeps: {},
+            },
+            R4: {
+              content: "Process character",
+              general_hint: "Process character",
+              detailed_hint:
+                "This substep involves processing the current character.",
+              substeps: {},
+            },
+          },
+        },
+      },
+    },
+  },
+];
 
 const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   onClose,
@@ -161,6 +1954,13 @@ const Abstract: React.FC = ({}) => {
   const zoomContentRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const { search, pathname } = useLocation();
+  const tutorialParam = new URLSearchParams(search).get("tutorial");
+  const navigate = useNavigate();
+  const startLen = tutorialStepsStart.length;
+  const probLen = tutorialSteps.length;
+  const absLen = tutorialStepsAbstract.length;
+
   const [transform, setTransform] = useState<Transform>({
     scale: 1,
     x: 0,
@@ -243,7 +2043,7 @@ const Abstract: React.FC = ({}) => {
 
   const saveStepTree = useCallback(
     async (newTree: Step[]) => {
-      if (!problemId) return;
+      if (!problemId || localStorage.getItem("tutorialStep")) return;
 
       const token = localStorage.getItem("authToken");
       if (!token) return;
@@ -1478,7 +3278,7 @@ const Abstract: React.FC = ({}) => {
 
   const saveAbstraction = useCallback(
     async (abstraction: any) => {
-      if (!problemId) return;
+      if (!problemId || !localStorage.getItem("tutorialStep")) return;
 
       const token = localStorage.getItem("authToken");
       if (!token) return;
@@ -1508,7 +3308,7 @@ const Abstract: React.FC = ({}) => {
   const [isLoadingAbstraction, setIsLoadingAbstraction] = useState(false);
 
   const handleCallAbstraction = async () => {
-    if (!treeCorrect) return;
+    if (!treeCorrect || localStorage.get("tutorialStep")) return;
 
     // 2) Turn on loading
     setIsLoadingAbstraction(true);
@@ -1696,7 +3496,7 @@ const Abstract: React.FC = ({}) => {
     };
 
     load();
-  }, [toggleAbstraction, problemId]);
+  }, [problemId]);
 
   const [abstractionStepLabels, setAbstractionStepLabels] = useState<string[]>(
     []
@@ -1817,6 +3617,113 @@ const Abstract: React.FC = ({}) => {
     },
     [abstractions /*…*/]
   );
+
+  useEffect(() => {
+    const inTutorial = Boolean(localStorage.getItem("tutorialStep"));
+    if (!inTutorial) return;
+
+    // slight delay can help ensure the DOM has updated
+    setTimeout(() => {
+      doHighlightAll();
+    }, 0);
+  }, [
+    abstractions,
+    toggleAbstraction,
+    transform.x,
+    transform.y,
+    transform.scale,
+  ]);
+
+  const doHighlightAll = useCallback(() => {
+    if (toggleAbstraction === "false") {
+      setHoverPolys([]);
+      setHoverGroupIds([]);
+      setCentralHub(null);
+
+      return;
+    }
+    if (!mapContainerRef.current) return;
+    const containerRect = mapContainerRef.current.getBoundingClientRect();
+
+    // 1) Gather every group (each array of steps) from all abstractions
+    const allGroups = abstractions.flatMap((a) => a.steps);
+
+    // 2) For each group, build its hull, pad & smooth it (your existing convexHull + chaikin logic)
+    const newPolys: [number, number][][] = [];
+    const centroids: { x: number; y: number }[] = [];
+    allGroups.forEach((group) => {
+      // collect every corner of every step‐box in this group
+      const corners: [number, number][] = group.flatMap(({ id }) => {
+        const el = document.querySelector<HTMLElement>(
+          `[data-node-id="${id}"]`
+        );
+        if (!el) return [];
+        const r = el.getBoundingClientRect();
+        return [
+          [r.left, r.top],
+          [r.right, r.top],
+          [r.right, r.bottom],
+          [r.left, r.bottom],
+        ] as [number, number][];
+      });
+      if (corners.length === 0) return;
+
+      // convex hull
+      let hull = convexHull(corners);
+      if (hull.length < 3) hull = corners;
+
+      // centroid
+      const cx = hull.reduce((s, [x]) => s + x, 0) / hull.length;
+      const cy = hull.reduce((s, [, y]) => s + y, 0) / hull.length;
+      centroids.push({ x: cx - containerRect.left, y: cy - containerRect.top });
+
+      // pad & smooth
+      const padded = hull.map(([x, y]) => {
+        const dx = x - cx,
+          dy = y - cy,
+          d = Math.hypot(dx, dy) || 1;
+        const PAD = 20;
+        return [cx + (dx / d) * (d + PAD), cy + (dy / d) * (d + PAD)] as [
+          number,
+          number
+        ];
+      });
+      const smooth = chaikin(padded, 2);
+
+      // shift into container‐relative coords
+      newPolys.push(
+        smooth.map(
+          ([x, y]) =>
+            [x - containerRect.left, y - containerRect.top] as [number, number]
+        )
+      );
+    });
+
+    // 3) Highlight every step ID that belongs to any group
+    const allStepIds = Array.from(
+      new Set(allGroups.flatMap((g) => g.map((s) => s.id)))
+    );
+
+    setHoverPolys(newPolys);
+    setHoverGroupIds(allStepIds);
+
+    // 4) Optionally draw a “starburst” hub in the center of all centroids
+    if (centroids.length) {
+      const hub = centroids.reduce(
+        (acc, c) => ({
+          x: acc.x + c.x,
+          y: acc.y + c.y,
+        }),
+        { x: 0, y: 0 }
+      );
+      setCentralHub({
+        x: hub.x / centroids.length,
+        y: hub.y / centroids.length,
+      });
+    }
+
+    console.log(hoverPolys, hoverGroupIds, centralHub);
+  }, [abstractions, toggleAbstraction]);
 
   // Needed for reclicks after overlay closes
   const lastHoveredRef = useRef<string | null>(null);
@@ -1987,7 +3894,19 @@ const Abstract: React.FC = ({}) => {
     if (hoveredStepId) {
       doHighlight(hoveredStepId);
     }
-  }, [transform.x, transform.y, transform.scale, doHighlight, hoveredStepId]);
+    if (localStorage.getItem("tutorialStep") && toggleAbstraction === "false") {
+      setTimeout(() => {
+        doHighlightAll();
+      }, 0);
+    }
+  }, [
+    transform.x,
+    transform.y,
+    transform.scale,
+    doHighlight,
+    hoveredStepId,
+    toggleAbstraction,
+  ]);
 
   useEffect(() => {
     const onResize = () => {
@@ -2138,7 +4057,14 @@ const Abstract: React.FC = ({}) => {
                       if (!hasGrouping && !hasRecycling) {
                         // No matching abstraction at all
                         return (
-                          <div className="container-icon-grouping-recycling letsgoski">
+                          <div
+                            className="container-icon-grouping-recycling letsgoski"
+                            ref={
+                              node.id === "step-1748855935470-7564"
+                                ? refs.ten
+                                : undefined
+                            }
+                          >
                             Fully Abstracted
                           </div>
                         );
@@ -2147,7 +4073,14 @@ const Abstract: React.FC = ({}) => {
                       return (
                         <>
                           {hasGrouping && (
-                            <div className="container-icon-grouping-recycling">
+                            <div
+                              className="container-icon-grouping-recycling"
+                              ref={
+                                node.id === "step-1748855935470-1128"
+                                  ? refs.eigth
+                                  : undefined
+                              }
+                            >
                               <Users
                                 style={{ width: "20px", height: "20px" }}
                               />
@@ -2155,7 +4088,14 @@ const Abstract: React.FC = ({}) => {
                           )}
 
                           {hasRecycling && (
-                            <div className="container-icon-grouping-recycling">
+                            <div
+                              className="container-icon-grouping-recycling"
+                              ref={
+                                node.id === "step-1748855935470-1128"
+                                  ? refs.nine
+                                  : undefined
+                              }
+                            >
                               <Recycle
                                 style={{ width: "20px", height: "20px" }}
                               />
@@ -2358,9 +4298,343 @@ const Abstract: React.FC = ({}) => {
   render Tree function END
 --------------------------------------- */
 
+  /* ---------------------------------------
+  TUTORIAL START
+--------------------------------------- */
+
+  const [stepIndex, setStepIndex] = useState<number>(
+    Number(localStorage.getItem("tutorialStep") || "0")
+  );
+  const SPACING = 10;
+  const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
+  const [animate, setAnimate] = useState<boolean>(true);
+  const tutorialModalRef = useRef<HTMLDivElement>(null);
+  const [modalSize, setModalSize] = useState({
+    width: 0,
+    height: 0,
+  });
+  const TOTAL_STEPS = (tutorialParam === "3" ? startLen + probLen : 0) + absLen;
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const current = tutorialStepsAbstract[stepIndex - 1] || null;
+
+  const refs: Record<
+    TutorialStep["targetKey"],
+    React.RefObject<HTMLDivElement>
+  > = {
+    first: useRef<HTMLDivElement>(null!),
+    second: useRef<HTMLDivElement>(null!),
+    third: useRef<HTMLDivElement>(null!),
+    fourth: useRef<HTMLDivElement>(null!),
+    fifth: useRef<HTMLDivElement>(null!),
+    six: useRef<HTMLDivElement>(null!),
+    seven: useRef<HTMLDivElement>(null!),
+    eigth: useRef<HTMLDivElement>(null!),
+    nine: useRef<HTMLDivElement>(null!),
+    ten: useRef<HTMLDivElement>(null!),
+    eleven: useRef<HTMLDivElement>(null!),
+    twelve: useRef<HTMLDivElement>(null!),
+    thirteen: useRef<HTMLDivElement>(null!),
+    fourteen: useRef<HTMLDivElement>(null!),
+    fifthteen: useRef<HTMLDivElement>(null!),
+    sixthteen: useRef<HTMLDivElement>(null!),
+    seventeen: useRef<HTMLDivElement>(null!),
+    eighteen: useRef<HTMLDivElement>(null!),
+    nineteen: useRef<HTMLDivElement>(null!),
+    twenty: useRef<HTMLDivElement>(null!),
+    twentyone: useRef<HTMLDivElement>(null!),
+    twentytwo: useRef<HTMLDivElement>(null!),
+    twentythree: useRef<HTMLDivElement>(null!),
+    twentyfour: useRef<HTMLDivElement>(null!),
+    twentyfive: useRef<HTMLDivElement>(null!),
+    twentysix: useRef<HTMLDivElement>(null!),
+    twentyseven: useRef<HTMLDivElement>(null!),
+    twentyeight: useRef<HTMLDivElement>(null!),
+    twentynine: useRef<HTMLDivElement>(null!),
+    thirty: useRef<HTMLDivElement>(null!),
+    thirtyone: useRef<HTMLDivElement>(null!),
+    thirtytwo: useRef<HTMLDivElement>(null!),
+    thirtythree: useRef<HTMLDivElement>(null!),
+    thirtyfour: useRef<HTMLDivElement>(null!),
+    thirtyfive: useRef<HTMLDivElement>(null!),
+    thirtysix: useRef<HTMLDivElement>(null!),
+    thirtyseven: useRef<HTMLDivElement>(null!),
+    thirtyeigth: useRef<HTMLDivElement>(null!),
+    thirtynine: useRef<HTMLDivElement>(null!),
+    fourty: useRef<HTMLDivElement>(null!),
+    fourtyone: useRef<HTMLDivElement>(null!),
+    fourtytwo: useRef<HTMLDivElement>(null!),
+    fourtythree: useRef<HTMLDivElement>(null!),
+    fourtyfour: useRef<HTMLDivElement>(null!),
+    fourtyfive: useRef<HTMLDivElement>(null!),
+    fourtysix: useRef<HTMLDivElement>(null!),
+    fourtyseven: useRef<HTMLDivElement>(null!),
+    fourtyeigth: useRef<HTMLDivElement>(null!),
+    fourtynine: useRef<HTMLDivElement>(null!),
+  };
+
+  useEffect(() => {
+    if (tutorialParam !== "3" && stepIndex !== 0) {
+      setStepIndex(0);
+      localStorage.removeItem("tutorialStep");
+    }
+    if (tutorialParam !== "3" && stepIndex !== -1) {
+      setStepIndex(0);
+      localStorage.removeItem("tutorialStep");
+    }
+  }, [pathname, search]);
+
+  useEffect(() => {
+    if (tutorialParam === "3") {
+      setAnimate(true);
+      if (stepIndex === -1) {
+        /* setStepIndex(49); */
+        //last step
+      } else {
+        setStepIndex(1);
+      }
+    }
+  }, [tutorialParam]);
+
+  useEffect(() => {
+    if (stepIndex > 0) {
+      localStorage.setItem("tutorialStep", String(stepIndex));
+    } else {
+      localStorage.removeItem("tutorialStep");
+    }
+  }, [stepIndex]);
+
+  useLayoutEffect(() => {
+    if (stepIndex > 0) {
+      setAnimate(true); // if you still want your anim flag reset
+      const cur = tutorialStepsAbstract[stepIndex - 1];
+      if (!cur) {
+        setHoleRect(null);
+      } else {
+        // 1) measure hole
+        const r = refs[cur.targetKey].current?.getBoundingClientRect() || null;
+        setHoleRect(r);
+        // 2) measure modal
+        if (tutorialModalRef.current) {
+          const m = tutorialModalRef.current.getBoundingClientRect();
+          setModalSize({ width: m.width, height: m.height });
+        }
+      }
+      // persist
+      if (stepIndex > 0) {
+        localStorage.setItem("tutorialStep", String(stepIndex));
+      }
+    }
+  }, [stepIndex, transform.x, transform.y]);
+
+  // debounce disable-restore animate on resize/scroll
+  const animateRef = useRef(animate);
+  // will store the animate value that needs to be restored
+  const prevAnimateRef = useRef<boolean>(animate);
+  const resizeTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    animateRef.current = animate;
+  }, [animate]);
+
+  const measureHole = () => {
+    if (current) {
+      const r =
+        refs[current.targetKey].current?.getBoundingClientRect() || null;
+      setHoleRect(r);
+    } else {
+      setHoleRect(null);
+    }
+  };
+  const measureModal = () => {
+    if (modalRef.current) {
+      const r = modalRef.current.getBoundingClientRect();
+      setModalSize({ width: r.width, height: r.height });
+    }
+  };
+
+  useEffect(() => {
+    const onChange = () => {
+      // first event in a burst → store the current animate value and disable
+      if (resizeTimer.current === null) {
+        prevAnimateRef.current = animateRef.current;
+        setAnimate(false);
+      }
+      // always re-measure immediately
+      measureHole();
+      measureModal();
+      // debounce “end of resize/scroll”
+      if (resizeTimer.current !== null)
+        window.clearTimeout(resizeTimer.current);
+      resizeTimer.current = window.setTimeout(() => {
+        // restore to whatever animate was before
+        setAnimate(prevAnimateRef.current);
+        resizeTimer.current = null;
+      }, 200);
+    };
+    window.addEventListener("resize", onChange);
+    window.addEventListener("scroll", onChange, true);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onChange);
+    }
+    return () => {
+      window.removeEventListener("resize", onChange);
+      window.removeEventListener("scroll", onChange, true);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", onChange);
+      }
+      // clean up any pending timer
+      if (resizeTimer.current !== null)
+        window.clearTimeout(resizeTimer.current);
+    };
+  }, [stepIndex]);
+
+  // compute modal position (flip logic)
+  let modalTop = 0,
+    modalLeft = 0;
+  const hdr = window.innerHeight * 0.1;
+  if (holeRect) {
+    if (holeRect.height >= window.innerHeight) {
+      modalTop = hdr + (window.innerHeight - hdr - modalSize.height) / 2;
+    } else {
+      modalTop = holeRect.bottom + SPACING;
+      if (holeRect.top < hdr + SPACING) modalTop = holeRect.bottom + SPACING;
+      if (modalTop + modalSize.height > window.innerHeight) {
+        modalTop = holeRect.top - SPACING - modalSize.height;
+      }
+    }
+    if (modalTop < hdr + SPACING) modalTop = hdr + SPACING;
+
+    modalLeft = holeRect.right + SPACING;
+
+    if (modalLeft + modalSize.width > window.innerWidth) {
+      modalLeft = holeRect.left - SPACING - modalSize.width;
+    }
+    if (modalLeft < SPACING) modalLeft = SPACING;
+  }
+
+  const go = (idx: number, animated: boolean) => {
+    setAnimate(animated);
+    if (idx < 1 || idx > TOTAL_STEPS) {
+      nextFinish();
+    } else {
+      setStepIndex(idx);
+    }
+  };
+
+  const cancelTutorial = () => {
+    setStepIndex(0);
+    localStorage.removeItem("tutorialStep");
+    setSteps(originalStepsRef.current);
+    setAbstractions([]);
+    setHoverPolys([]);
+    setHoverGroupIds([]);
+    setCentralHub(null);
+    navigate(pathname, { replace: true });
+  };
+
+  const nextFinish = () => {
+    setSteps(originalStepsRef.current);
+    setStepIndex(0);
+    localStorage.removeItem("tutorialStep");
+    navigate(pathname, { replace: true });
+  };
+
+  const blocks = holeRect
+    ? [
+        { top: 0, left: 0, width: "100vw", height: holeRect.top },
+        {
+          top: holeRect.bottom,
+          left: 0,
+          width: "100vw",
+          height: `calc(100vh - ${holeRect.bottom}px)`,
+        },
+        {
+          top: holeRect.top,
+          left: 0,
+          width: holeRect.left,
+          height: holeRect.height,
+        },
+        {
+          top: holeRect.top,
+          left:
+            holeRect.right +
+            (stepIndex === 17 || stepIndex === 21 || stepIndex === 23
+              ? 10000000000
+              : 0),
+          width: `calc(100vw - ${holeRect.right}px)`,
+          height: holeRect.height,
+        },
+      ]
+    : [];
+
+  // ─── TUTORIAL OVERLAY JSX ────────────────────────────────────
+  // place this right before your final `return ( … )` closing brace:
+  const originalStepsRef = useRef<Step[]>([]);
+
+  const startTutorial = () => {
+    originalStepsRef.current = steps;
+
+    setStepIndex(1);
+    setSteps(tutorialStepJSON1);
+  };
+
+  useEffect(() => {
+    if (stepIndex === 4) {
+      setSteps(tutorialStepJSON1);
+    } else if (stepIndex === 5) {
+      setSteps(tutorialStepJSON2);
+      setAbstractions([]);
+      setAbstractionToSteps({});
+      setStepToAbstractions({});
+    } else if (stepIndex === 6) {
+      setToggleAbstraction("true");
+      setAbstractions([...testDataTutorial]);
+
+      const abstractionToSteps: Record<string, string[]> = {};
+      const stepToAbstractions: Record<string, string[]> = {};
+
+      for (const abstraction of testDataTutorial) {
+        const abstractionId = abstraction.id;
+        const stepIds: string[] = [];
+
+        for (const group of abstraction.steps) {
+          for (const step of group) {
+            stepIds.push(step.id);
+
+            // Update reverse mapping: step -> abstraction
+            if (!stepToAbstractions[step.id]) {
+              stepToAbstractions[step.id] = [];
+            }
+            stepToAbstractions[step.id].push(abstractionId);
+          }
+        }
+
+        // Store abstraction -> step list
+        abstractionToSteps[abstractionId] = stepIds;
+      }
+
+      setAbstractionToSteps({ ...abstractionToSteps });
+      setStepToAbstractions({ ...stepToAbstractions });
+    } else if (stepIndex === 7) {
+      setToggleAbstraction("true");
+    } else if (stepIndex === 8) {
+      setToggleAbstraction("false");
+    }
+  }, [stepIndex]);
+  /* ---------------------------------------
+  TUTORIAL END
+--------------------------------------- */
+
   return (
     <div
-      ref={mainContainerRef}
+      ref={(el) => {
+        if (el) {
+          mainContainerRef.current = el;
+          refs.first.current = el;
+          refs.six.current = el;
+        }
+      }}
       className={`main-container-abstract ${
         animateToRight ? "slide-right" : ""
       }`}
@@ -2389,6 +4663,7 @@ const Abstract: React.FC = ({}) => {
               <div
                 className="container-icons-ab"
                 onClick={handleToggleAbstraction}
+                ref={refs.seven}
               >
                 {toggleAbstraction === "true" ? (
                   <Eye className="Check-abstract" strokeWidth="1px" />
@@ -2412,6 +4687,12 @@ const Abstract: React.FC = ({}) => {
                   });
                 }}
                 style={{ position: "relative" }}
+                ref={(el) => {
+                  if (el) {
+                    refs.fourth.current = el;
+                    refs.fifth.current = el;
+                  }
+                }}
               >
                 Abstraction {treeCorrect ? <SearchCheck /> : <SearchX />}
                 {/*Hovering over the incorrect step tree*/}
@@ -2441,7 +4722,15 @@ const Abstract: React.FC = ({}) => {
               </div>
             </div>
           </div>
-          <div className="select-problem-abstract" ref={dropdownRef}>
+          <div
+            className="select-problem-abstract"
+            ref={(el) => {
+              if (el) {
+                dropdownRef.current = el;
+                refs.third.current = el;
+              }
+            }}
+          >
             <div className="dropdown-header-abstract" onClick={toggleDropdown}>
               <span
                 className={`dropdown-label ${isDropdownOpen ? "hidden" : ""}`}
@@ -2472,7 +4761,7 @@ const Abstract: React.FC = ({}) => {
             </div>
           </div>
         </div>
-        <div className="container-plus-ab">
+        <div className="container-plus-ab" ref={refs.second}>
           <SquarePlus
             className="square-plus-ab"
             onPointerDown={startNewStepDrag}
@@ -2731,9 +5020,119 @@ const Abstract: React.FC = ({}) => {
           />
         </div>
       )}
+      {holeRect && current && (
+        <div
+          className={`tutorial-overlay ${animate ? "with-anim" : "no-anim"}`}
+        >
+          {blocks.map((s, i) => (
+            <div key={i} className="overlay-block" style={s} />
+          ))}
+
+          <div
+            className={`overlay-hole ${
+              stepIndex === 23 ? "hover-enabled" : ""
+            }`}
+            style={{
+              top: holeRect.top,
+              left: holeRect.left,
+              width: holeRect.width,
+              height: holeRect.height,
+            }}
+            onClick={() => go(stepIndex + 1, animate)}
+          />
+
+          <div
+            ref={modalRef}
+            className="tutorial-step-container"
+            style={
+              holeRect &&
+              (current?.targetKey === "first" || current?.targetKey === "six")
+                ? {
+                    position: "absolute",
+                    top: holeRect.top + holeRect.height / 2,
+                    left: holeRect.left + holeRect.width / 2,
+                    transform: "translate(-50%, -50%)",
+                  }
+                : { position: "absolute", top: modalTop, left: modalLeft }
+            }
+          >
+            <X
+              className="close-button-tutorial"
+              onClick={cancelTutorial}
+              size={20}
+              style={{ position: "absolute", top: 5, right: 2 }}
+            />
+            <div className="tutorial-header">{current.title}</div>
+            <div className="tutorial-progress-container">
+              <div className="tutorial-progress-bar">
+                <div
+                  className="tutorial-progress-fill"
+                  style={{
+                    width: `${
+                      ((stepIndex +
+                        (tutorialParam === "3"
+                          ? tutorialSteps.length + tutorialStepsStart.length
+                          : 0)) /
+                        TOTAL_STEPS) *
+                      100
+                    }%`,
+                  }}
+                >
+                  <span className="tutorial-progress-number">
+                    {stepIndex +
+                      (tutorialParam === "3"
+                        ? tutorialSteps.length + tutorialStepsStart.length
+                        : 0)}
+                  </span>
+                </div>
+                <span className="tutorial-progress-total">/ {TOTAL_STEPS}</span>
+              </div>
+            </div>
+            <div className="tutorial-content">
+              <p>{current.content}</p>
+            </div>
+            <div className="tutorial-footer">
+              <button
+                disabled={stepIndex === 1 && tutorialParam !== "3"}
+                onClick={() => {
+                  if (tutorialParam === "3" && stepIndex === 1) {
+                    localStorage.setItem(
+                      "tutorialStep",
+                      String(-1) // last Problem step
+                    );
+
+                    window.location.href = `${tutorialRoutes[1]}/Problem%201?tutorial=2`;
+                  } else {
+                    go(stepIndex - 1, animate);
+                  }
+                }}
+              >
+                Back
+              </button>
+              <button
+                className="skip-button-tutorial"
+                style={{ backgroundColor: "var(--dropdown-border)" }}
+                onClick={() => setAnimate((prev) => !prev)}
+              >
+                {animate ? (
+                  <X color={"red"} size={15} />
+                ) : (
+                  <Check className="check-icon-tutorial" size={15} />
+                )}
+                Skip
+              </button>
+              <button onClick={() => go(stepIndex + 1, animate)}>
+                {stepIndex < TOTAL_STEPS ? "Next" : "Finish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="container-tutorial-problem abstract">
-        <div className="Tutorial-Problem">?</div>
+        <div className="Tutorial-Problem" onClick={startTutorial}>
+          ?
+        </div>
       </div>
     </div>
   );

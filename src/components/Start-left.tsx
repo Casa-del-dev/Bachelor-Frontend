@@ -106,6 +106,15 @@ const StartLeft = ({
     if (currentIndex === 5) {
       selectSection("Problem");
       setSelected("Problem");
+    } else if (currentIndex === 1) {
+      selectSection("Project");
+      setSelected("Project");
+    } else if (currentIndex === 4) {
+      selectSection("Project");
+      setSelected("Project");
+    } else if (currentIndex === 7) {
+      selectSection("Problem");
+      setSelected("Problem");
     } else if (currentIndex === 8) {
       selectSection("Project");
       setSelected("Project");

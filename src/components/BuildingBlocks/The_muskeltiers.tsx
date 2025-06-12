@@ -7,6 +7,8 @@ interface TheMuskeltiersProps {
   onSplitStep: () => void;
   selected: number[] | null;
   vertical?: boolean | false;
+  ref1?: any;
+  ref2?: any;
 }
 
 const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
@@ -14,24 +16,45 @@ const The_muskeltiers: React.FC<TheMuskeltiersProps> = ({
   onSplitStep,
   selected,
   vertical,
+  ref1,
+  ref2,
 }) => {
   return (
     <div className={`container-for-triplets ${vertical ? "vertical" : ""}`}>
-      <Pen
-        className="Filetext-tree"
-        strokeWidth="1.2"
-        onClick={() => {
-          if (onEditStep) {
-            onEditStep();
-          }
+      <div
+        ref={ref1}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
-        style={{ fill: selected ? "lightgray" : "" }}
-      />
-      <TableRowsSplit
-        className="Filetext-tree"
-        strokeWidth="1.2"
-        onClick={() => onSplitStep()}
-      />
+      >
+        <Pen
+          className="Filetext-tree"
+          strokeWidth="1.2"
+          onClick={() => {
+            if (onEditStep) {
+              onEditStep();
+            }
+          }}
+          ref={ref1}
+          style={{ fill: selected ? "lightgray" : "" }}
+        />
+      </div>
+      <div
+        ref={ref2}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <TableRowsSplit
+          className="Filetext-tree"
+          strokeWidth="1.2"
+          onClick={() => onSplitStep()}
+        />
+      </div>
     </div>
   );
 };

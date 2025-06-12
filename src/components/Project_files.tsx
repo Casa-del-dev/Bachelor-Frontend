@@ -441,6 +441,8 @@ const ProjectFiles = ({
   useEffect(() => {
     if (currentIndex === 11) {
       setCurrentFile(2);
+    } else if (currentIndex === 10) {
+      setCurrentFile(null);
     }
   }, [currentIndex]);
 

@@ -6,15 +6,26 @@ const CustomLightbulb = ({
   onGiveHint = () => {},
   color,
   abstract = false,
+  ref1,
+  ref2,
 }: {
   number: number | null;
   fill: string;
   onGiveHint: () => void;
   color: string;
   abstract?: boolean;
+  ref1?: React.RefObject<HTMLDivElement>;
+  ref2?: React.RefObject<HTMLDivElement>;
 }) => {
   return (
-    <div className={`lightbulb-container ${abstract ? "abstract" : ""}`}>
+    <div
+      className={`lightbulb-container ${abstract ? "abstract" : ""}`}
+      ref={(el) => {
+        if (!el) return;
+        if (ref1?.current !== undefined) ref1.current = el;
+        if (ref2?.current !== undefined) ref2.current = el;
+      }}
+    >
       {/* Custom Lightbulb Icon */}
       <svg
         className="lightbulb-icon"

@@ -37,6 +37,7 @@ interface PythonPlaygroundProps {
   ref9?: React.RefObject<HTMLDivElement>;
   ref10?: React.RefObject<HTMLDivElement>;
   ref11?: React.RefObject<HTMLDivElement>;
+  ref12?: React.RefObject<HTMLDivElement>;
 
   currentIndex?: number;
 }
@@ -65,6 +66,7 @@ export default function ResizableSplitView({
   ref9,
   ref10,
   ref11,
+  ref12,
   currentIndex,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
@@ -790,7 +792,12 @@ export default function ResizableSplitView({
       <div
         className="top-section"
         style={{ height: `${topHeight}%` }}
-        ref={ref1}
+        ref={(el) => {
+          if (el) {
+            ref1!.current = el;
+            ref12!.current = el;
+          }
+        }}
       >
         <PythonPlayground
           setHoveredStep={setHoveredStep}

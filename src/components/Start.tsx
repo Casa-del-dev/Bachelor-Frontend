@@ -18,6 +18,7 @@ import tutorialSteps from "./BuildingBlocks/TutorialStepsProblem";
 import tutorialStepsStart, {
   TutorialStepStart,
 } from "./BuildingBlocks/TutorialStepsStart";
+import tutorialStepsAbstract from "./BuildingBlocks/TutorialStepsAbstract";
 
 const SPACING = 10;
 
@@ -373,7 +374,11 @@ const Start: React.FC = () => {
 
   // Clean up if tutorial=2 is not active
   useEffect(() => {
-    if (tutorialParam !== "2" && stepIndex !== 0) {
+    if (tutorialParam !== "2" && stepIndex === 0) {
+      setStepIndex(0);
+      localStorage.removeItem("tutorialStep");
+    }
+    if (tutorialParam !== "2" && stepIndex === -1) {
       setStepIndex(0);
       localStorage.removeItem("tutorialStep");
     }
@@ -386,7 +391,12 @@ const Start: React.FC = () => {
     if (tutorialParam === "2") {
       setCurrentFile(null);
       setAnimate(true);
-      setStepIndex(1);
+      if (stepIndex === -1) {
+        setStepIndex(49);
+      } else {
+        //easier for me to aways start at the start since I would need a lot of if stmts to set all the correct states
+        setStepIndex(1);
+      }
     }
   }, [tutorialParam]);
 
@@ -401,7 +411,9 @@ const Start: React.FC = () => {
 
   const baseSteps = tutorialStepsStart.length;
   const urlSteps =
-    tutorialParam === "2" ? tutorialSteps.length + baseSteps : baseSteps;
+    tutorialParam === "2"
+      ? tutorialSteps.length + baseSteps + tutorialStepsAbstract.length
+      : baseSteps;
 
   const TOTAL_STEPS = urlSteps;
   const current = tutorialStepsStart[stepIndex - 1] || null;
@@ -430,11 +442,33 @@ const Start: React.FC = () => {
   >("Project");
 
   // Disable animations & re-measure on resize/scroll
+  const animateRef = useRef(animate);
+  // will store the animate value that needs to be restored
+  const prevAnimateRef = useRef<boolean>(animate);
+  const resizeTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    animateRef.current = animate;
+  }, [animate]);
+
   useEffect(() => {
     const onChange = () => {
-      setAnimate(false);
+      // first event in a burst → store the current animate value and disable
+      if (resizeTimer.current === null) {
+        prevAnimateRef.current = animateRef.current;
+        setAnimate(false);
+      }
+      // always re-measure immediately
       measureHole();
       measureModal();
+      // debounce “end of resize/scroll”
+      if (resizeTimer.current !== null)
+        window.clearTimeout(resizeTimer.current);
+      resizeTimer.current = window.setTimeout(() => {
+        // restore to whatever animate was before
+        setAnimate(prevAnimateRef.current);
+        resizeTimer.current = null;
+      }, 200);
     };
     window.addEventListener("resize", onChange);
     window.addEventListener("scroll", onChange, true);
@@ -447,6 +481,9 @@ const Start: React.FC = () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener("resize", onChange);
       }
+      // clean up any pending timer
+      if (resizeTimer.current !== null)
+        window.clearTimeout(resizeTimer.current);
     };
   }, [stepIndex]);
 
@@ -491,6 +528,18 @@ const Start: React.FC = () => {
     thirtyfive: useRef<HTMLDivElement>(null!),
     thirtysix: useRef<HTMLDivElement>(null!),
     thirtyseven: useRef<HTMLDivElement>(null!),
+    thirtyeigth: useRef<HTMLDivElement>(null!),
+    thirtynine: useRef<HTMLDivElement>(null!),
+    fourty: useRef<HTMLDivElement>(null!),
+    fourtyone: useRef<HTMLDivElement>(null!),
+    fourtytwo: useRef<HTMLDivElement>(null!),
+    fourtythree: useRef<HTMLDivElement>(null!),
+    fourtyfour: useRef<HTMLDivElement>(null!),
+    fourtyfive: useRef<HTMLDivElement>(null!),
+    fourtysix: useRef<HTMLDivElement>(null!),
+    fourtyseven: useRef<HTMLDivElement>(null!),
+    fourtyeigth: useRef<HTMLDivElement>(null!),
+    fourtynine: useRef<HTMLDivElement>(null!),
   };
 
   const startTutorial = () => {
@@ -501,8 +550,11 @@ const Start: React.FC = () => {
   };
 
   const go = (idx: number, animated: boolean) => {
+    console.log("go", idx, tutorialStepsStart.length);
     setAnimate(animated);
     if (idx < 1 || idx > TOTAL_STEPS) {
+      nextFinish();
+    } else if (tutorialParam === "2" && idx > tutorialStepsStart.length) {
       nextFinish();
     } else {
       setStepIndex(idx);
@@ -511,8 +563,8 @@ const Start: React.FC = () => {
 
   const cancelTutorial = () => {
     setStepIndex(0);
+    setCurrentFile(null);
     localStorage.removeItem("tutorialStep");
-    console.log(stepTree);
     setStepTree((old) => [...old]);
     setLoading(false);
     navigate(pathname, { replace: true });
@@ -521,11 +573,13 @@ const Start: React.FC = () => {
   const nextFinish = () => {
     setStepIndex(0);
     setStepTree((old) => [...old]);
+    setCurrentFile(null);
     setLoading(false);
     if (tutorialParam === "2") {
-      const idx = tutorialRoutes.indexOf(pathname);
-      const next = tutorialRoutes[idx + 1];
-      if (next) navigate(`${next}?tutorial=3`);
+      const next = tutorialRoutes[Number(tutorialParam)];
+      if (next) window.location.href = `${next}?tutorial=3`;
+    } else {
+      localStorage.removeItem("tutorialStep");
     }
   };
 
@@ -605,6 +659,29 @@ const Start: React.FC = () => {
       ref2={refs.twenty}
       ref3={refs.twentyfour}
       ref4={refs.twentyfive}
+      ref5={refs.twentysix}
+      ref6={refs.twentyseven}
+      ref7={refs.twentyeight}
+      ref8={refs.twentynine}
+      ref9={refs.thirty}
+      ref10={refs.thirtyone}
+      ref11={refs.thirtytwo}
+      ref12={refs.thirtythree}
+      ref13={refs.thirtyfour}
+      ref14={refs.thirtyfive}
+      ref15={refs.thirtysix}
+      ref16={refs.thirtyseven}
+      ref17={refs.thirtyeigth}
+      ref18={refs.thirtynine}
+      ref19={refs.fourty}
+      ref20={refs.fourtyone}
+      ref21={refs.fourtytwo}
+      ref22={refs.fourtythree}
+      ref23={refs.fourtyfour}
+      ref24={refs.fourtyfive}
+      ref25={refs.fourtysix}
+      ref26={refs.fourtyseven}
+      ref27={refs.fourtynine}
       stepIndexTutorial={stepIndex}
     />
   );
@@ -621,22 +698,41 @@ const Start: React.FC = () => {
 
   useLayoutEffect(() => {
     if (stepIndex === 19) {
-      // delay measurement by 1ms
       const id = window.setTimeout(() => {
         measureHole();
       }, 350);
       return () => window.clearTimeout(id);
-    } else if (stepIndex === 5 || stepIndex === 8) {
+    } else if (
+      stepIndex === 5 ||
+      stepIndex === 8 ||
+      stepIndex === 4 ||
+      stepIndex === 7
+    ) {
       // delay measurement by 1ms
       const id = window.setTimeout(() => {
         measureHole();
       }, 0);
       return () => window.clearTimeout(id);
-    } else if (stepIndex === 25) {
+    } else if (stepIndex === 25 || stepIndex === 24) {
       // delay measurement by 1ms
       const id = window.setTimeout(() => {
         measureHole();
       }, 50);
+      return () => window.clearTimeout(id);
+    } else if (stepIndex === 28 || stepIndex === 27) {
+      const id = window.setTimeout(() => {
+        measureHole();
+      }, 350);
+      return () => window.clearTimeout(id);
+    } else if (stepIndex === 35) {
+      const id = window.setTimeout(() => {
+        measureHole();
+      }, 0);
+      return () => window.clearTimeout(id);
+    } else if (stepIndex === 41 || stepIndex === 42) {
+      const id = window.setTimeout(() => {
+        measureHole();
+      }, 0);
       return () => window.clearTimeout(id);
     } else {
       // normal immediate measurement
@@ -722,6 +818,7 @@ const Start: React.FC = () => {
               ref9={refs.twentyone}
               ref10={refs.twentytwo}
               ref11={refs.twentythree}
+              ref12={refs.fourtyeigth}
               currentIndex={stepIndex}
             />
           </CodeProvider>
@@ -829,8 +926,19 @@ const Start: React.FC = () => {
               </div>
               <div className="tutorial-footer">
                 <button
-                  disabled={stepIndex === 1}
-                  onClick={() => go(stepIndex - 1, animate)}
+                  disabled={stepIndex === 1 && tutorialParam !== "2"}
+                  onClick={() => {
+                    if (tutorialParam === "2" && stepIndex === 1) {
+                      localStorage.setItem(
+                        "tutorialStep",
+                        String(-1) // last Problem step
+                      );
+
+                      window.location.href = `${tutorialRoutes[0]}?tutorial=1`;
+                    } else {
+                      go(stepIndex - 1, animate);
+                    }
+                  }}
                 >
                   Back
                 </button>

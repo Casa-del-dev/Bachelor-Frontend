@@ -8,6 +8,7 @@ import { Check, X } from "lucide-react";
 import tutorialSteps from "./BuildingBlocks/TutorialStepsProblem";
 import tutorialStepsStart from "./BuildingBlocks/TutorialStepsStart";
 import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
+import tutorialStepsAbstract from "./BuildingBlocks/TutorialStepsAbstract";
 
 const SPACING = 10; // px between hole and modal
 
@@ -55,11 +56,17 @@ export default function Problem() {
       setAnimate(true);
       setStepIndex(1);
     }
+    if (tutorialParam === "1" && stepIndex === -1) {
+      setAnimate(true);
+      setStepIndex(5);
+    }
   }, [tutorialParam]);
 
   const baseSteps = tutorialSteps.length;
   const urlSteps =
-    tutorialParam === "1" ? tutorialStepsStart.length + baseSteps : baseSteps;
+    tutorialParam === "1"
+      ? tutorialStepsStart.length + baseSteps + tutorialStepsAbstract.length
+      : baseSteps;
   const TOTAL_STEPS = urlSteps;
   const current = tutorialSteps[stepIndex - 1] || null;
 
@@ -87,11 +94,36 @@ export default function Problem() {
   useLayoutEffect(measureModal, [holeRect, stepIndex]);
 
   // on resize or scroll, disable anim + re-measure
+  const animateRef = useRef(animate);
+  // will store the animate value that needs to be restored
+  const prevAnimateRef = useRef<boolean>(animate);
+  // debounce timer id
+  const resizeTimer = useRef<number | null>(null);
+
+  // whenever animate changes for “real” (e.g. user clicked Skip, Next, etc):
+  useEffect(() => {
+    animateRef.current = animate;
+  }, [animate]);
+
+  // Disable animations & re-measure on resize/scroll
   useEffect(() => {
     const onChange = () => {
-      setAnimate(false);
+      // first event in a burst → store the current animate value and disable
+      if (resizeTimer.current === null) {
+        prevAnimateRef.current = animateRef.current;
+        setAnimate(false);
+      }
+      // always re-measure immediately
       measureHole();
       measureModal();
+      // debounce “end of resize/scroll”
+      if (resizeTimer.current !== null)
+        window.clearTimeout(resizeTimer.current);
+      resizeTimer.current = window.setTimeout(() => {
+        // restore to whatever animate was before
+        setAnimate(prevAnimateRef.current);
+        resizeTimer.current = null;
+      }, 200);
     };
     window.addEventListener("resize", onChange);
     window.addEventListener("scroll", onChange, true);
@@ -104,6 +136,9 @@ export default function Problem() {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener("resize", onChange);
       }
+      // clean up any pending timer
+      if (resizeTimer.current !== null)
+        window.clearTimeout(resizeTimer.current);
     };
   }, [stepIndex]);
 

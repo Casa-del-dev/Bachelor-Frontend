@@ -9,6 +9,7 @@ export default function Welcome() {
   const [videoReady, setVideoReady] = useState(false);
   const [videoDone, setVideoDone] = useState(false);
 
+  localStorage.removeItem("tutorialStep");
   //used for header
   useEffect(() => {
     if (!videoDone) {

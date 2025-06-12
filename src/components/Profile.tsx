@@ -9,6 +9,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ openLogin }: ProfileProps) {
+  localStorage.removeItem("tutorialStep");
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
   const { logout } = useAuth();

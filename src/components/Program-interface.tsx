@@ -234,6 +234,30 @@ const tutorialFileCommented = `def roman_to_int(s):
     return total
 `;
 
+const tutorialFileCommented2 = `def roman_to_int(s):
+    # Step 1 - NOT IMPLEMENTED CORRECTLY
+    roman_map = {
+        'I': 1, 'V': 5, 'X': 10, 'L': 50,
+        'C': 100, 'D': 500, 'M': 1000
+    }
+    
+    # MISSING STEP
+
+    # Step 3 - NOT IMPLEMENTED CORRECTLY
+    for char in reversed(s):
+        # Step 3.1
+        value = roman_map[char]
+        # Step 3.2
+        if value < prev_value:
+            total -= value  # Subtract if a smaller value precedes a larger one
+        else:
+            total += value
+            prev_value = value
+
+    # Step 4
+    return total
+`;
+
 interface FileItem {
   id: number;
   name: string;
@@ -751,14 +775,29 @@ export default function PythonPlayground({
     if (currentIndex === 1) {
       setColorMode(true);
     }
+    if (currentIndex === 10) {
+      setTutorialFileActually("");
+    }
     if (currentIndex === 11) {
+      setTutorialFileActually(tutorialFile);
+    }
+    if (currentIndex === 19) {
       setTutorialFileActually(tutorialFile);
     }
     if (currentIndex === 20) {
       setTutorialFileActually(tutorialFileCommented);
     }
+    if (currentIndex === 22) {
+      setColorMode(true);
+    }
     if (currentIndex === 23) {
       setColorMode(false);
+    }
+    if (currentIndex === 47) {
+      setTutorialFileActually(tutorialFileCommented);
+    }
+    if (currentIndex === 48) {
+      setTutorialFileActually(tutorialFileCommented2);
     }
   }, [currentIndex]);
 
