@@ -364,9 +364,7 @@ const Start: React.FC = () => {
   const tutorialParam = query.get("tutorial");
 
   // Tutorial state
-  const [stepIndex, setStepIndex] = useState<number>(
-    Number(localStorage.getItem("tutorialStep") || 0)
-  );
+  const [stepIndex, setStepIndex] = useState<number>(Number(0));
   const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
   const [animate, setAnimate] = useState<boolean>(true);
   const modalRef = useRef<HTMLDivElement>(null);

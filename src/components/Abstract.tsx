@@ -4313,9 +4313,7 @@ const Abstract: React.FC = ({}) => {
   TUTORIAL START
 --------------------------------------- */
 
-  const [stepIndex, setStepIndex] = useState<number>(
-    Number(localStorage.getItem("tutorialStep") || "0")
-  );
+  const [stepIndex, setStepIndex] = useState<number>(Number("0"));
   const SPACING = 10;
   const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
   const [animate, setAnimate] = useState<boolean>(true);
@@ -4402,10 +4400,13 @@ const Abstract: React.FC = ({}) => {
         /* setStepIndex(49); */
         //last step
       } else {
+        console.log("tutorialParam", tutorialParam);
         originalStepsRef.current = steps;
-
         setStepIndex(1);
-        setSteps(tutorialStepJSON1);
+        setSteps([...tutorialStepJSON1]);
+        setAbstractions([]);
+        setAbstractionToSteps({});
+        setStepToAbstractions({});
       }
     }
   }, [tutorialParam]);
@@ -4610,11 +4611,7 @@ const Abstract: React.FC = ({}) => {
         },
         {
           top: holeRect.top,
-          left:
-            holeRect.right +
-            (stepIndex === 17 || stepIndex === 21 || stepIndex === 23
-              ? 10000000000
-              : 0),
+          left: holeRect.right,
           width: `calc(100vw - ${holeRect.right}px)`,
           height: holeRect.height,
         },
@@ -4627,12 +4624,17 @@ const Abstract: React.FC = ({}) => {
 
   const startTutorial = () => {
     originalStepsRef.current = steps;
-
     setStepIndex(1);
     setSteps(tutorialStepJSON1);
+    setAbstractions([]);
+    setAbstractionToSteps({});
+    setStepToAbstractions({});
   };
 
   useEffect(() => {
+    if (stepIndex === 1) {
+      setSteps(tutorialStepJSON1);
+    }
     if (stepIndex === 4) {
       setSteps(tutorialStepJSON1);
     } else if (stepIndex === 5) {
