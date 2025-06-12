@@ -4402,7 +4402,10 @@ const Abstract: React.FC = ({}) => {
         /* setStepIndex(49); */
         //last step
       } else {
+        originalStepsRef.current = steps;
+
         setStepIndex(1);
+        setSteps(tutorialStepJSON1);
       }
     }
   }, [tutorialParam]);
