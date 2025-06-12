@@ -3639,7 +3639,6 @@ const Abstract: React.FC = ({}) => {
       setHoverPolys([]);
       setHoverGroupIds([]);
       setCentralHub(null);
-
       return;
     }
     if (!mapContainerRef.current) return;
@@ -3721,8 +3720,6 @@ const Abstract: React.FC = ({}) => {
         y: hub.y / centroids.length,
       });
     }
-
-    console.log(hoverPolys, hoverGroupIds, centralHub);
   }, [abstractions, toggleAbstraction]);
 
   // Needed for reclicks after overlay closes
@@ -3928,6 +3925,8 @@ const Abstract: React.FC = ({}) => {
     }
   }, [isHoveringStep, isHoveringPoly, showHoverOverlay]);
 
+  const refTutorial1 = useRef<HTMLDivElement>(null);
+  const refTutorial2 = useRef<HTMLDivElement>(null);
   /**
    * Recursively renders a node and its children
    */
@@ -3996,6 +3995,18 @@ const Abstract: React.FC = ({}) => {
               backgroundColor: getStepBoxColor(node),
               color: getStepBoxTextColor(node),
             }}
+            ref={
+              node.id === "step-1748855935470-7564"
+                ? refTutorial1
+                : node.id === "step-1748855935470-1128"
+                ? (el) => {
+                    if (el) {
+                      refTutorial2.current = el;
+                      refs.twelve.current = el;
+                    }
+                  }
+                : undefined
+            }
           >
             <div className="tree-node-text">
               <div
@@ -4405,27 +4416,66 @@ const Abstract: React.FC = ({}) => {
   }, [stepIndex]);
 
   useLayoutEffect(() => {
-    if (stepIndex > 0) {
-      setAnimate(true); // if you still want your anim flag reset
-      const cur = tutorialStepsAbstract[stepIndex - 1];
-      if (!cur) {
-        setHoleRect(null);
-      } else {
-        // 1) measure hole
-        const r = refs[cur.targetKey].current?.getBoundingClientRect() || null;
-        setHoleRect(r);
-        // 2) measure modal
-        if (tutorialModalRef.current) {
-          const m = tutorialModalRef.current.getBoundingClientRect();
-          setModalSize({ width: m.width, height: m.height });
+    setTimeout(() => {
+      if (stepIndex > 0) {
+        setAnimate(true); // if you still want your anim flag reset
+        const cur = tutorialStepsAbstract[stepIndex - 1];
+        if (!cur) {
+          setHoleRect(null);
+        } else {
+          // 1) measure hole
+          const r =
+            refs[cur.targetKey].current?.getBoundingClientRect() || null;
+          setHoleRect(r);
+          // 2) measure modal
+          if (tutorialModalRef.current) {
+            const m = tutorialModalRef.current.getBoundingClientRect();
+            setModalSize({ width: m.width, height: m.height });
+          }
+        }
+        // persist
+        if (stepIndex > 0) {
+          localStorage.setItem("tutorialStep", String(stepIndex));
         }
       }
-      // persist
-      if (stepIndex > 0) {
-        localStorage.setItem("tutorialStep", String(stepIndex));
-      }
-    }
+    }, 0);
   }, [stepIndex, transform.x, transform.y]);
+
+  useLayoutEffect(() => {
+    if (![8, 9, 10].includes(stepIndex)) return;
+
+    const targetRef = stepIndex === 10 ? refTutorial1 : refTutorial2;
+    const el = targetRef.current;
+    const container = zoomContentRef.current; // the element you're applying the transform to
+
+    if (!el || !container) return;
+
+    const elBox = el.getBoundingClientRect();
+    const containerBox = container.getBoundingClientRect();
+
+    const { scale } = transform;
+
+    // Step 1: Calculate the center of the target in content-local coordinates
+    const centerX = elBox.left - containerBox.left + elBox.width / 2;
+    const centerY = elBox.top - containerBox.top + elBox.height / 2;
+
+    // Step 2: Convert that to screen coordinates with scale
+    const screenX = centerX * scale;
+    const screenY = centerY * scale;
+
+    // Step 3: Compute new transform that brings that point to screen center
+    const newX = window.innerWidth / 2 - screenX;
+    const newY = window.innerHeight / 2 - screenY;
+
+    setTransform({ x: newX, y: newY, scale });
+  }, [stepIndex]);
+
+  useLayoutEffect(() => {
+    const el = zoomContentRef.current;
+    if (!el || !localStorage.getItem("tutorialStep")) return;
+    const { x, y, scale } = transform;
+    el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+  }, [transform]);
 
   // debounce disable-restore animate on resize/scroll
   const animateRef = useRef(animate);
@@ -4620,6 +4670,24 @@ const Abstract: React.FC = ({}) => {
       setToggleAbstraction("true");
     } else if (stepIndex === 8) {
       setToggleAbstraction("false");
+      setTimeout(() => {
+        measureHole();
+        measureModal();
+      }, 0);
+    } else if (stepIndex === 9) {
+      setTimeout(() => {
+        measureHole();
+        measureModal();
+      }, 0);
+    } else if (stepIndex === 10) {
+      setTimeout(() => {
+        measureHole();
+        measureModal();
+      }, 0);
+    } else if (stepIndex === 11) {
+      setToggleAbstraction("false");
+    } else if (stepIndex === 12) {
+      setToggleAbstraction("true");
     }
   }, [stepIndex]);
   /* ---------------------------------------
@@ -4663,7 +4731,12 @@ const Abstract: React.FC = ({}) => {
               <div
                 className="container-icons-ab"
                 onClick={handleToggleAbstraction}
-                ref={refs.seven}
+                ref={(el) => {
+                  if (el) {
+                    refs.seven.current = el;
+                    refs.eleven.current = el;
+                  }
+                }}
               >
                 {toggleAbstraction === "true" ? (
                   <Eye className="Check-abstract" strokeWidth="1px" />
