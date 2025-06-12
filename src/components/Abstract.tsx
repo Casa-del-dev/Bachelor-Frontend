@@ -5837,7 +5837,7 @@ const Abstract: React.FC = ({}) => {
     } else if (stepIndex === 22) {
       const id = window.setTimeout(() => {
         measureHole();
-      }, 0);
+      }, 200);
       return () => window.clearTimeout(id);
     } else if (stepIndex === 24) {
       const id = window.setTimeout(() => {

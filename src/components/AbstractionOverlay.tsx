@@ -2354,6 +2354,17 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       setSteps(abstractionInbetweenTutorial);
     } else if (stepIndex === 22) {
       setSteps(abstractionInbetweenTutorial2);
+
+      setTimeout(() => {
+        const el = ref10.current;
+        if (el) {
+          el.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "center",
+          });
+        }
+      }, 200);
     }
   }, [stepIndex]);
 
