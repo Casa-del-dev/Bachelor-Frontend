@@ -286,7 +286,7 @@ const tutorialStepsAbstract: TutorialStep[] = [
     targetKey: "twentyfour",
     title: "Abstraction Result",
     content:
-      "As you can see, the left part of your tree has now been completely replaced by your new abstraction. Of course, in this tutorial, the abstraction doesn’t actually make sense and wouldn’t work in practice — it’s only meant to demonstrate the process.",
+      "As you can see, the left part of your tree has been completely replaced by your new abstraction and now only requires a Recycling abstraction. Of course, in this tutorial the abstraction doesn’t actually make sense and wouldn’t work in practice—it’s only meant to demonstrate the process.",
   },
 
   // … add as many steps as you like here

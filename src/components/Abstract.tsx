@@ -2912,6 +2912,49 @@ const testDataTutorial: AbstractionItem[] = [
   },
 ];
 
+const testDataTutorial2: AbstractionItem[] = [
+  {
+    id: "abstraction-1748260426981-83469",
+    steps: [
+      [
+        { id: "step-0001" },
+        { id: "step-0002" },
+        { id: "step-0003" },
+        { id: "step-0004" },
+        { id: "step-0005" },
+      ],
+      [{ id: "step-1748855935470-1795" }],
+      [{ id: "step-1748855935470-681" }],
+    ],
+    correct_answer: {
+      stepsTree: {
+        R: {
+          content: "Generalized iteration and processing",
+          general_hint: "Generalized iteration and processing of characters",
+          detailed_hint:
+            "This step involves iterating over characters and performing a processing action.",
+          substeps: {
+            R1: {
+              content: "Iterate over characters",
+              general_hint: "Iterate over characters",
+              detailed_hint:
+                "This substep involves iterating over each character in a sequence.",
+              substeps: {},
+            },
+            R2: {
+              content: "Process character",
+              general_hint: "Process character",
+              detailed_hint:
+                "This substep involves processing the current character.",
+              substeps: {},
+            },
+          },
+        },
+      },
+    },
+  },
+];
+
 const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   onClose,
   onConfirm,
@@ -5859,10 +5902,12 @@ const Abstract: React.FC = ({}) => {
       }
     } else if (stepIndex === 23) {
       setSteps(tutorialStepJSON2);
+      setAbstractions(testDataTutorial);
       setToggleAbstraction("true");
       setShowHoverOverlay(true);
     } else if (stepIndex === 24) {
       setSteps(tutorialStepJSON3);
+      setAbstractions(testDataTutorial2);
       setToggleAbstraction("true");
       setShowHoverOverlay(false);
       //finish if not tutorialParam === "3"

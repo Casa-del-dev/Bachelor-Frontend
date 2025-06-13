@@ -457,6 +457,11 @@ const Start: React.FC = () => {
         prevAnimateRef.current = animateRef.current;
         setAnimate(false);
       }
+
+      if (stepIndex !== 0) {
+        enforceRightWidthPx();
+        updateFontSize();
+      }
       // always re-measure immediately
       measureHole();
       measureModal();
