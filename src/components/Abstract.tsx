@@ -3061,6 +3061,8 @@ const Abstract: React.FC = ({}) => {
   const headerRef = useRef<HTMLDivElement>(null);
   const rightAbstractRef = useRef<HTMLDivElement>(null);
 
+  const [stepIndex, setStepIndex] = useState<number>(Number("0"));
+
   //used for adding step drag and drop
   const [draggingNew, setDraggingNew] = useState(false);
 
@@ -3329,7 +3331,11 @@ const Abstract: React.FC = ({}) => {
     };
 
     const onWheel = (e: WheelEvent) => {
-      if (showHoverOverlay) return;
+      if (
+        showHoverOverlay ||
+        Number(localStorage.getItem("tutorialStep")) === 6
+      )
+        return;
       e.preventDefault();
       const rect = container.getBoundingClientRect();
       const mx = e.clientX - rect.left;
@@ -3339,6 +3345,7 @@ const Abstract: React.FC = ({}) => {
       const newScale = clamp(old.scale * factor, MIN_ZOOM, MAX_ZOOM);
       transformRef.current.x = mx - (mx - old.x) * (newScale / old.scale);
       transformRef.current.y = my - (my - old.y) * (newScale / old.scale);
+
       transformRef.current.scale = newScale;
 
       scheduleUpdate();
@@ -4424,7 +4431,6 @@ const Abstract: React.FC = ({}) => {
     Record<string, string[]>
   >({});
   //neeeded to load the abstraction everytime we toggle the abstraction
-  const [stepIndex, setStepIndex] = useState<number>(Number("0"));
 
   useEffect(() => {
     if (localStorage.getItem("tutorialStep")) return;
@@ -5867,7 +5873,7 @@ const Abstract: React.FC = ({}) => {
     if (stepIndex === 13 || stepIndex === 23) {
       const id = window.setTimeout(() => {
         measureHole();
-      }, 400);
+      }, 500);
       return () => window.clearTimeout(id);
     } else if (stepIndex === 20) {
       const id = window.setTimeout(() => {
@@ -6375,7 +6381,7 @@ const Abstract: React.FC = ({}) => {
               </div>
             </div>
             <div className="tutorial-content">
-              <p>{current.content}</p>
+              <div>{current.content}</div>
             </div>
             <div className="tutorial-footer">
               <button

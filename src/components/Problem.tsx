@@ -52,7 +52,7 @@ export default function Problem() {
 
   // auto-start if arrived with ?tutorial=1
   useEffect(() => {
-    if (tutorialParam === "1" && stepIndex === 0) {
+    if (tutorialParam === "1" && stepIndex <= 0) {
       setAnimate(true);
       setStepIndex(1);
     }
@@ -204,7 +204,9 @@ export default function Problem() {
         go(stepIndex + 1, true);
       } else if (e.key === "ArrowLeft" && inTutorial) {
         // same as clicking "Back"
-        go(stepIndex - 1, true);
+        if (stepIndex !== 1) {
+          go(stepIndex - 1, true);
+        }
       }
     };
 
@@ -369,7 +371,7 @@ export default function Problem() {
               </div>
             </div>
             <div className="tutorial-content">
-              <p>{current.content}</p>
+              <div>{current.content}</div>
             </div>
             <div className="tutorial-footer">
               <button

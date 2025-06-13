@@ -128,14 +128,17 @@ body.dark-mode {
 }
 
 .tutorial-header {
-  font-size: 13px;
+  font-size: 17px;
   margin-bottom: 12px;
+  font-weight: bold;
 }
 
 .tutorial-content {
   flex: 1;
   margin-bottom: 16px;
-  font-size: 13px;
+  font-size: 17px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .tutorial-footer {
@@ -151,7 +154,7 @@ body.dark-mode {
 .tutorial-footer button {
   width: 100px;
   padding: 4px 16px;
-  font-size: 13px;
+  font-size: 15px;
   cursor: pointer;
   outline: none;
   border: 1px solid grey;

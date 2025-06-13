@@ -953,7 +953,7 @@ const Start: React.FC = () => {
                 </div>
               </div>
               <div className="tutorial-content">
-                <p>{current.content}</p>
+                <div>{current.content}</div>
               </div>
               <div className="tutorial-footer">
                 <button
