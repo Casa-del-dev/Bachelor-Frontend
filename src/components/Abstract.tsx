@@ -3095,6 +3095,26 @@ const Abstract: React.FC = ({}) => {
     "Problem 7",
     "Problem 8",
     "Problem 9",
+    "Problem 10",
+    "Problem 11",
+    "Problem 12",
+    "Problem 13",
+    "Problem 14",
+    "Problem 15",
+    "Problem 16",
+    "Problem 17",
+    "Problem 18",
+    "Problem 19",
+    "Problem 20",
+    "Problem 21",
+    "Problem 22",
+    "Problem 23",
+    "Problem 24",
+    "Problem 25",
+    "Problem 26",
+    "Problem 27",
+    "Problem 28",
+    "Problem 29",
   ];
   const [problemList] = useState(problemListItems);
   const [problemId, setProblemId] = useState<string>("");
@@ -3376,7 +3396,8 @@ const Abstract: React.FC = ({}) => {
     const onWheel = (e: WheelEvent) => {
       if (
         showHoverOverlay ||
-        Number(localStorage.getItem("tutorialStep")) === 6
+        Number(localStorage.getItem("tutorialStep")) === 6 ||
+        document.querySelector(".dropdown-list-abstract.open")
       )
         return;
       e.preventDefault();

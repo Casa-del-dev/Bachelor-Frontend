@@ -62,7 +62,7 @@ body.dark-mode {
 }
 
 .Network.disabled {
-  opacity: 0.6;
+  color: rgb(153, 153, 153);
   cursor: default;
 }
 

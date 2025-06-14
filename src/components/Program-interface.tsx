@@ -11,7 +11,7 @@ import {
 import { RangeSetBuilder } from "@codemirror/state";
 import { Network, Paintbrush } from "lucide-react";
 import { useAuth } from "../AuthContext";
-import { problemDetailsMap } from "./Problem_detail";
+import { problemDetailsMap } from "./BuildingBlocks/ProblemDetailsText";
 import ApiCallEditor from "./AI_Editor.tsx";
 import { setStepsData, setChanged } from "./BuildingBlocks/StepsData.tsx";
 import "./Program-interface.css";

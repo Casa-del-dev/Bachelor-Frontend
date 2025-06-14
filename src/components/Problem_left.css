@@ -1,15 +1,12 @@
 /* Left Side*/
 .left-side {
   grid-area: left-side;
-  display: grid;
-  grid-template-rows: 2vw auto;
-  grid-template-areas: "seperator" "content";
+  display: flex;
   width: 100%;
-  height: inherit;
+  height: calc(100vh - var(--header-height));
 }
 
 .left-side-title {
-  grid-area: title;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,25 +16,22 @@
   text-align: center;
   position: relative;
   margin: 0;
-  width: 100%;
 }
 
 .custom-line-left-side {
-  grid-area: seperating;
   width: 100%;
   height: 1px;
   background-color: black;
 }
 
 .left-side-content {
-  padding-top: 1vw;
-  grid-area: content;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1vw;
   width: 100%;
-  height: calc(90vh - 5vw - 1px);
+  height: 100%;
   overflow-y: auto;
 }
 

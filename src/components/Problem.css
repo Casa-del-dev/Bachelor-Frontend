@@ -37,6 +37,7 @@ body.dark-mode {
   flex-direction: column;
   align-items: flex-start;
   color: var(--text-color);
+  overflow-y: auto;
 }
 
 .container-tutorial-problem {

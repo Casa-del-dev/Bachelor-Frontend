@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Step } from "./Start";
 import The_muskeltiers from "./BuildingBlocks/The_muskeltiers";
-import { problemDetailsMap } from "./Problem_detail";
+import { problemDetailsMap } from "./BuildingBlocks/ProblemDetailsText";
 import { useAuth } from "../AuthContext";
 import { apiCall } from "./AI_Prompt";
 import PlusbetweenSteps from "./BuildingBlocks/PlusBetweenSteps";

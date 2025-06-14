@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./Problem_detail";
 import "./Start-left.css";
 import Project_files from "./Project_files";
-import { problemDetailsMap } from "./Problem_detail";
+import { problemDetailsMap } from "./BuildingBlocks/ProblemDetailsText";
 import { FileItem } from "../CodeContext";
 
 interface StartLeftInput {
@@ -144,8 +144,8 @@ const StartLeft = ({
         );
       case "Problem":
         return (
-          <div className="container-problem-left" ref={ref3}>
-            <div className={`problem-title-left`} ref={problemDropdownRef}>
+          <div className="container-problem-left1" ref={ref3}>
+            <div className={`problem-title-left1`} ref={problemDropdownRef}>
               <div
                 className={`title-dropdown-trigger  ${menuOpen ? "open" : ""}`}
                 onClick={() => setMenuOpen((prev) => !prev)}
@@ -158,7 +158,7 @@ const StartLeft = ({
               </div>
 
               {menuOpen && (
-                <div className="dropdown-menu">
+                <div className="dropdown-menu1">
                   {problemKeys.map((key) => (
                     <div
                       key={key}
@@ -172,7 +172,7 @@ const StartLeft = ({
               )}
             </div>
 
-            <div className="problem-text-left">
+            <div className="problem-text-left1">
               {details || (
                 <div className="defaulttextytext">
                   "No problem selected yet"
@@ -217,7 +217,7 @@ const StartLeft = ({
           </div>
         </div>
         {/* Render dynamic content based on section */}
-        <div className="all-type-of-content">{renderContent()}</div>
+        <div className="all-type-of-content1">{renderContent()}</div>
       </div>
     </div>
   );

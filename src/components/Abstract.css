@@ -201,7 +201,9 @@ body.dark-mode {
 }
 
 .dropdown-list-abstract.open {
-  max-height: 100vh;
+  max-height: 300px;
+  overflow-y: auto;
+  pointer-events: all;
 }
 
 .dropdown-items-container-ab {

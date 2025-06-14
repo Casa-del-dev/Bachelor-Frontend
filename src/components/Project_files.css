@@ -90,6 +90,7 @@ body.dark-mode {
   overflow: auto;
   background-color: var(--main-background);
   color: var(--text-color);
+  align-items: normal;
 }
 
 /*=============================================
@@ -266,6 +267,7 @@ body.dark-mode {
   height: 100%;
   display: grid;
   grid-template-rows: 50% 1fr;
+  box-sizing: border-box;
 }
 
 .file-tree ul {
