@@ -2177,6 +2177,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       let updatedTree = originalSteps;
       for (const { ids } of infos) {
         console.log(ids);
+        console.log("Before Tree: ", updatedTree);
         updatedTree = replaceStepsBySequenceWithChildren(
           updatedTree,
           ids,
@@ -2216,22 +2217,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     }
   }, [answerAbstractionOVerlay]);
 
-  function replaceOrMergeSteps(
-    original: Step[],
-    groupIds: string[],
-    replacements: Step[]
-  ): Step[] {
-    console.log("replacing group:", groupIds);
-
-    const merged = replaceStepsBySequenceWithChildren(
-      original,
-      groupIds,
-      replacements
-    );
-    console.log("after merge:", merged);
-    return merged;
-  }
-
   function collectAllStepIds(tree: Step[]): string[] {
     const result: string[] = [];
     function walk(nodes: Step[]) {
@@ -2252,19 +2237,45 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     return a.every((x) => setB.has(x));
   }
 
+  function removeNodesByIds(nodes: Step[], idsToRemove: Set<string>): Step[] {
+    return nodes
+      .filter((node) => !idsToRemove.has(node.id))
+      .map((node) => ({
+        ...node,
+        children: removeNodesByIds(node.children, idsToRemove),
+      }));
+  }
+
+  function removeAndPromoteChildren(
+    siblings: Step[],
+    idsToRemove: Set<string>
+  ): Step[] {
+    return siblings.flatMap((node) => {
+      if (idsToRemove.has(node.id)) {
+        // “delete” this node but keep & promote its children
+        return removeAndPromoteChildren(node.children, idsToRemove);
+      } else {
+        // keep this node, but clean its children recursively
+        return [
+          {
+            ...node,
+            children: removeAndPromoteChildren(node.children, idsToRemove),
+          },
+        ];
+      }
+    });
+  }
+
   function replaceStepsBySequenceWithChildren(
     root: Step[],
     groupIds: string[],
     replacements: Step[]
   ): Step[] {
-    // 1) Find each ID’s index‐path in the tree
+    // 1) Find each ID’s index‐path in the tree (unchanged)
     const paths = groupIds
       .map((id) => findPath(root, id))
       .filter((p): p is number[] => Array.isArray(p));
-    if (paths.length !== groupIds.length) {
-      // some ID wasn’t found → bail out
-      return root;
-    }
+    if (paths.length !== groupIds.length) return root;
 
     // 2) Compute the LCA path (longest common prefix)
     let lcaPath = paths[0].slice();
@@ -2274,23 +2285,22 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       lcaPath = lcaPath.slice(0, i);
     }
 
-    // 3) Get the LCA node’s ID
+    // 3) Pull out the LCA’s ID, and only remove the *other* IDs
     const lcaNode = getNodeAtPath(root, lcaPath);
-    const removeSelf = groupIds.includes(lcaNode.id);
+    const childIdsToRemove = groupIds.filter((id) => id !== lcaNode.id);
 
-    // 4) Depending on whether LCA itself is in groupIds, either
-    //    a) remove that node itself, or
-    //    b) remove its children matching groupIds
-    return updateAtAncestor(
-      root,
-      lcaPath.slice(0, removeSelf ? -1 : undefined),
-      (siblings) =>
-        spliceGroup(
-          siblings,
-          removeSelf ? [lcaNode.id] : groupIds,
-          replacements
-        )
+    // 4) Now ALWAYS treat this as “remove children, keep the parent”
+    const spliced = updateAtAncestor(root, lcaPath, (siblings) =>
+      spliceGroup(
+        siblings,
+        childIdsToRemove, // <- only the children
+        replacements
+      )
     );
+
+    // 5) Finally promote any grandchildren of those deleted siblings
+    //    into the exact spot they occupied
+    return removeAndPromoteChildren(spliced, new Set(childIdsToRemove));
   }
 
   // --- Helpers ---
@@ -2704,7 +2714,12 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               gap: "5px",
               fontSize: "20px",
             }}
-            onClick={() => handleReplaceSteps(steps, abstraction)}
+            onClick={
+              () =>
+                setAnswerAbstractionOVerlay(
+                  "Yes"
+                ) /* handleReplaceSteps(steps, abstraction) */
+            }
             ref={ref11}
           >
             {isCheckingAbstractionOverlay ? (
