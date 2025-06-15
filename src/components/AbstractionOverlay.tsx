@@ -2206,14 +2206,14 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         }),
       }));
 
-      /*       saveAbstraction(updatedFiltered);
+      saveAbstraction(updatedFiltered);
       originalSetAbstraction(updatedFiltered);
       originalSetSteps(updatedTree);
       saveOriginalStepTree(updatedTree);
 
       deleteAbstractionInbetween(problemId, abstraction!.id)
         .catch((err) => console.error(err))
-        .finally(onClose); */
+        .finally(onClose);
     }
   }, [answerAbstractionOVerlay]);
 
@@ -2235,15 +2235,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     if (a.length !== b.length) return false;
     const setB = new Set(b);
     return a.every((x) => setB.has(x));
-  }
-
-  function removeNodesByIds(nodes: Step[], idsToRemove: Set<string>): Step[] {
-    return nodes
-      .filter((node) => !idsToRemove.has(node.id))
-      .map((node) => ({
-        ...node,
-        children: removeNodesByIds(node.children, idsToRemove),
-      }));
   }
 
   function removeAndPromoteChildren(
@@ -2271,13 +2262,13 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     groupIds: string[],
     replacements: Step[]
   ): Step[] {
-    // 1) Find each ID’s index‐path in the tree (unchanged)
+    // 1) Find each ID’s index path
     const paths = groupIds
       .map((id) => findPath(root, id))
       .filter((p): p is number[] => Array.isArray(p));
     if (paths.length !== groupIds.length) return root;
 
-    // 2) Compute the LCA path (longest common prefix)
+    // 2) Find LCA (longest common prefix)
     let lcaPath = paths[0].slice();
     for (const p of paths.slice(1)) {
       let i = 0;
@@ -2285,22 +2276,27 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       lcaPath = lcaPath.slice(0, i);
     }
 
-    // 3) Pull out the LCA’s ID, and only remove the *other* IDs
+    // 3) LCA node + removeSelf logic
     const lcaNode = getNodeAtPath(root, lcaPath);
-    const childIdsToRemove = groupIds.filter((id) => id !== lcaNode.id);
+    const removeSelf = groupIds.includes(lcaNode.id);
 
-    // 4) Now ALWAYS treat this as “remove children, keep the parent”
-    const spliced = updateAtAncestor(root, lcaPath, (siblings) =>
-      spliceGroup(
-        siblings,
-        childIdsToRemove, // <- only the children
-        replacements
-      )
+    // 4) What IDs to remove (if LCA included, exclude it from promote set)
+    const promoteIds = groupIds.filter((id) => id !== lcaNode.id);
+
+    // 5) Ancestor path & targets for splice
+    const spliceTargets = removeSelf ? [lcaNode.id] : promoteIds;
+    const ancestorPath = removeSelf ? lcaPath.slice(0, -1) : lcaPath;
+
+    // 6) Perform the splice (spliceGroup will handle promotion + replacement)
+    const spliced = updateAtAncestor(root, ancestorPath, (siblings) =>
+      spliceGroup(siblings, spliceTargets, replacements)
     );
 
-    // 5) Finally promote any grandchildren of those deleted siblings
-    //    into the exact spot they occupied
-    return removeAndPromoteChildren(spliced, new Set(childIdsToRemove));
+    // 8) Now *always* remove & promote any IDs in promoteIds:
+    //    - in the non-removeSelf case they’re already gone, so no change
+    //    - in the removeSelf case this strips out those two child IDs
+    //      that got orphaned under the replacement
+    return removeAndPromoteChildren(spliced, new Set(promoteIds));
   }
 
   // --- Helpers ---
@@ -2323,49 +2319,53 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     );
   }
 
-  // Remove exactly the IDs in `toRemove` from `siblings`, collect all of their
-  // children as “orphans,” then splice in `replacements` (with fresh IDs),
-  // appending those orphans onto the *last* replacement’s children.
+  function cloneReplacementTree(step: Step): Step {
+    const newId = `step-${Date.now()}-${Math.floor(Math.random() * 1e8)}`;
+    return {
+      ...step,
+      id: newId,
+      children: step.children.map(cloneReplacementTree),
+    };
+  }
+
+  // 2) spliceGroup: promote orphans (no cloning), then clone only the replacements
   function spliceGroup(
     siblings: Step[],
     toRemove: string[],
     replacements: Step[]
   ): Step[] {
+    const toRemoveSet = new Set(toRemove);
     const newSibs: Step[] = [];
     const orphanChildren: Step[] = [];
 
+    // Remove nodes by ID, but collect their ORIGINAL children
     for (const node of siblings) {
-      if (toRemove.includes(node.id)) {
-        // collect any grandchildren we need to preserve
-        orphanChildren.push(...node.children);
+      if (toRemoveSet.has(node.id)) {
+        orphanChildren.push(
+          ...removeAndPromoteChildren(node.children, toRemoveSet)
+        );
       } else {
         newSibs.push(node);
       }
     }
 
-    // clone each replacement with new IDs
+    // Clone ONLY the replacement subtree
     const clones = replacements.map((repl, idx) => {
-      const clone = cloneWithNewIds(repl);
-      // clone its own children
-      let kids = repl.children.map(cloneWithNewIds);
-      // on the *last* replacement, tack on all the orphanChildren
+      const clone = cloneReplacementTree(repl);
+      // the clone already has its own cloned children
       if (idx === replacements.length - 1) {
-        kids = [...kids, ...orphanChildren.map(cloneWithNewIds)];
+        // append the *existing* orphans under the last clone
+        clone.children = clone.children.concat(orphanChildren);
       }
-      clone.children = kids;
       return clone;
     });
 
-    // find the splice index (first removed position)
-    const firstRemovedIndex = siblings.findIndex((n) =>
-      toRemove.includes(n.id)
+    // Splice in at the right index
+    const firstRemovedIndex = siblings.findIndex((node) =>
+      toRemoveSet.has(node.id)
     );
-    if (firstRemovedIndex < 0) {
-      // nothing to splice
-      return siblings;
-    }
+    if (firstRemovedIndex < 0) return siblings;
 
-    // build the new siblings array
     return [
       ...newSibs.slice(0, firstRemovedIndex),
       ...clones,
@@ -2394,16 +2394,6 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       cur = cur.children[path[i]];
     }
     return cur;
-  }
-
-  // Deep‐clone a step (new IDs everywhere)
-  function cloneWithNewIds(step: Step): Step {
-    const newId = `step-${Date.now()}-${Math.floor(Math.random() * 1e8)}`;
-    return {
-      ...step,
-      id: newId,
-      children: step.children.map(cloneWithNewIds),
-    };
   }
 
   /* -----------------------
@@ -2714,12 +2704,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               gap: "5px",
               fontSize: "20px",
             }}
-            onClick={
-              () =>
-                setAnswerAbstractionOVerlay(
-                  "Yes"
-                ) /* handleReplaceSteps(steps, abstraction) */
-            }
+            onClick={() => handleReplaceSteps(steps, abstraction)}
             ref={ref11}
           >
             {isCheckingAbstractionOverlay ? (

@@ -656,7 +656,15 @@ Output: 5
 Expression Evaluator
 
 Description:
-Write a function that takes a string representing a basic arithmetic expression and evaluates it. The expression may contain integers, spaces, and the operators +, -, *, and /.
+Write a function that takes a string representing a basic arithmetic expression and evaluates it. The expression may contain integers, spaces, the operators +, -, *, and / (integer division), and parentheses.
+
+The evaluator should respect standard arithmetic precedence:
+- Multiplication (*) and division (/) have higher precedence than addition (+) and subtraction (-)
+- Parentheses should be evaluated first to override normal precedence rules
+
+The function should raise a KeyError if the expression contains any invalid tokens, such as unrecognized characters or malformed input.
+
+You can assume that valid input will have properly spaced tokens (e.g., "3 + 4", not "3+4").
 
 Example 1:
 Input: "3 + 4 * 2"
@@ -673,5 +681,9 @@ Output: 212
 Example 4:
 Input: "100 * ( 2 + 12 )"
 Output: 1400
+
+Example 5:
+Input: "2 + x"
+Raises: KeyError (invalid token 'x')
 `,
 };
