@@ -475,9 +475,10 @@ interface AbstractionOverlayProps {
   originalSetSteps: React.Dispatch<React.SetStateAction<Step[]>>;
   onClose: () => void;
   abstraction: AbstractionItem | null;
-  abstractionToSteps: Record<string, string[]>;
+  abstractionToSteps: Record<string, string[][]>;
   stepLabels: string[];
   getType: "Group" | "Recycle";
+  saveOriginalStepTree: any;
   ref1: React.RefObject<HTMLDivElement>;
   ref2: React.RefObject<HTMLDivElement>;
   ref3: React.RefObject<HTMLDivElement>;
@@ -607,6 +608,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   abstractionToSteps,
   stepLabels,
   getType,
+  saveOriginalStepTree,
   ref1,
   ref2,
   ref3,
@@ -2122,6 +2124,22 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     []
   );
 
+  function computeLCApath(root: Step[], groupIds: string[]): number[] | null {
+    // find each ID’s path
+    const paths = groupIds
+      .map((id) => findPath(root, id))
+      .filter((p): p is number[] => Array.isArray(p));
+    if (paths.length !== groupIds.length) return null;
+    // compute longest common prefix
+    let lca = paths[0].slice();
+    for (const p of paths.slice(1)) {
+      let i = 0;
+      while (i < lca.length && i < p.length && lca[i] === p[i]) i++;
+      lca = lca.slice(0, i);
+    }
+    return lca;
+  }
+
   const [fadeInTextNo, setFadeInTextNo] = useState(false);
   const [fadeOutTextNo, setFadeOutTextNo] = useState(false);
 
@@ -2140,90 +2158,78 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         setFadeOutTextNo(false);
       }, 5300);
     } else if (answerAbstractionOVerlay === "Yes") {
-      //implement here
-      const stepIdsToReplace = abstractionToSteps[abstraction!.id];
+      // 1) grab the *array of groups* for this abstraction
+      const groupsToReplace: string[][] =
+        abstractionToSteps[abstraction!.id] || [];
 
-      const updatedStepsTree: Step[] = replaceOrMergeSteps(
-        originalSteps,
-        new Set(stepIdsToReplace),
-        steps
-      );
+      // 3) …and for each group, call your replaceOrMergeSteps once with that group’s IDs
+      type GroupInfo = { ids: string[]; lcaDepth: number };
+      const infos: GroupInfo[] = (abstractionToSteps[abstraction!.id] || [])
+        .map((ids) => {
+          const path = computeLCApath(originalSteps, ids);
+          return path ? { ids, lcaDepth: path.length } : null;
+        })
+        .filter((x): x is GroupInfo => !!x)
+        // 3b) sort by descending depth so inner groups go first
+        .sort((a, b) => b.lcaDepth - a.lcaDepth);
 
+      // 3c) now apply them in order
+      let updatedTree = originalSteps;
+      for (const { ids } of infos) {
+        console.log(ids);
+        updatedTree = replaceStepsBySequenceWithChildren(
+          updatedTree,
+          ids,
+          steps
+        );
+
+        console.log(updatedTree);
+      }
+
+      // 4) now wire it back into your abstractions list…
       const filtered = originalAbstraction.filter(
         (a) => a.id !== abstraction!.id
       );
-
-      const oldAbstractionItem = originalAbstraction.find(
-        (a) => a.id === abstraction!.id
-      );
-      if (!oldAbstractionItem) {
-        console.error(
-          "Could not find old abstraction item for id",
-          abstraction!.id
-        );
-        return;
-      }
-
       const newAllIds = collectAllStepIds(steps);
+      const newGroup = newAllIds.map((id) => ({ id }));
 
-      const newGroup: { id: string }[] = newAllIds.map((id) => ({ id }));
-
-      const updatedFiltered = filtered.map((absItem) => {
-        const replacedSteps = absItem.steps.map(
-          (group /* group: {id:string}[] */) => {
-            const groupIds = group.map((o) => o.id);
-            if (sameIdSet(groupIds, stepIdsToReplace)) {
-              return newGroup;
-            } else {
-              return group;
-            }
+      const updatedFiltered = filtered.map((absItem) => ({
+        ...absItem,
+        steps: absItem.steps.map((oldGroup) => {
+          const oldIds = oldGroup.map((o) => o.id);
+          // if this oldGroup matches ANY of the replaced groups, swap it out:
+          if (groupsToReplace.some((g) => sameIdSet(g, oldIds))) {
+            return newGroup;
           }
-        );
+          return oldGroup;
+        }),
+      }));
 
-        return {
-          ...absItem,
-          steps: replacedSteps,
-        };
-      });
-
-      saveAbstraction(updatedFiltered);
+      /*       saveAbstraction(updatedFiltered);
       originalSetAbstraction(updatedFiltered);
-
-      originalSetSteps(updatedStepsTree);
+      originalSetSteps(updatedTree);
+      saveOriginalStepTree(updatedTree);
 
       deleteAbstractionInbetween(problemId, abstraction!.id)
-        .catch((err) => {
-          console.error("Failed to delete abstraction from backend:", err);
-        })
-        .finally(() => {
-          onClose();
-        });
+        .catch((err) => console.error(err))
+        .finally(onClose); */
     }
   }, [answerAbstractionOVerlay]);
 
   function replaceOrMergeSteps(
-    originalSteps: Step[],
-    stepIdsToReplace: Set<string>,
+    original: Step[],
+    groupIds: string[],
     replacements: Step[]
   ): Step[] {
-    if (getType === "Recycle") {
-      return replaceStepsById(originalSteps, stepIdsToReplace, replacements);
-    } else {
-      return mergeStepsById(originalSteps, stepIdsToReplace, replacements);
-    }
-  }
+    console.log("replacing group:", groupIds);
 
-  function generateUniqueId(): string {
-    return `step-${Date.now()}-${Math.floor(Math.random() * 100000000)}`;
-  }
-
-  function cloneWithNewIds(step: Step): Step {
-    const newId = generateUniqueId();
-    return {
-      ...step,
-      id: newId,
-      children: step.children.map(cloneWithNewIds),
-    };
+    const merged = replaceStepsBySequenceWithChildren(
+      original,
+      groupIds,
+      replacements
+    );
+    console.log("after merge:", merged);
+    return merged;
   }
 
   function collectAllStepIds(tree: Step[]): string[] {
@@ -2246,90 +2252,148 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     return a.every((x) => setB.has(x));
   }
 
-  function mergeStepsById(
-    tree: Step[],
-    idsToMerge: Set<string>,
+  function replaceStepsBySequenceWithChildren(
+    root: Step[],
+    groupIds: string[],
     replacements: Step[]
   ): Step[] {
-    const result: Step[] = [];
-
-    let i = 0;
-    while (i < tree.length) {
-      const step = tree[i];
-
-      // If this step should be merged
-      if (idsToMerge.has(step.id)) {
-        const mergedGroup: Step[] = [];
-        const mergedChildren: Step[] = [];
-
-        // Collect all consecutive steps that should be merged
-        while (i < tree.length && idsToMerge.has(tree[i].id)) {
-          mergedGroup.push(tree[i]);
-          mergedChildren.push(...(tree[i].children || []));
-          i++;
-        }
-
-        // Clone replacements and attach mergedChildren after their own children
-        const mergedSteps: Step[] = replacements.map((replacementStep) => {
-          const newId = generateUniqueId();
-
-          return {
-            ...replacementStep,
-            id: newId,
-            children: [
-              // first keep any children that replacementStep already had
-              ...(replacementStep.children || []).map((child) => ({
-                ...child,
-              })),
-              // then append all mergedChildren as grandchildren of this new root
-              ...mergedChildren.map((child) => ({ ...child })),
-            ],
-          };
-        });
-
-        result.push(...mergedSteps);
-      } else {
-        // Recursively check children
-        const newChildren = step.children?.length
-          ? mergeStepsById(step.children, idsToMerge, replacements)
-          : [];
-
-        result.push({
-          ...step,
-          children: newChildren,
-        });
-        i++;
-      }
+    // 1) Find each ID’s index‐path in the tree
+    const paths = groupIds
+      .map((id) => findPath(root, id))
+      .filter((p): p is number[] => Array.isArray(p));
+    if (paths.length !== groupIds.length) {
+      // some ID wasn’t found → bail out
+      return root;
     }
 
-    return result;
+    // 2) Compute the LCA path (longest common prefix)
+    let lcaPath = paths[0].slice();
+    for (const p of paths.slice(1)) {
+      let i = 0;
+      while (i < lcaPath.length && i < p.length && lcaPath[i] === p[i]) i++;
+      lcaPath = lcaPath.slice(0, i);
+    }
+
+    // 3) Get the LCA node’s ID
+    const lcaNode = getNodeAtPath(root, lcaPath);
+    const removeSelf = groupIds.includes(lcaNode.id);
+
+    // 4) Depending on whether LCA itself is in groupIds, either
+    //    a) remove that node itself, or
+    //    b) remove its children matching groupIds
+    return updateAtAncestor(
+      root,
+      lcaPath.slice(0, removeSelf ? -1 : undefined),
+      (siblings) =>
+        spliceGroup(
+          siblings,
+          removeSelf ? [lcaNode.id] : groupIds,
+          replacements
+        )
+    );
   }
 
-  function replaceStepsById(
-    tree: Step[],
-    idsToReplace: Set<string>,
+  // --- Helpers ---
+
+  // Recursively descend to apply `updater` at the given parentPath.
+  // If parentPath is empty, we’re already at the right siblings array.
+  function updateAtAncestor(
+    nodes: Step[],
+    parentPath: number[] = [],
+    updater: (siblings: Step[]) => Step[]
+  ): Step[] {
+    if (parentPath.length === 0) {
+      return updater(nodes);
+    }
+    const [head, ...rest] = parentPath;
+    return nodes.map((n, i) =>
+      i === head
+        ? { ...n, children: updateAtAncestor(n.children, rest, updater) }
+        : n
+    );
+  }
+
+  // Remove exactly the IDs in `toRemove` from `siblings`, collect all of their
+  // children as “orphans,” then splice in `replacements` (with fresh IDs),
+  // appending those orphans onto the *last* replacement’s children.
+  function spliceGroup(
+    siblings: Step[],
+    toRemove: string[],
     replacements: Step[]
   ): Step[] {
-    const newTree: Step[] = [];
+    const newSibs: Step[] = [];
+    const orphanChildren: Step[] = [];
 
-    for (const step of tree) {
-      if (idsToReplace.has(step.id)) {
-        // Instead of pushing `repl` itself, push a deep clone with new ids
-        for (const repl of replacements) {
-          newTree.push(cloneWithNewIds(repl));
-        }
+    for (const node of siblings) {
+      if (toRemove.includes(node.id)) {
+        // collect any grandchildren we need to preserve
+        orphanChildren.push(...node.children);
       } else {
-        // Recurse into children normally
-        const newChildren = replaceStepsById(
-          step.children,
-          idsToReplace,
-          replacements
-        );
-        newTree.push({ ...step, children: newChildren });
+        newSibs.push(node);
       }
     }
 
-    return newTree;
+    // clone each replacement with new IDs
+    const clones = replacements.map((repl, idx) => {
+      const clone = cloneWithNewIds(repl);
+      // clone its own children
+      let kids = repl.children.map(cloneWithNewIds);
+      // on the *last* replacement, tack on all the orphanChildren
+      if (idx === replacements.length - 1) {
+        kids = [...kids, ...orphanChildren.map(cloneWithNewIds)];
+      }
+      clone.children = kids;
+      return clone;
+    });
+
+    // find the splice index (first removed position)
+    const firstRemovedIndex = siblings.findIndex((n) =>
+      toRemove.includes(n.id)
+    );
+    if (firstRemovedIndex < 0) {
+      // nothing to splice
+      return siblings;
+    }
+
+    // build the new siblings array
+    return [
+      ...newSibs.slice(0, firstRemovedIndex),
+      ...clones,
+      ...newSibs.slice(firstRemovedIndex),
+    ];
+  }
+
+  // Recursively find the index‐path of `id` in `nodes`
+  function findPath(
+    nodes: Step[],
+    id: string,
+    prefix: number[] = []
+  ): number[] | null {
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].id === id) return [...prefix, i];
+      const childPath = findPath(nodes[i].children, id, [...prefix, i]);
+      if (childPath) return childPath;
+    }
+    return null;
+  }
+
+  // Get the node at a given index‐path
+  function getNodeAtPath(nodes: Step[], path: number[]): Step {
+    let cur = nodes[path[0]];
+    for (let i = 1; i < path.length; i++) {
+      cur = cur.children[path[i]];
+    }
+    return cur;
+  }
+
+  // Deep‐clone a step (new IDs everywhere)
+  function cloneWithNewIds(step: Step): Step {
+    const newId = `step-${Date.now()}-${Math.floor(Math.random() * 1e8)}`;
+    return {
+      ...step,
+      id: newId,
+      children: step.children.map(cloneWithNewIds),
+    };
   }
 
   /* -----------------------

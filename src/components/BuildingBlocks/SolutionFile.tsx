@@ -405,7 +405,7 @@ def analyze_frequencies(text, stopwords):
 
     if cmd == "add":
         return a + b
-    elif cmd == "subtract":
+    elif cmd == "substract":
         return a - b
     elif cmd == "multiply":
         return a * b

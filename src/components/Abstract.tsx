@@ -4426,7 +4426,7 @@ const Abstract: React.FC = ({}) => {
   const saveAbstraction = useCallback(
     async (abstraction: any) => {
       if (localStorage.getItem("tutorialStep")) return testDataTutorial;
-      if (!problemId || !localStorage.getItem("tutorialStep")) return;
+      if (!problemId) return;
 
       const token = localStorage.getItem("authToken");
       if (!token) return;
@@ -4456,7 +4456,7 @@ const Abstract: React.FC = ({}) => {
   const [isLoadingAbstraction, setIsLoadingAbstraction] = useState(false);
 
   const handleCallAbstraction = async () => {
-    if (!treeCorrect || localStorage.get("tutorialStep")) return;
+    if (!treeCorrect || localStorage.getItem("tutorialStep")) return;
 
     // 2) Turn on loading
     setIsLoadingAbstraction(true);
@@ -4476,6 +4476,32 @@ const Abstract: React.FC = ({}) => {
       }
 
       setToggleAbstraction("true");
+
+      const data = abstractionJson as AbstractionItem[];
+
+      setAbstractions(data || []);
+
+      //here we create the arrays that are easily accessable
+
+      const abstractionToSteps: Record<string, string[][]> = {};
+      const stepToAbstractions: Record<string, string[]> = {};
+
+      for (const abstraction of data) {
+        const abstractionId = abstraction.id;
+        // Keep the array of groups
+        abstractionToSteps[abstractionId] = abstraction.steps.map((group) =>
+          group.map((step) => {
+            // Reverse mapping
+            if (!stepToAbstractions[step.id]) stepToAbstractions[step.id] = [];
+            stepToAbstractions[step.id].push(abstractionId);
+            return step.id;
+          })
+        );
+      }
+
+      setAbstractionToSteps(abstractionToSteps);
+      setStepToAbstractions(stepToAbstractions);
+
       await saveAbstraction(abstractionJson);
     } catch (error) {
       console.error("Failed to get response from API Abstract:", error);
@@ -4489,7 +4515,7 @@ const Abstract: React.FC = ({}) => {
   const [abstractions, setAbstractions] = useState<AbstractionItem[]>([]);
 
   const [abstractionToSteps, setAbstractionToSteps] = useState<
-    Record<string, string[]>
+    Record<string, string[][]>
   >({});
   const [stepToAbstractions, setStepToAbstractions] = useState<
     Record<string, string[]>
@@ -4515,125 +4541,27 @@ const Abstract: React.FC = ({}) => {
         if (res.status === 404) {
           setAbstractions([]);
         } else {
-          /*           const data = (await res.json()) as AbstractionItem[];
-           */ const testData: AbstractionItem[] = [
-            {
-              id: "abstraction-1748260426981-83469",
-              steps: [
-                [
-                  { id: "step-1748855935470-1128" },
-                  { id: "step-1748855935470-3631" },
-                ],
-                [{ id: "step-1748855935470-1795" }],
-                [{ id: "step-1748855935470-681" }],
-              ],
-              correct_answer: {
-                stepsTree: {
-                  R: {
-                    content: "Generalized iteration and processing",
-                    general_hint:
-                      "Generalized iteration and processing of characters",
-                    detailed_hint:
-                      "This step involves iterating over characters and performing a processing action.",
-                    substeps: {
-                      R1: {
-                        content: "Iterate over characters",
-                        general_hint: "Iterate over characters",
-                        detailed_hint:
-                          "This substep involves iterating over each character in a sequence.",
-                        substeps: {},
-                      },
-                      R2: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            {
-              id: "abstraction-1748260426981-6579",
-              steps: [
-                [
-                  { id: "step-1748855935470-1128" },
-                  { id: "step-1748855935470-3631" },
-                ],
-              ],
-              correct_answer: {
-                stepsTree: {
-                  R: {
-                    content: "Generalized iteration and processing",
-                    general_hint:
-                      "Generalized iteration and processing of characters",
-                    detailed_hint:
-                      "This step involves iterating over characters and performing a processing action.",
-                    substeps: {
-                      R1: {
-                        content: "Iterate over characters",
-                        general_hint: "Iterate over characters",
-                        detailed_hint:
-                          "This substep involves iterating over each character in a sequence.",
-                        substeps: {},
-                      },
-                      R2: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                      R3: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                      R4: {
-                        content: "Process character",
-                        general_hint: "Process character",
-                        detailed_hint:
-                          "This substep involves processing the current character.",
-                        substeps: {},
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          ];
+          const data = (await res.json()) as AbstractionItem[];
 
-          setAbstractions(testData);
-          /*           setAbstractions(data || []);
-           */
+          setAbstractions(data || []);
 
           //here we create the arrays that are easily accessable
 
-          const abstractionToSteps: Record<string, string[]> = {};
+          const abstractionToSteps: Record<string, string[][]> = {};
           const stepToAbstractions: Record<string, string[]> = {};
 
-          for (const abstraction of testData) {
+          for (const abstraction of data) {
             const abstractionId = abstraction.id;
-            const stepIds: string[] = [];
-
-            for (const group of abstraction.steps) {
-              for (const step of group) {
-                stepIds.push(step.id);
-
-                // Update reverse mapping: step -> abstraction
-                if (!stepToAbstractions[step.id]) {
+            // Keep the array of groups
+            abstractionToSteps[abstractionId] = abstraction.steps.map((group) =>
+              group.map((step) => {
+                // Reverse mapping
+                if (!stepToAbstractions[step.id])
                   stepToAbstractions[step.id] = [];
-                }
                 stepToAbstractions[step.id].push(abstractionId);
-              }
-            }
-
-            // Store abstraction -> step list
-            abstractionToSteps[abstractionId] = stepIds;
+                return step.id;
+              })
+            );
           }
 
           setAbstractionToSteps(abstractionToSteps);
@@ -5737,7 +5665,7 @@ const Abstract: React.FC = ({}) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const inTutorial =
-        stepIndex !== 0 && !!localStorage.getItem("tutorialStep");
+        stepIndex !== 0 && localStorage.getItem("tutorialStep");
       if (e.key === "Escape" && inTutorial) {
         cancelTutorial();
       } else if (e.key === "ArrowRight" && inTutorial) {
@@ -5848,31 +5776,24 @@ const Abstract: React.FC = ({}) => {
       setToggleAbstraction("true");
       setAbstractions([...testDataTutorial]);
 
-      const abstractionToSteps: Record<string, string[]> = {};
+      const abstractionToSteps: Record<string, string[][]> = {};
       const stepToAbstractions: Record<string, string[]> = {};
 
       for (const abstraction of testDataTutorial) {
         const abstractionId = abstraction.id;
-        const stepIds: string[] = [];
-
-        for (const group of abstraction.steps) {
-          for (const step of group) {
-            stepIds.push(step.id);
-
-            // Update reverse mapping: step -> abstraction
-            if (!stepToAbstractions[step.id]) {
-              stepToAbstractions[step.id] = [];
-            }
+        // Keep the array of groups
+        abstractionToSteps[abstractionId] = abstraction.steps.map((group) =>
+          group.map((step) => {
+            // Reverse mapping
+            if (!stepToAbstractions[step.id]) stepToAbstractions[step.id] = [];
             stepToAbstractions[step.id].push(abstractionId);
-          }
-        }
-
-        // Store abstraction -> step list
-        abstractionToSteps[abstractionId] = stepIds;
+            return step.id;
+          })
+        );
       }
 
-      setAbstractionToSteps({ ...abstractionToSteps });
-      setStepToAbstractions({ ...stepToAbstractions });
+      setAbstractionToSteps(abstractionToSteps);
+      setStepToAbstractions(stepToAbstractions);
     } else if (stepIndex === 7) {
       setToggleAbstraction("true");
     } else if (stepIndex === 8) {
@@ -6361,6 +6282,7 @@ const Abstract: React.FC = ({}) => {
             abstractionToSteps={abstractionToSteps}
             stepLabels={abstractionStepLabels}
             getType={abstractionType}
+            saveOriginalStepTree={saveStepTree}
             ref1={refs.thirteen}
             ref2={refs.fourteen}
             ref3={refs.fifthteen}
