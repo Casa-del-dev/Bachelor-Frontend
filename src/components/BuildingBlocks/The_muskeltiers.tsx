@@ -5,7 +5,7 @@ import "./The_muskeltiers.css";
 interface TheMuskeltiersProps {
   onEditStep?: () => void;
   onSplitStep: () => void;
-  selected: number[] | null;
+  selected: boolean;
   vertical?: boolean | false;
   ref1?: any;
   ref2?: any;

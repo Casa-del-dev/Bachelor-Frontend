@@ -681,22 +681,29 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const loadedRefSteps = useRef(false);
 
   const [steps, setSteps] = useState<Step[]>([]);
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [allIsAvailable, setAllIsAvailable] = useState(true);
-  const [allIsHinted, setAllIsHinted] = useState(true);
+  const [isAvailable, setIsAvailable] = useState<boolean>();
+  const [allIsAvailable, setAllIsAvailable] = useState<boolean>();
+  const [allIsHinted, setAllIsHinted] = useState<boolean>();
 
   useEffect(() => {
     loadedRefSteps.current = false;
     setSteps([]);
 
     loadAbstractionInbetween(problemId, abstractionId)
-      .then(({ steps, isAvailable, allIsAvailable, allIsHinted }) => {
-        setSteps(steps);
-        setIsAvailable(isAvailable);
-        setAllIsAvailable(allIsAvailable);
-        setAllIsHinted(allIsHinted);
-      })
-      .catch((err) => console.error(err))
+      .then(
+        ({
+          steps,
+          isAvailable: backendAvailable = true,
+          allIsAvailable: backendAllAvail = true,
+          allIsHinted: backendAllHinted = true,
+        }) => {
+          setSteps(steps);
+          setIsAvailable(backendAvailable);
+          setAllIsAvailable(backendAllAvail);
+          setAllIsHinted(backendAllHinted);
+        }
+      )
+      .catch(console.error)
       .finally(() => {
         loadedRefSteps.current = true;
       });
@@ -960,6 +967,13 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   useEffect(() => {
     if (!loadedRefSteps.current) return;
     if (!problemId || !abstractionId) return;
+    if (
+      isAvailable === undefined ||
+      allIsAvailable === undefined ||
+      allIsHinted === undefined
+    )
+      return;
+
     saveAbstractionInbetween(
       problemId,
       abstractionId,
@@ -1616,6 +1630,16 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     editingRef.current = editingPath !== null;
   }, [editingPath]);
 
+  useEffect(() => {
+    if (!editingPath) return;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const len = textarea.value.length;
+      textarea.setSelectionRange(len, len);
+      textarea.focus();
+    }
+  }, [editingPath]);
+
   // focus on the right step
   useEffect(() => {
     if (editingPath && mapContainerRef.current) {
@@ -1646,8 +1670,10 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       setEditingPath(null);
       setTempContent("");
     } else {
-      setEditingPath(path);
-      setTempContent(initialValue);
+      setTimeout(() => {
+        setEditingPath(path);
+        setTempContent(initialValue);
+      }, 100);
     }
   }
 
@@ -1783,7 +1809,14 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                       className="Filetext-tree abstract"
                       strokeWidth={1.2}
                       onClick={() => handleStartEditing(path, node.content)}
-                      style={{ fill: editingPath ? "lightgray" : undefined }}
+                      style={{
+                        fill:
+                          editingPath &&
+                          editingPath.length === path.length &&
+                          editingPath.every((v, i) => v === path[i])
+                            ? "lightgray"
+                            : undefined,
+                      }}
                     />
                   </div>
                   <div className="trash">
@@ -1797,13 +1830,15 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                       abstract={true}
                       ref1={node.id === "step-0001" ? ref10 : undefined}
                     />
-                    <Trash
-                      cursor="pointer"
-                      strokeWidth={1.2}
-                      color={getStepBoxTextColor(node)}
-                      onClick={() => handleRemoveStep(node.id)}
-                      className="trash-icon abstract"
-                    />
+                    {allIsAvailable && (
+                      <Trash
+                        cursor="pointer"
+                        strokeWidth={1.2}
+                        color={getStepBoxTextColor(node)}
+                        onClick={() => handleRemoveStep(node.id)}
+                        className="trash-icon abstract"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -1990,6 +2025,12 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     const currentHave = countCurrentSteps(stepsRef.current);
     setNumberOfNeededSteps(totalNeeded - currentHave);
   }, [abstraction]);
+
+  useEffect(() => {
+    if (!isAvailable) {
+      recalcNumberOfNeeded();
+    }
+  }, []);
 
   useEffect(() => {
     if (numberOfNeededSteps !== null && draggingNew === false) {
@@ -2712,8 +2753,13 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               justifyContent: "center",
               gap: "5px",
               fontSize: "20px",
+              cursor: "pointer",
             }}
-            onClick={() => handleReplaceSteps(steps, abstraction)}
+            onClick={() => {
+              setTimeout(() => {
+                handleReplaceSteps(steps, abstraction);
+              }, 100);
+            }}
             ref={ref11}
           >
             {isCheckingAbstractionOverlay ? (
@@ -2722,7 +2768,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               <Check
                 size={30}
                 strokeWidth={3}
-                style={{ color: "rgb(40, 211, 40)", cursor: "pointer" }}
+                style={{ color: "rgb(40, 211, 40)" }}
               />
             )}
             Check

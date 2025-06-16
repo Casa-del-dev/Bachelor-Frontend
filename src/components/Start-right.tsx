@@ -1501,8 +1501,10 @@ Editing logic START
       setEditingPath(null);
       setTempContent("");
     } else {
-      setEditingPath(path);
-      setTempContent(initialValue);
+      setTimeout(() => {
+        setEditingPath(path);
+        setTempContent(initialValue);
+      }, 100);
     }
   }
 
@@ -2151,6 +2153,10 @@ Editing logic START
         const isLastSibling = currentIndex === siblingArray.length - 1;
         const parentPathOfSubstep = currentPath.slice(0, -1);
         const indexInParent = currentPath[currentPath.length - 1];
+        const isThisNodeEditing =
+          editingPath !== null &&
+          editingPath.length === currentPath.length &&
+          editingPath.every((v, i) => v === currentPath[i]);
 
         promotedElements.push(
           <Fragment key={`promoted-${currentPath.join("-")}`}>
@@ -2256,7 +2262,7 @@ Editing logic START
                                 }
                                 vertical={burgerIcon ?? true}
                                 onSplitStep={HandleOnSplitStep(currentPath)}
-                                selected={editingPath}
+                                selected={isThisNodeEditing}
                               />
                             </div>
                             <CustomLightbulb
@@ -2299,7 +2305,7 @@ Editing logic START
                               handleStartEditing(currentPath, step.content)
                             }
                             onSplitStep={HandleOnSplitStep(currentPath)}
-                            selected={editingPath}
+                            selected={isThisNodeEditing}
                           />
                         </div>
                         <div className="trash">
@@ -2342,6 +2348,10 @@ Editing logic START
                 editingPath.every((val, i) => val === currentPath[i]) ? (
                   <textarea
                     autoFocus
+                    onFocus={(e) => {
+                      const len = e.currentTarget.value.length;
+                      e.currentTarget.setSelectionRange(len, len);
+                    }}
                     className="inline-edit-textarea-editing"
                     style={{ color: getStepBoxTextColor(step) }}
                     rows={3}
@@ -3750,6 +3760,11 @@ Biggest render Tree ever recored START
           ? `Substep ${displayPath}:`
           : `Step ${displayPath}:`;
 
+      const isThisNodeEditing =
+        editingPath !== null &&
+        editingPath.length === currentPath.length &&
+        editingPath.every((v, i) => v === currentPath[i]);
+
       // TOP LEVEL: NO PARENTS <-> NOT A SUBSTEP
       let view: JSX.Element;
 
@@ -3841,7 +3856,7 @@ Biggest render Tree ever recored START
                             }
                             vertical={burgerIcon ?? true}
                             onSplitStep={HandleOnSplitStep(currentPath)}
-                            selected={editingPath}
+                            selected={isThisNodeEditing}
                           />
                         </div>
                         <CustomLightbulb
@@ -3880,7 +3895,7 @@ Biggest render Tree ever recored START
                           handleStartEditing(currentPath, step.content)
                         }
                         onSplitStep={HandleOnSplitStep(currentPath)}
-                        selected={editingPath}
+                        selected={isThisNodeEditing}
                         ref1={ref9}
                         ref2={ref10}
                       />
@@ -3935,6 +3950,10 @@ Biggest render Tree ever recored START
             {isCurrentlyEditing ? (
               <textarea
                 autoFocus
+                onFocus={(e) => {
+                  const len = e.currentTarget.value.length;
+                  e.currentTarget.setSelectionRange(len, len);
+                }}
                 className="inline-edit-textarea-editing"
                 style={{ color: getStepBoxTextColor(step) }}
                 rows={3}

@@ -3622,6 +3622,16 @@ const Abstract: React.FC = ({}) => {
     editingRef.current = editingPath !== null;
   }, [editingPath]);
 
+  useEffect(() => {
+    if (!editingPath) return;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const len = textarea.value.length;
+      textarea.setSelectionRange(len, len);
+      textarea.focus();
+    }
+  }, [editingPath]);
+
   // focus on the right step
   useEffect(() => {
     if (editingPath && mapContainerRef.current) {
@@ -3659,8 +3669,10 @@ const Abstract: React.FC = ({}) => {
       setEditingPath(null);
       setTempContent("");
     } else {
-      setEditingPath(path);
-      setTempContent(initialValue);
+      setTimeout(() => {
+        setEditingPath(path);
+        setTempContent(initialValue);
+      }, 100);
     }
   }
 
@@ -5130,7 +5142,14 @@ const Abstract: React.FC = ({}) => {
                         className="Filetext-tree abstract"
                         strokeWidth={1.2}
                         onClick={() => handleStartEditing(path, node.content)}
-                        style={{ fill: editingPath ? "lightgray" : undefined }}
+                        style={{
+                          fill:
+                            editingPath &&
+                            editingPath.length === path.length &&
+                            editingPath.every((v, i) => v === path[i])
+                              ? "lightgray"
+                              : undefined,
+                        }}
                       />
                     </div>
                     <div className="trash">

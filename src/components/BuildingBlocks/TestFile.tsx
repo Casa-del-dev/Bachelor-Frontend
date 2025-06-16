@@ -453,10 +453,6 @@ class CustomSortTests(unittest.TestCase):
         ]
         self.assertEqual(sort_by_key(data, "age", reverse=True), expected)
 
-    def test_unsupported_key(self):
-        data = [{"name": "Test", "height": 180}]
-        self.assertEqual(sort_by_key(data, "height"), "Unsupported key")
-
     def test_empty_data(self):
         self.assertEqual(sort_by_key([], "age"), [])
 

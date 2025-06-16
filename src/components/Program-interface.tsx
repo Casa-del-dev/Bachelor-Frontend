@@ -879,6 +879,7 @@ export default function PythonPlayground({
         currentFile !== undefined &&
         codeMap[currentFile] !== null ? (
           <CodeMirror
+            key={currentFile}
             className="ILoveEprogg"
             value={codeMap[currentFile] || ""}
             extensions={[editorExtensions]}
