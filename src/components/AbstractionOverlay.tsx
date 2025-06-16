@@ -2276,6 +2276,15 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       lcaPath = lcaPath.slice(0, i);
     }
 
+    if (lcaPath.length === 0) {
+      // splice at the very top-level array; spliceGroup will
+      // merge into the first matching ID (i.e. “to the left”)
+      const spliced = updateAtAncestor(root, [], (siblings) =>
+        spliceGroup(siblings, groupIds, replacements)
+      );
+      return removeAndPromoteChildren(spliced, new Set(groupIds));
+    }
+
     // 3) LCA node + removeSelf logic
     const lcaNode = getNodeAtPath(root, lcaPath);
     const removeSelf = groupIds.includes(lcaNode.id);

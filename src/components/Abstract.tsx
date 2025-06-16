@@ -4455,6 +4455,35 @@ const Abstract: React.FC = ({}) => {
 
   const [isLoadingAbstraction, setIsLoadingAbstraction] = useState(false);
 
+  async function deleteAllAbstractions(problemId: string): Promise<void> {
+    // don’t do anything during the tutorial
+    if (localStorage.getItem("tutorialStep")) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) throw new Error("Not authenticated, do Login");
+
+    console.log("Deleting all old abstractions...");
+
+    const res = await fetch(
+      `https://bachelor-backend.erenhomburg.workers.dev/abstractionInbetween/v1/deleteAllAbstractions?problemId=${encodeURIComponent(
+        problemId
+      )}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Finished deleting all old abstractions!");
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to clear abstractions: ${res.status} ${text}`);
+    }
+  }
+
   const handleCallAbstraction = async () => {
     if (!treeCorrect || localStorage.getItem("tutorialStep")) return;
 
@@ -4462,6 +4491,8 @@ const Abstract: React.FC = ({}) => {
     setIsLoadingAbstraction(true);
 
     try {
+      await deleteAllAbstractions(problemId);
+
       const simplifiedTree = simplifyStepTree(steps);
       setToggleAbstraction("false");
       const gptResponse = await apiCallAbstract(simplifiedTree); // <-- await here!
