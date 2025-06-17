@@ -2027,10 +2027,10 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   }, [abstraction]);
 
   useEffect(() => {
-    if (!isAvailable) {
+    if (!isAvailable && isAvailable !== undefined) {
       recalcNumberOfNeeded();
     }
-  }, []);
+  }, [isAvailable]);
 
   useEffect(() => {
     if (numberOfNeededSteps !== null && draggingNew === false) {
