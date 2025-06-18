@@ -2453,6 +2453,12 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   useEffect(() => {
     if (stepIndex === 13) {
       setSteps([]);
+      setTimeout(() => {
+        setNumberOfNeededSteps(null);
+      }, 100);
+    }
+    if (stepIndex === 14) {
+      setNumberOfNeededSteps(null);
     }
     if (stepIndex === 17) {
       setNumberOfNeededSteps(null);
