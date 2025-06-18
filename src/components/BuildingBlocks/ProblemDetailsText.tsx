@@ -649,7 +649,7 @@ Input: "divide 10 2"
 Output: 5
 
 Example 4:
-Input: "substract 9 4"
+Input: "subtract 9 4"
 Output: 5
 `,
   "Problem 29": `

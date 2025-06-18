@@ -1012,7 +1012,7 @@ class CommandExecutorTests(unittest.TestCase):
         self.assertEqual(execute_command("add 3 5"), 8)
 
     def test_subtract(self):
-        self.assertEqual(execute_command("substract 9 4"), 5)
+        self.assertEqual(execute_command("subtract 9 4"), 5)
 
     def test_multiply(self):
         self.assertEqual(execute_command("multiply 4 2"), 8)
@@ -1028,7 +1028,7 @@ class CommandExecutorTests(unittest.TestCase):
 
     def test_negative_numbers(self):
         self.assertEqual(execute_command("add -5 -3"), -8)
-        self.assertEqual(execute_command("substract -10 -4"), -6)
+        self.assertEqual(execute_command("subtract -10 -4"), -6)
         self.assertEqual(execute_command("multiply -2 3"), -6)
 
     def test_invalid_input_format(self):
