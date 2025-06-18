@@ -632,7 +632,7 @@ Build a simple command-line interpreter that reads a command string (e.g., "add 
 
 Commands are:
     - add
-    - substract
+    - subtract
     - multiply
     - divide
 
