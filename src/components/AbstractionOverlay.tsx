@@ -2052,6 +2052,11 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
     });
   }
 
+  function shapesEqual(a: Step[], b: Step[]): boolean {
+    if (a.length !== b.length) return false;
+    return a.every((nodeA, i) => shapesEqual(nodeA.children, b[i].children));
+  }
+
   function applyAbstractionHints(
     steps: Step[],
     abstraction: AbstractionItem | null
@@ -2184,6 +2189,17 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
   const [fadeInTextNo, setFadeInTextNo] = useState(false);
   const [fadeOutTextNo, setFadeOutTextNo] = useState(false);
 
+  function markAllStepsCorrect(steps: Step[]): Step[] {
+    return steps.map((step) => ({
+      ...step,
+      status: {
+        correctness: "correct",
+        can_be_further_divided: "cannot",
+      },
+      children: markAllStepsCorrect(step.children),
+    }));
+  }
+
   useEffect(() => {
     if (answerAbstractionOVerlay === "No") {
       setFadeOutTextNo(false);
@@ -2199,6 +2215,9 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
         setFadeOutTextNo(false);
       }, 5300);
     } else if (answerAbstractionOVerlay === "Yes") {
+      const normalizedSteps = markAllStepsCorrect(steps);
+      setSteps(normalizedSteps);
+
       // 1) grab the *array of groups* for this abstraction
       const groupsToReplace: string[][] =
         abstractionToSteps[abstraction!.id] || [];
@@ -2217,22 +2236,18 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       // 3c) now apply them in order
       let updatedTree = originalSteps;
       for (const { ids } of infos) {
-        console.log(ids);
-        console.log("Before Tree: ", updatedTree);
         updatedTree = replaceStepsBySequenceWithChildren(
           updatedTree,
           ids,
-          steps
+          normalizedSteps
         );
-
-        console.log(updatedTree);
       }
 
       // 4) now wire it back into your abstractions list…
       const filtered = originalAbstraction.filter(
         (a) => a.id !== abstraction!.id
       );
-      const newAllIds = collectAllStepIds(steps);
+      const newAllIds = collectAllStepIds(normalizedSteps);
       const newGroup = newAllIds.map((id) => ({ id }));
 
       const updatedFiltered = filtered.map((absItem) => ({
@@ -2456,6 +2471,9 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       setTimeout(() => {
         setNumberOfNeededSteps(null);
       }, 100);
+      setTimeout(() => {
+        setAllIsAvailable(true);
+      }, 100);
     }
     if (stepIndex === 14) {
       setNumberOfNeededSteps(null);
@@ -2466,9 +2484,11 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       setNumberOfNeededSteps(5);
     } else if (stepIndex === 19) {
       setNumberOfNeededSteps(5);
+      setAllIsAvailable(true);
       setSteps([]);
     } else if (stepIndex === 20) {
       setNumberOfNeededSteps(0);
+      setAllIsAvailable(false);
       setSteps(abstractionInbetweenTutorial);
     } else if (stepIndex === 21) {
       setSteps(abstractionInbetweenTutorial);
@@ -2485,6 +2505,10 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           });
         }
       }, 200);
+    } else if (stepIndex === 23) {
+      setTimeout(() => {
+        setSteps(abstractionInbetweenTutorial2);
+      }, 0);
     }
   }, [stepIndex]);
 
@@ -2693,11 +2717,20 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               }}
               onClick={() => {
                 if (!allIsAvailable) return;
-                setAllIsAvailable(false);
 
-                const tree = abstraction?.correct_answer?.stepsTree;
-                if (tree) {
-                  const blankTree = mapStepsTreeToBlank(tree);
+                const correctTree = abstraction?.correct_answer?.stepsTree;
+                const expectedBlank = correctTree
+                  ? mapStepsTreeToBlank(correctTree)
+                  : [];
+
+                if (shapesEqual(expectedBlank, steps)) {
+                  setAllIsAvailable(false);
+                  return;
+                }
+
+                setAllIsAvailable(false);
+                if (correctTree) {
+                  const blankTree = mapStepsTreeToBlank(correctTree);
                   setSteps(blankTree);
                   setNumberOfNeededSteps(0);
                 }
