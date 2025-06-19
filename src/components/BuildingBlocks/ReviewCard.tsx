@@ -155,7 +155,11 @@ export default function ReviewCard({
 
   if (rating === 0 && !editMode) {
     return (
-      <div ref={cardRef} className="review-card empty-mode-card">
+      <div
+        ref={cardRef}
+        className="review-card empty-mode-card"
+        style={{ padding: "1rem" }}
+      >
         <div className="review-header">
           <h4>{username}</h4>
           <div className="icon-buttons">
@@ -200,7 +204,7 @@ export default function ReviewCard({
             </p>
           </div>
         ) : (
-          <div style={{ padding: "1rem", minHeight: "calc(200px - 2rem)" }}>
+          <div style={{ minHeight: "calc(200px - 2rem)" }}>
             <div className="review-header">
               <h4>{username}</h4>
               <div className="icon-buttons">
@@ -221,7 +225,11 @@ export default function ReviewCard({
   }
 
   return (
-    <div ref={cardRef} className={`review-card editing `}>
+    <div
+      ref={cardRef}
+      className={`review-card editing `}
+      style={{ padding: "1rem" }}
+    >
       {workingRating === 5 ? (
         <div
           className="five-stars"
