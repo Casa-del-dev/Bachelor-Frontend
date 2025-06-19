@@ -2763,7 +2763,7 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               borderRadius: "10px",
             }}
             onClick={() => {
-              if (!allIsHinted && !allIsAvailable) return;
+              if (!allIsHinted || allIsAvailable) return;
               setAllIsHinted(false);
               applyAbstractionHints(steps, abstraction);
               setSteps((prev) => [...prev]);
