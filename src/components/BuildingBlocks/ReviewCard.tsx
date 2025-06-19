@@ -158,7 +158,7 @@ export default function ReviewCard({
       <div
         ref={cardRef}
         className="review-card empty-mode-card"
-        style={{ padding: "1rem" }}
+        style={{ padding: "1rem", boxSizing: "border-box" }}
       >
         <div className="review-header">
           <h4>{username}</h4>
@@ -225,11 +225,7 @@ export default function ReviewCard({
   }
 
   return (
-    <div
-      ref={cardRef}
-      className={`review-card editing `}
-      style={{ padding: "1rem" }}
-    >
+    <div ref={cardRef} className={`review-card editing `}>
       {workingRating === 5 ? (
         <div
           className="five-stars"
