@@ -5258,6 +5258,13 @@ const Abstract: React.FC = ({}) => {
                   value={tempContent}
                   onChange={(e) => setTempContent(e.target.value)}
                   onBlur={handleBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                    // Shift+Enter will insert a newline as usual
+                  }}
                 />
               ) : (
                 <div

@@ -93,6 +93,7 @@ export default function ResizableSplitView({
       background: isDark ? "#121212" : "#fff",
       foreground: isDark ? "#f0f0f0" : "#000000",
       cursor: isDark ? "#f0f0f0" : "#000000",
+      ...(isDark ? {} : { selectionBackground: "rgba(0,0,0,0.2)" }),
     };
   }
 
@@ -493,9 +494,10 @@ export default function ResizableSplitView({
             const isDark = document.body.classList.contains("dark-mode");
             term.current.options = {
               theme: {
-                background: isDark ? "#121212" : "#f1f1f1",
+                background: isDark ? "#121212" : "#fff",
                 foreground: isDark ? "#f0f0f0" : "#000000",
                 cursor: isDark ? "#f0f0f0" : "#000000",
+                ...(isDark ? {} : { selectionBackground: "rgba(0,0,0,0.2)" }),
               },
             };
           }
@@ -777,6 +779,27 @@ export default function ResizableSplitView({
     };
   }, []);
 
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [iconSize, setIconSize] = useState(24);
+
+  // whenever topHeight changes, re-measure the bottom pane
+  useEffect(() => {
+    const updateIconSize = () => {
+      if (!bottomRef.current) return;
+      const h = bottomRef.current.getBoundingClientRect().height;
+      const sizeFromHeight = Math.round(h * 0.1);
+      const vwPixels = window.innerWidth * 0.02;
+      setIconSize(Math.min(sizeFromHeight, vwPixels));
+    };
+
+    // Call initially
+    updateIconSize();
+
+    // Update on resize
+    window.addEventListener("resize", updateIconSize);
+    return () => window.removeEventListener("resize", updateIconSize);
+  }, [topHeight]);
+
   return (
     <div
       className="container"
@@ -822,7 +845,12 @@ export default function ResizableSplitView({
       <div
         className="bottom-section"
         style={{ height: `${100 - topHeight}%` }}
-        ref={ref2}
+        ref={(el) => {
+          if (ref2 && el instanceof HTMLDivElement) {
+            ref2.current = el;
+          }
+          bottomRef.current = el;
+        }}
       >
         <div className="icon-terminal" ref={ref3}>
           <div
@@ -835,7 +863,7 @@ export default function ResizableSplitView({
           >
             <FaPlay
               className="icons-for-terminal"
-              size="1.5vw"
+              size={iconSize}
               onClick={handleRunClick}
             />
           </div>
@@ -849,7 +877,7 @@ export default function ResizableSplitView({
           >
             <FaCog
               className="icons-for-terminal"
-              size="1.5vw"
+              size={iconSize}
               onClick={handleCompileClick}
             />
           </div>
@@ -863,7 +891,7 @@ export default function ResizableSplitView({
           >
             <FaHourglassHalf
               className="icons-for-terminal"
-              size="1.5vw"
+              size={iconSize}
               onClick={handleTestClick}
             />
           </div>

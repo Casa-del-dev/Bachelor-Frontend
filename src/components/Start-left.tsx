@@ -69,6 +69,7 @@ const StartLeft = ({
 
   // Change problem without a full reload
   const handleProblemSelect = (problemKey: string) => {
+    if (problemKey !== storedProblem) setCurrentFile(null);
     localStorage.setItem("selectedProblem", problemKey);
     setProblemId(problemKey);
     setMenuOpen(false);

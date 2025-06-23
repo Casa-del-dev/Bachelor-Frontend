@@ -2358,6 +2358,13 @@ Editing logic START
                     value={tempContent}
                     onChange={(e) => setTempContent(e.target.value)}
                     onBlur={handleBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.blur();
+                      }
+                      // Shift+Enter will insert a newline as usual
+                    }}
                   />
                 ) : (
                   <div
@@ -3960,6 +3967,13 @@ Biggest render Tree ever recored START
                 value={tempContent}
                 onChange={(e) => setTempContent(e.target.value)}
                 onBlur={handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                  // Shift+Enter will insert a newline as usual
+                }}
               />
             ) : (
               <div
@@ -4768,6 +4782,13 @@ TUTORIAL END
                       className="text-input"
                       placeholder="Enter Your Thoughts"
                       rows={1}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleGenerateWithChatGPT("From Prompt");
+                        }
+                        // Shift+Enter will insert a newline as usual
+                      }}
                     />
                   )}
                   <button

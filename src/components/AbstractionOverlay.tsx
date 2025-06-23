@@ -1855,6 +1855,13 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
                   value={tempContent}
                   onChange={(e) => setTempContent(e.target.value)}
                   onBlur={handleBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                    // Shift+Enter will insert a newline as usual
+                  }}
                 />
               ) : (
                 <div
@@ -2142,6 +2149,22 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
       };
     }
     return result;
+  };
+
+  const onCheck = async () => {
+    if (isCheckingAbstractionOverlay) return; // guard against spamming
+
+    // 1️⃣ commit any in-flight edit into a brand new array
+    let next = steps;
+    if (editingPath) {
+      next = updateStepContentAtPath(steps, editingPath, tempContent);
+      setSteps(next);
+      setEditingPath(null);
+      setTempContent("");
+    }
+
+    // 2️⃣ now invoke your checker *with* the up-to-date tree
+    await handleReplaceSteps(next, abstraction);
   };
 
   const handleReplaceSteps = useCallback(
@@ -2793,12 +2816,11 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
               gap: "5px",
               fontSize: "20px",
               cursor: "pointer",
+
+              pointerEvents: isCheckingAbstractionOverlay ? "none" : "auto",
+              opacity: isCheckingAbstractionOverlay ? 0.5 : 1,
             }}
-            onClick={() => {
-              setTimeout(() => {
-                handleReplaceSteps(steps, abstraction);
-              }, 100);
-            }}
+            onClick={onCheck}
             ref={ref11}
           >
             {isCheckingAbstractionOverlay ? (

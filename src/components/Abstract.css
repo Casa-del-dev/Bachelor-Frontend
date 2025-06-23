@@ -386,6 +386,8 @@ body.dark-mode {
   overflow-wrap: anywhere;
   text-align: start;
   width: 100%;
+  min-width: 100%;
+  min-height: 5em;
 }
 
 .step-content-ab-hinted {
