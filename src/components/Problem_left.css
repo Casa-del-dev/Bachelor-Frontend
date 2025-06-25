@@ -130,6 +130,7 @@ body.dark-mode {
 
 .default-problem-title {
   grid-area: defaultTitle;
+  height: 100%;
 }
 
 .custom-problem-title {
