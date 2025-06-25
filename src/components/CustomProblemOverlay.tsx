@@ -72,6 +72,18 @@ export default function CustomProblemOverlay({
     }
   };
 
+  const resetOverlay = () => {
+    setStep(0);
+    setForm({ name: "", description: "", defaultText: "", tests: "" });
+    setEntered(false);
+  };
+
+  const handleCreate = () => {
+    onSubmit(form);
+    resetOverlay();
+    onClose();
+  };
+
   return (
     <div className="overlay-backdrop-problemOverlay" onClick={onClose}>
       <div
@@ -225,13 +237,7 @@ if __name__ == "__main__":
               Next
             </button>
           ) : (
-            <button
-              disabled={!isComplete(step)}
-              onClick={() => {
-                onSubmit(form);
-                onClose();
-              }}
-            >
+            <button disabled={!isComplete(step)} onClick={handleCreate}>
               Create
             </button>
           )}

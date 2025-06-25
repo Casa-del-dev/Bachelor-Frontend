@@ -108,7 +108,7 @@ const Problem_left = ({
           <Plus
             className={`plus-custom-problems ${plusError ? "plus-error" : ""}`}
             onClick={() => {
-              if (!isAuthenticated) {
+              if (!isAuthenticated.isAuthenticated) {
                 setPlusError(true);
                 setTimeout(() => setPlusError(false), 2000);
                 return;
