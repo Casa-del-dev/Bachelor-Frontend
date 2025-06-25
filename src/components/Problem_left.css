@@ -135,6 +135,7 @@ body.dark-mode {
 .custom-problem-title {
   grid-area: customTitle;
   justify-content: space-evenly;
+  height: calc(100% - 1px);
 }
 
 .plus-custom-problems:hover {
