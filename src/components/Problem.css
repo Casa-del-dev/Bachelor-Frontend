@@ -22,10 +22,16 @@ body.dark-mode {
   grid-area: separator;
   display: flex;
   justify-content: center;
-  width: 1px;
+  width: 2px;
   height: 100%;
   background-color: var(--border-color);
   align-self: center;
+  transition: 0.3s width ease;
+}
+
+.custom-line:hover {
+  width: 4px;
+  cursor: ew-resize;
 }
 
 /* Right Side */

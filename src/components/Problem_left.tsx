@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Problem_left.css";
+import { Plus } from "lucide-react";
 
 type ProblemLeftProps = {
   onSelect: (problem: string) => void;
@@ -7,6 +8,7 @@ type ProblemLeftProps = {
   secondRef?: React.Ref<HTMLDivElement>;
   tutorial?: string;
   tutorialPass?: boolean;
+  setOverlayOpen: (open: boolean) => void;
 };
 
 const problems = [
@@ -47,6 +49,7 @@ const Problem_left = ({
   secondRef,
   tutorial,
   tutorialPass,
+  setOverlayOpen,
 }: ProblemLeftProps) => {
   const [selected, setSelected] = useState<string>("");
   const [theChosen, setTheChosen] = useState<string>("");
@@ -77,21 +80,49 @@ const Problem_left = ({
   return (
     <div className="left-side" ref={firstRef}>
       <div className="left-side-content">
-        <div style={{ height: "2vw" }} />
-        {problems.map((p, index) => (
-          <div
-            key={index}
-            ref={index === 0 ? secondRef : null}
-            className={`general-button 
+        <div className="default-problem-title">Default Problems</div>
+        <div className="default-problems-parent">
+          <div className="default-problems">
+            {problems.map((p, index) => (
+              <div
+                key={index}
+                ref={index === 0 ? secondRef : null}
+                className={`general-button 
                 ${theChosen === p ? "activeA" : ""} 
                 ${selected === p && theChosen !== p ? "activeB" : ""}
               `}
-            onClick={() => handleClick(p)}
-          >
-            {p}
+                onClick={() => handleClick(p)}
+              >
+                {p}
+              </div>
+            ))}
           </div>
-        ))}
-        <div style={{ height: "2vw" }} />
+        </div>
+        <hr className="custom-line-problem" />
+        <div className="custom-problem-title">
+          Custom Problems{" "}
+          <Plus
+            className="plus-custom-problems"
+            onClick={() => setOverlayOpen(true)}
+          />
+        </div>
+        <div className="custom-problems-parent">
+          <div className="custom-problems">
+            {problems.map((p, index) => (
+              <div
+                key={index}
+                ref={index === 0 ? secondRef : null}
+                className={`general-button 
+                ${theChosen === p ? "activeA" : ""} 
+                ${selected === p && theChosen !== p ? "activeB" : ""}
+              `}
+                onClick={() => handleClick(p)}
+              >
+                {p}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

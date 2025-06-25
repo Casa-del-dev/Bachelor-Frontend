@@ -9,10 +9,12 @@ import tutorialSteps from "./BuildingBlocks/TutorialStepsProblem";
 import tutorialStepsStart from "./BuildingBlocks/TutorialStepsStart";
 import { tutorialRoutes } from "./BuildingBlocks/TutorialRoutes";
 import tutorialStepsAbstract from "./BuildingBlocks/TutorialStepsAbstract";
+import CustomProblemOverlay, { OverlayData } from "./CustomProblemOverlay";
 
 const SPACING = 10; // px between hole and modal
 
 export default function Problem() {
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const navigate = useNavigate();
   const { search, pathname } = useLocation();
   const query = new URLSearchParams(search);
@@ -280,18 +282,74 @@ export default function Problem() {
     setModalSize({ width: r.width, height: r.height });
   }, [holeRect]);
 
+  //JUST THE RESIZING PART
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // load saved width or default to 215px
+  const [leftWidth, setLeftWidth] = useState<number>(() => {
+    const saved = localStorage.getItem("problemLayout");
+    return saved ? Math.max(215, parseInt(saved, 10)) : 215;
+  });
+
+  const [isResizing, setIsResizing] = useState(false);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+
+  // keep the grid in sync
+  const gridStyle = {
+    display: "grid",
+    gridTemplateColumns: `${leftWidth}px 5px auto`,
+  };
+
+  // global mouse handlers
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const dx = e.clientX - startXRef.current;
+      const newW = Math.max(215, startWidthRef.current + dx);
+      setLeftWidth(newW);
+      localStorage.setItem("problemLayout", newW.toString());
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // when you press down on the separator
+  const onMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = leftWidth;
+    e.preventDefault();
+  };
+
   return (
-    <div className="container-problem" ref={refs.first}>
+    <div
+      className="container-problem"
+      ref={(el) => {
+        if (refs.first && el !== null) refs.first.current = el;
+        containerRef.current = el;
+      }}
+      style={gridStyle}
+    >
       <Problem_left
         onSelect={setSelectedProblem}
         firstRef={refs.second}
         secondRef={refs.third}
         tutorial={tutorialPass}
         tutorialPass={tutorialFinal}
+        setOverlayOpen={setOverlayOpen}
       />
 
       <div className="container-separator-problem">
-        <div className="custom-line" />
+        <div className="custom-line" onMouseDown={onMouseDown} />
       </div>
       <div className="right-side-problem" ref={refs.fourth}>
         <Problem_details
@@ -408,6 +466,14 @@ export default function Problem() {
           </div>
         </div>
       )}
+      <CustomProblemOverlay
+        isOpen={overlayOpen}
+        onClose={() => setOverlayOpen(false)}
+        onSubmit={(data: OverlayData) => {
+          // TODO: add `data` to your custom problems list/store
+          console.log("New custom problem:", data);
+        }}
+      />
     </div>
   );
 }
