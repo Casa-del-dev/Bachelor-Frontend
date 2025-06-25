@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Problem_left.css";
 import { Plus } from "lucide-react";
+import { useAuth } from "../AuthContext";
 
 type ProblemLeftProps = {
   onSelect: (problem: string) => void;
@@ -54,6 +55,9 @@ const Problem_left = ({
   const [selected, setSelected] = useState<string>("");
   const [theChosen, setTheChosen] = useState<string>("");
 
+  const isAuthenticated = useAuth();
+  const [plusError, setPlusError] = useState(false);
+
   useEffect(() => {
     if (tutorial) {
       onSelect(tutorial);
@@ -102,8 +106,15 @@ const Problem_left = ({
         <div className="custom-problem-title">
           Custom Problems{" "}
           <Plus
-            className="plus-custom-problems"
-            onClick={() => setOverlayOpen(true)}
+            className={`plus-custom-problems ${plusError ? "plus-error" : ""}`}
+            onClick={() => {
+              if (!isAuthenticated) {
+                setPlusError(true);
+                setTimeout(() => setPlusError(false), 2000);
+                return;
+              }
+              setOverlayOpen(true);
+            }}
           />
         </div>
         <div className="custom-problems-parent">

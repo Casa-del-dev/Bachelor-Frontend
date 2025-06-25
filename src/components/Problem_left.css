@@ -148,6 +148,10 @@ body.dark-mode {
   color: grey;
 }
 
+.plus-custom-problems.plus-error {
+  color: red;
+}
+
 /* Separator */
 .container-separator-problem {
   width: 100%;

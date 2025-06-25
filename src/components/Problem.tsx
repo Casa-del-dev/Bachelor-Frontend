@@ -470,8 +470,10 @@ export default function Problem() {
         isOpen={overlayOpen}
         onClose={() => setOverlayOpen(false)}
         onSubmit={(data: OverlayData) => {
-          // TODO: add `data` to your custom problems list/store
-          console.log("New custom problem:", data);
+          const id = crypto.randomUUID();
+          const problemWithId = { id, ...data };
+
+          console.log("New custom problem:", problemWithId);
         }}
       />
     </div>

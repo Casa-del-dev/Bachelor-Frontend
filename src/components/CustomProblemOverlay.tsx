@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import "./CustomProblemOverlay.css";
 
@@ -30,10 +30,37 @@ export default function CustomProblemOverlay({
     tests: "",
   });
 
+  // track “entered” state for animation
+  const [entered, setEntered] = useState(false);
+
+  // 1) Listen for ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [isOpen, onClose]);
+
+  // 2) Trigger the “entered” flag on mount
+  useEffect(() => {
+    if (isOpen) {
+      // small timeout ensures CSS can apply the initial style first
+      const t = setTimeout(() => setEntered(true), 10);
+      return () => clearTimeout(t);
+    } else {
+      setEntered(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const isComplete = (index: number) => {
-    switch (index) {
+  const isComplete = (i: number) => {
+    switch (i) {
       case 0:
         return form.name.trim() !== "" && form.description.trim() !== "";
       case 1:
@@ -46,8 +73,13 @@ export default function CustomProblemOverlay({
   };
 
   return (
-    <div className="overlay-backdrop-problemOverlay">
-      <div className="overlay-container-problemOverlay">
+    <div className="overlay-backdrop-problemOverlay" onClick={onClose}>
+      <div
+        className={
+          "overlay-container-problemOverlay" + (entered ? " entered" : "")
+        }
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* TAB BAR */}
         <div className="overlay-tabs-problemOverlay">
           {labels.map((label, i) => (
@@ -75,11 +107,12 @@ export default function CustomProblemOverlay({
         {/* BODY */}
         <div className="overlay-body-problemOverlay">
           {step === 0 && (
-            <div className="step-problemOverlay">
+            <div className="step-problemOverlay1">
               <label>Problem Name</label>
               <input
                 type="text"
                 value={form.name}
+                maxLength={20}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
@@ -91,7 +124,7 @@ export default function CustomProblemOverlay({
                   setForm((f) => ({ ...f, description: e.target.value }))
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     e.currentTarget.blur();
                   }
@@ -106,24 +139,73 @@ export default function CustomProblemOverlay({
 
           {step === 1 && (
             <div className="step-problemOverlay">
-              <label>Default Text</label>
+              <label>Default Solution File</label>
               <textarea
                 value={form.defaultText}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, defaultText: e.target.value }))
                 }
+                onKeyDown={(e) => {
+                  const isEnter = e.key === "Enter" && !e.shiftKey;
+                  const isTab = e.key === "Tab";
+
+                  if ((isEnter || isTab) && form.defaultText.trim() === "") {
+                    e.preventDefault();
+                    const placeholder = e.currentTarget.placeholder;
+                    setForm((f) => ({ ...f, defaultText: placeholder }));
+                  } else if (isEnter) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
+                onFocus={(e) => {
+                  const len = e.currentTarget.value.length;
+                  e.currentTarget.setSelectionRange(len, len);
+                }}
+                placeholder={`def solution():\n  pass`}
               />
             </div>
           )}
 
           {step === 2 && (
             <div className="step-problemOverlay">
-              <label>Tests (JSON or one per line)</label>
+              <label>Tests</label>
               <textarea
                 value={form.tests}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, tests: e.target.value }))
                 }
+                onKeyDown={(e) => {
+                  const isEnter = e.key === "Enter" && !e.shiftKey;
+                  const isTab = e.key === "Tab";
+
+                  if ((isEnter || isTab) && form.tests.trim() === "") {
+                    e.preventDefault();
+                    const placeholder = e.currentTarget.placeholder;
+                    setForm((f) => ({ ...f, tests: placeholder }));
+                  } else if (isEnter) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
+                onFocus={(e) => {
+                  const len = e.currentTarget.value.length;
+                  e.currentTarget.setSelectionRange(len, len);
+                }}
+                placeholder={`import unittest
+
+class CommandExecutorTests(unittest.TestCase):
+    def cases(self):
+        //tests
+
+    def test_edgeCases(self):
+        //tests
+
+    def test_invalid_input_format(self):
+        //tests
+
+if __name__ == "__main__":
+    unittest.main()`}
               />
             </div>
           )}
