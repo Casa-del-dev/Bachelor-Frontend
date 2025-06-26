@@ -19,11 +19,11 @@ export interface ProblemPayload {
 }
 
 type ProblemDetailsProps = {
-  items: ProblemMeta[];
+  items?: ProblemMeta[];
   selectedProblem: string;
   refFirst?: React.Ref<HTMLButtonElement>;
-  setCustomProblems: React.Dispatch<React.SetStateAction<ProblemMeta[]>>;
-  setSelectedProblem: React.Dispatch<React.SetStateAction<string>>;
+  setCustomProblems?: React.Dispatch<React.SetStateAction<ProblemMeta[]>>;
+  setSelectedProblem?: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const UUID_RE =
@@ -89,7 +89,7 @@ export default function Problem_details({
   }
 
   // look for a matching custom problem
-  const custom = items.find((p) => p.id === selectedProblem);
+  const custom = items!.find((p) => p.id === selectedProblem);
 
   // decide title & description based on default vs custom
   const title = custom ? custom.name : selectedProblem;
@@ -151,12 +151,14 @@ export default function Problem_details({
       }
 
       // 1) remove from your local list
-      setCustomProblems((prev) => prev.filter((p) => p.id !== selectedProblem));
+      setCustomProblems!((prev) =>
+        prev.filter((p) => p.id !== selectedProblem)
+      );
       // 2) clear any stored selection
       if (localStorage.getItem("selectedProblem") === selectedProblem) {
         localStorage.removeItem("selectedProblem");
       }
-      setSelectedProblem("");
+      setSelectedProblem!("");
     } catch (err) {
       console.error("Failed to delete problem:", err);
     }
@@ -218,7 +220,7 @@ export default function Problem_details({
               throw new Error(`Save failed: ${text}`);
             }
 
-            setCustomProblems((prev) =>
+            setCustomProblems!((prev) =>
               prev.map((p) => (p.id === payload.id ? payload : p))
             );
 
