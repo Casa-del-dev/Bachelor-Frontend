@@ -13,6 +13,20 @@ import CustomProblemOverlay, { OverlayData } from "./CustomProblemOverlay";
 
 const SPACING = 10; // px between hole and modal
 
+export interface ProblemPayload {
+  id: string;
+  name: string;
+  description: string;
+  defaultText: string;
+  tests: string;
+}
+
+interface ProblemMeta {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export default function Problem() {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const navigate = useNavigate();
@@ -26,6 +40,37 @@ export default function Problem() {
   );
   const [holeRect, setHoleRect] = useState<DOMRect | null>(null);
   const [animate, setAnimate] = useState<boolean>(true);
+
+  const [customProblems, setCustomProblems] = useState<ProblemMeta[]>([]);
+
+  useEffect(() => {
+    async function fetchCustomProblems() {
+      try {
+        const resp = await fetch(
+          "https://bachelor-backend.erenhomburg.workers.dev/customProblems/v1/",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
+        );
+
+        if (!resp.ok) {
+          throw new Error(`Failed to load: ${await resp.text()}`);
+        }
+
+        const list = (await resp.json()) as ProblemMeta[];
+        setCustomProblems(list);
+      } catch (err) {
+        console.error(err);
+        // you could show an error banner here
+      }
+    }
+
+    fetchCustomProblems();
+  }, []);
 
   // 1) If the new URL *doesn't* have ?tutorial=1, wipe out any lingering tutorialStep
   useEffect(() => {
@@ -340,12 +385,14 @@ export default function Problem() {
       style={gridStyle}
     >
       <Problem_left
+        items={customProblems}
         onSelect={setSelectedProblem}
         firstRef={refs.second}
         secondRef={refs.third}
         tutorial={tutorialPass}
         tutorialPass={tutorialFinal}
         setOverlayOpen={setOverlayOpen}
+        selectedProblem={selectedProblem}
       />
 
       <div className="container-separator-problem">
@@ -353,8 +400,11 @@ export default function Problem() {
       </div>
       <div className="right-side-problem" ref={refs.fourth}>
         <Problem_details
+          items={customProblems}
           selectedProblem={selectedProblem}
           refFirst={refs.fifth}
+          setCustomProblems={setCustomProblems}
+          setSelectedProblem={setSelectedProblem}
         />
       </div>
 
@@ -469,11 +519,53 @@ export default function Problem() {
       <CustomProblemOverlay
         isOpen={overlayOpen}
         onClose={() => setOverlayOpen(false)}
-        onSubmit={(data: OverlayData) => {
+        onSubmit={async (data: OverlayData) => {
+          // 1) Generate an ID
           const id = crypto.randomUUID();
-          const problemWithId = { id, ...data };
+          const problemWithId: ProblemPayload = { id, ...data };
 
-          console.log("New custom problem:", problemWithId);
+          console.log(problemWithId);
+
+          try {
+            const resp = await fetch(
+              "https://bachelor-backend.erenhomburg.workers.dev/customProblems/v1/save",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                },
+                body: JSON.stringify(problemWithId),
+              }
+            );
+
+            if (!resp.ok) {
+              const err = await resp.text();
+              console.error("Failed to save problem:", err);
+              alert("Could not save problem: " + err);
+              return;
+            }
+
+            const { id: savedId } = await resp.json();
+
+            setCustomProblems((prev) => [
+              ...prev,
+              { id: savedId, name: data.name, description: data.description },
+            ]);
+
+            setSelectedProblem(savedId);
+
+            setOverlayOpen(false);
+          } catch (e) {
+            console.error("Error saving custom problem", e);
+            alert("Unexpected error saving problem");
+          }
+        }}
+        initialData={{
+          name: "",
+          description: "",
+          defaultText: "",
+          tests: "",
         }}
       />
     </div>

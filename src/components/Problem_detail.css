@@ -20,6 +20,25 @@
   margin: 0;
 }
 
+.inner-Title {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.icon-problem-descripition {
+  width: 2vw;
+}
+
+.icon-problem-descripition:hover {
+  fill: lightgrey;
+  cursor: pointer;
+}
+
 .problem-text {
   grid-area: bottom;
   white-space: pre-wrap;

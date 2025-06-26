@@ -291,6 +291,9 @@ interface PythonPlaygroundProps {
   currentIndex?: number;
   ref1?: React.RefObject<HTMLDivElement>;
   ref2?: React.RefObject<HTMLDivElement>;
+  isCustom: boolean;
+  problemName: string;
+  problemDescription: string;
 }
 
 export default function PythonPlayground({
@@ -308,6 +311,9 @@ export default function PythonPlayground({
   currentIndex,
   ref1,
   ref2,
+  isCustom,
+  problemName,
+  problemDescription,
 }: PythonPlaygroundProps) {
   const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -336,7 +342,9 @@ export default function PythonPlayground({
     return () => observer.disconnect();
   }, []);
 
-  const selectedProblemName = problemId;
+  let selectedProblemName = problemId;
+
+  selectedProblemName = isCustom ? problemName : selectedProblemName;
 
   function loadStepsTree(): Step[] {
     return stepTree;
@@ -543,7 +551,10 @@ export default function PythonPlayground({
     setFromEditor(true);
     const selectedProblem = problemId;
 
-    const selectedProblemDetails = problemDetailsMap[selectedProblem];
+    const selectedProblemDetails = isCustom
+      ? problemDescription
+      : problemDetailsMap[selectedProblem];
+
     try {
       const code = codeMap[currentFile];
 
@@ -703,7 +714,7 @@ export default function PythonPlayground({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        problemId: selectedProblemName,
+        problemId: problemId,
         tree: treeToSubmit,
         codeMap: updatedCodeMap,
       }),

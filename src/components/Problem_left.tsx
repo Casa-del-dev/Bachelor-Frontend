@@ -3,13 +3,27 @@ import "./Problem_left.css";
 import { Plus } from "lucide-react";
 import { useAuth } from "../AuthContext";
 
+interface ProblemMeta {
+  id: string;
+  name: string;
+  description: string;
+}
+
 type ProblemLeftProps = {
-  onSelect: (problem: string) => void;
+  items: ProblemMeta[];
+  onSelect: (problemId: string) => void;
   firstRef?: React.Ref<HTMLDivElement>;
   secondRef?: React.Ref<HTMLDivElement>;
   tutorial?: string;
   tutorialPass?: boolean;
   setOverlayOpen: (open: boolean) => void;
+  selectedProblem: string;
+};
+
+type Option = {
+  id: string;
+  label: string;
+  description?: string;
 };
 
 const problems = [
@@ -44,65 +58,85 @@ const problems = [
   "Problem 29",
 ];
 
-const Problem_left = ({
+export default function Problem_left({
+  items,
   onSelect,
   firstRef,
   secondRef,
   tutorial,
   tutorialPass,
   setOverlayOpen,
-}: ProblemLeftProps) => {
-  const [selected, setSelected] = useState<string>("");
+  selectedProblem,
+}: ProblemLeftProps) {
   const [theChosen, setTheChosen] = useState<string>("");
 
   const isAuthenticated = useAuth();
-  const [plusError, setPlusError] = useState(false);
+  const [plusError, setPlusError] = useState<boolean>(false);
 
+  // sync tutorial-driven selection
   useEffect(() => {
     if (tutorial) {
       onSelect(tutorial);
-      setSelected(tutorial);
     }
     if (tutorialPass) {
       setTheChosen("Problem 1");
     }
-  }, [tutorial, tutorialPass]);
+  }, [tutorial, tutorialPass, onSelect]);
 
+  // restore last-chosen from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("selectedProblem");
     if (stored) {
       setTheChosen(stored);
       onSelect(stored);
     }
-  }, []);
+  }, [onSelect]);
 
-  const handleClick = (problem: string) => {
-    setSelected(problem);
-    onSelect(problem);
+  const handleClick = (id: string) => {
+    onSelect(id);
   };
+
+  // build uniform option lists
+  const defaultOptions: Option[] = problems.map((p) => ({
+    id: p,
+    label: p,
+  }));
+  const customOptions: Option[] = items.map((p) => ({
+    id: p.id,
+    label: p.name,
+    description: p.description,
+  }));
 
   return (
     <div className="left-side" ref={firstRef}>
       <div className="left-side-content">
+        {/* Default Problems */}
         <div className="default-problem-title">Default Problems</div>
         <div className="default-problems-parent">
           <div className="default-problems">
-            {problems.map((p, index) => (
+            {defaultOptions.map((opt, idx) => (
               <div
-                key={index}
-                ref={index === 0 ? secondRef : null}
-                className={`general-button 
-                ${theChosen === p ? "activeA" : ""} 
-                ${selected === p && theChosen !== p ? "activeB" : ""}
-              `}
-                onClick={() => handleClick(p)}
+                key={opt.id}
+                ref={idx === 0 ? secondRef : null}
+                className={`general-button
+                  ${theChosen === opt.id ? "activeA" : ""}
+                  ${
+                    selectedProblem === opt.id && theChosen !== opt.id
+                      ? "activeB"
+                      : ""
+                  }
+                `}
+                onClick={() => handleClick(opt.id)}
               >
-                {p}
+                {opt.label}
               </div>
             ))}
           </div>
         </div>
+
         <hr className="custom-line-problem" />
+
+        {/* Custom Problems */}
         <div className="custom-problem-title">
           Custom Problems{" "}
           <Plus
@@ -119,17 +153,21 @@ const Problem_left = ({
         </div>
         <div className="custom-problems-parent">
           <div className="custom-problems">
-            {problems.map((p, index) => (
+            {customOptions.map((opt, idx) => (
               <div
-                key={index}
-                ref={index === 0 ? secondRef : null}
-                className={`general-button 
-                ${theChosen === p ? "activeA" : ""} 
-                ${selected === p && theChosen !== p ? "activeB" : ""}
-              `}
-                onClick={() => handleClick(p)}
+                key={opt.id}
+                ref={idx === 0 ? secondRef : null}
+                className={`general-button
+                  ${theChosen === opt.id ? "activeA" : ""}
+                  ${
+                    selectedProblem === opt.id && theChosen !== opt.id
+                      ? "activeB"
+                      : ""
+                  }
+                `}
+                onClick={() => handleClick(opt.id)}
               >
-                {p}
+                {opt.label}
               </div>
             ))}
           </div>
@@ -137,6 +175,4 @@ const Problem_left = ({
       </div>
     </div>
   );
-};
-
-export default Problem_left;
+}

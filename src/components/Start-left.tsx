@@ -26,7 +26,17 @@ interface StartLeftInput {
   initialFiles: FileItem[];
   selectedSection: "Project" | "Problem" | "Blocks";
   setSelectedSection: (section: "Project" | "Problem" | "Blocks") => void;
+  isCustom: boolean;
+  problemName: string;
+  problemDescription: string;
 }
+interface CustomMeta {
+  id: string;
+  name: string;
+  description: string;
+}
+
+const BACKEND = "https://bachelor-backend.erenhomburg.workers.dev";
 
 const StartLeft = ({
   codeMap,
@@ -49,17 +59,37 @@ const StartLeft = ({
   initialFiles,
   selectedSection,
   setSelectedSection,
+  isCustom,
+  problemName,
+  problemDescription,
 }: StartLeftInput) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const problemDropdownRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string>("Project");
 
   // Retrieve the last selected problem from localStorage
-  const storedProblem = problemId;
-  const details = storedProblem
-    ? problemDetailsMap[storedProblem]?.trim()
-    : null;
-  const problemKeys = Object.keys(problemDetailsMap);
+  let storedProblem = problemId;
+  let details = storedProblem ? problemDetailsMap[storedProblem]?.trim() : null;
+
+  storedProblem = isCustom ? problemName : storedProblem;
+  details = isCustom ? problemDescription : details;
+
+  const [customMetas, setCustomMetas] = useState<CustomMeta[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+    fetch(`${BACKEND}/customProblems/v1/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.statusText)))
+      .then((list: CustomMeta[]) => setCustomMetas(list))
+      .catch((err) =>
+        console.warn("Failed to load custom problem metadata:", err)
+      );
+  }, []);
+
+  const defaultKeys = Object.keys(problemDetailsMap);
 
   // Persist the selected section in localStorage
   const selectSection = (section: "Project" | "Problem" | "Blocks") => {
@@ -160,13 +190,22 @@ const StartLeft = ({
 
               {menuOpen && (
                 <div className="dropdown-menu1">
-                  {problemKeys.map((key) => (
+                  {defaultKeys.map((k) => (
                     <div
-                      key={key}
+                      key={k}
                       className="dropdown-item-left-problem"
-                      onClick={() => handleProblemSelect(key)}
+                      onClick={() => handleProblemSelect(k)}
                     >
-                      {key}
+                      {k}
+                    </div>
+                  ))}
+                  {customMetas.map((p) => (
+                    <div
+                      key={p.id}
+                      className="dropdown-item-left-problem"
+                      onClick={() => handleProblemSelect(p.id)}
+                    >
+                      {p.name}
                     </div>
                   ))}
                 </div>

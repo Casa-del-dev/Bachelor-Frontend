@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import "./CustomProblemOverlay.css";
 
@@ -13,6 +13,8 @@ type Props = {
   isOpen: boolean;
   onClose(): void;
   onSubmit(data: OverlayData): void;
+  initialData: OverlayData;
+  edit?: boolean;
 };
 
 const labels = ["Description", "Default Text", "Tests"];
@@ -21,6 +23,8 @@ export default function CustomProblemOverlay({
   isOpen,
   onClose,
   onSubmit,
+  initialData,
+  edit = false,
 }: Props) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<OverlayData>({
@@ -30,8 +34,37 @@ export default function CustomProblemOverlay({
     tests: "",
   });
 
+  // any time initialData changes *and* the overlay is opening,
+  // reset both step and form to the incoming values.
+  useEffect(() => {
+    if (isOpen) {
+      setStep(0);
+      setForm(initialData);
+    }
+  }, [initialData, isOpen]);
+
   // track “entered” state for animation
   const [entered, setEntered] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, [isOpen, onClose]);
 
   // 1) Listen for ESC
   useEffect(() => {
@@ -85,8 +118,9 @@ export default function CustomProblemOverlay({
   };
 
   return (
-    <div className="overlay-backdrop-problemOverlay" onClick={onClose}>
+    <div className="overlay-backdrop-problemOverlay">
       <div
+        ref={containerRef}
         className={
           "overlay-container-problemOverlay" + (entered ? " entered" : "")
         }
@@ -238,7 +272,12 @@ if __name__ == "__main__":
             </button>
           ) : (
             <button disabled={!isComplete(step)} onClick={handleCreate}>
-              Create
+              {edit ? "Update" : "Create"}
+            </button>
+          )}
+          {edit && step < labels.length - 1 && (
+            <button disabled={!isComplete(step)} onClick={handleCreate}>
+              Update
             </button>
           )}
         </div>

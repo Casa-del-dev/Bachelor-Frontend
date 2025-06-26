@@ -22,6 +22,11 @@ import tutorialStepsAbstract from "./BuildingBlocks/TutorialStepsAbstract";
 
 const SPACING = 10;
 
+const BACKEND = "https://bachelor-backend.erenhomburg.workers.dev";
+// if you tag custom problems by UUID:
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export interface Step {
   id: string; // unique ID for each step
   code: string;
@@ -95,6 +100,49 @@ const Start: React.FC = () => {
 
   const [stepTree, setStepTree] = useState<Step[]>([]);
   const hasInitializedStepTree = useRef(false);
+
+  const [isCustom, setIsCustom] = useState(false);
+  const [problemName, setProblemName] = useState("");
+  const [problemDescription, setProblemDescription] = useState("");
+
+  useEffect(() => {
+    // only try if it looks like a custom problem ID
+    setIsCustom(false);
+
+    if (!UUID_RE.test(problemId)) return;
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch(
+          `${BACKEND}/customProblems/v1/${encodeURIComponent(problemId)}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!resp.ok) return;
+
+        const { name, description } = await resp.json();
+        if (cancelled) return;
+
+        setIsCustom(true);
+        setProblemName(name);
+        setProblemDescription(description);
+      } catch (err) {
+        console.warn("Failed to load custom problem metadata:", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [problemId]);
 
   useEffect(() => {
     if (!problemId) return;
@@ -719,6 +767,8 @@ const Start: React.FC = () => {
       ref26={refs.fourtyseven}
       ref27={refs.fourtynine}
       stepIndexTutorial={stepIndex}
+      isCustom={isCustom}
+      problemDescription={problemDescription}
     />
   );
 
@@ -821,6 +871,9 @@ const Start: React.FC = () => {
             initialFiles={initialFiles}
             selectedSection={selectedSection}
             setSelectedSection={setSelectedSection}
+            isCustom={isCustom}
+            problemName={problemName}
+            problemDescription={problemDescription}
           />
         </div>
 
@@ -856,6 +909,9 @@ const Start: React.FC = () => {
               ref11={refs.twentythree}
               ref12={refs.fourtyeigth}
               currentIndex={stepIndex}
+              isCustom={isCustom}
+              problemName={problemName}
+              problemDescription={problemDescription}
             />
           </CodeProvider>
         </div>

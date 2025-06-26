@@ -40,6 +40,9 @@ interface PythonPlaygroundProps {
   ref12?: React.RefObject<HTMLDivElement>;
 
   currentIndex?: number;
+  isCustom: boolean;
+  problemName: string;
+  problemDescription: string;
 }
 
 export default function ResizableSplitView({
@@ -68,6 +71,9 @@ export default function ResizableSplitView({
   ref11,
   ref12,
   currentIndex,
+  isCustom,
+  problemName,
+  problemDescription,
 }: PythonPlaygroundProps) {
   const [topHeight, setTopHeight] = useState<number>(() => {
     return parseFloat(localStorage.getItem("terminal-height") || "50");
@@ -837,6 +843,9 @@ export default function ResizableSplitView({
           currentIndex={currentIndex}
           ref1={ref8}
           ref2={ref10}
+          isCustom={isCustom}
+          problemName={problemName}
+          problemDescription={problemDescription}
         />
       </div>
 

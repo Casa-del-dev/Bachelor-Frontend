@@ -18,6 +18,8 @@ export interface FileItem {
   children?: FileItem[];
 }
 
+const BACKEND = "https://bachelor-backend.erenhomburg.workers.dev";
+
 // The context interface holds the file tree along with other shared state.
 export interface CodeContextType {
   currentFile: number | null;
@@ -32,6 +34,9 @@ export interface CodeContextType {
   setProblemId: (newId: string) => void;
   saveTreeToBackend: (tree: FileItem[]) => void;
 }
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const CodeContext = createContext<CodeContextType | undefined>(undefined);
 
@@ -146,52 +151,95 @@ export function CodeProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Load the data from the backend once when the CodeContext mounts.
   useEffect(() => {
     let mounted = true;
+
     async function init() {
-      const data = await loadFromBackend(problemId);
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      // 1) DEFAULT: try your existing loadFromBackend
+      let data = null;
+      try {
+        data = await loadFromBackend(problemId);
+      } catch (err) {
+        console.error("Default load failed:", err);
+      }
       if (!mounted) return;
 
-      if (data && data.tree && data.tree.rootNode) {
-        const loadedFiles: FileItem[] = data.tree.rootNode.children || [];
-        if (loadedFiles.length === 0) {
-          // No files on the backend: use the fallback initialFiles.
-          const defaultFileCode = getDefaultFileCode(problemId);
-          const defaultTestCode = getDefaultTestCode(problemId);
-          const initialCodeMap: Record<number, string> = {
-            2: defaultFileCode,
-            4: defaultTestCode,
-          };
+      // Check if it’s a “meaningful” default save:
+      const children = data?.tree?.rootNode?.children;
+      const hasMeaningfulDefault =
+        Array.isArray(children) &&
+        !(children.length === 1 || children.length === 0);
 
-          setFileTree(initialFiles);
-          setCodeMap(initialCodeMap);
-          setTest(defaultTestCode);
-
-          await saveToBackend(problemId, initialFiles, initialCodeMap, null);
-        } else {
-          setFileTree(loadedFiles);
-        }
-        if (data.codeMap) {
+      if (hasMeaningfulDefault) {
+        // ✅ We have a real default‐saved problem
+        setFileTree(children!);
+        if (data!.codeMap) {
           const converted: Record<number, string> = {};
-          for (const [key, val] of Object.entries(data.codeMap)) {
-            converted[Number(key)] = val;
+          for (const [k, v] of Object.entries(data!.codeMap)) {
+            converted[Number(k)] = v;
           }
-          // Set the code for each file using the context function.
-          Object.entries(converted).forEach(([fileId, codeValue]) => {
-            setCodeForFileHandler(Number(fileId), codeValue);
-          });
+          Object.entries(converted).forEach(([fid, code]) =>
+            setCodeForFileHandler(Number(fid), code)
+          );
         }
-        // If the backend provides a currentFile value, update our state.
-        if (data.currentFile !== null) {
-          setCurrentFile(data.currentFile);
+        if (data!.currentFile != null) {
+          setCurrentFile(data!.currentFile);
         }
-      } else {
-        // If no data is returned, default to the initial files.
-        setFileTree(initialFiles);
-        await saveToBackend(problemId, initialFiles, {}, null);
+        return;
+      }
+
+      // 2) CUSTOM: only if this problemId looks like a UUID
+      if (UUID_RE.test(problemId)) {
+        try {
+          const customResp = await fetch(
+            `${BACKEND}/customProblems/v1/${encodeURIComponent(problemId)}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          if (customResp.ok) {
+            const { defaultText, tests } = await customResp.json();
+            if (!mounted) return;
+
+            // two-file tree from custom
+            setFileTree(initialFiles);
+            setCodeMap({ 2: defaultText, 4: tests });
+            setTest(tests);
+            setCurrentFile(2);
+            return;
+          }
+        } catch (err) {
+          console.warn("Custom load failed:", err);
+        }
+      }
+
+      // 3) FIRST‐EVER DEFAULT SEED: neither default nor custom existed
+      const defaultFileCode = getDefaultFileCode(problemId);
+      const defaultTestCode = getDefaultTestCode(problemId);
+      const initialCodeMap: Record<number, string> = {
+        2: defaultFileCode,
+        4: defaultTestCode,
+      };
+      setFileTree(initialFiles);
+      setCodeMap(initialCodeMap);
+      setTest(defaultTestCode);
+      setCurrentFile(2);
+
+      // persist them so next time loadFromBackend has data
+      try {
+        await saveToBackend(problemId, initialFiles, initialCodeMap, 2);
+      } catch (err) {
+        console.error("Persist default save failed:", err);
       }
     }
+
     init();
     return () => {
       mounted = false;

@@ -846,6 +846,8 @@ interface StartRightProps {
   ref26?: any;
   ref27?: React.RefObject<HTMLDivElement>;
   stepIndexTutorial: number;
+  isCustom: boolean;
+  problemDescription: string;
 }
 
 const StartRight: React.FC<StartRightProps> = ({
@@ -890,6 +892,8 @@ const StartRight: React.FC<StartRightProps> = ({
   ref26,
   ref27,
   stepIndexTutorial,
+  isCustom,
+  problemDescription,
 }) => {
   const [text, setText] = useState("");
   const [steps, setSteps] = useState<Step[]>([]);
@@ -1173,7 +1177,9 @@ Checking Code and Tree END
 
     const selectedProblem =
       localStorage.getItem("selectedProblem") || "Default Problem";
-    const selectedProblemDetails = problemDetailsMap[selectedProblem];
+    const selectedProblemDetails = isCustom
+      ? problemDescription
+      : problemDetailsMap[selectedProblem];
 
     setLoading(true);
     setLoadingCheck(true);
@@ -1247,7 +1253,9 @@ Checking Code and Tree END
 
     const selectedProblem =
       localStorage.getItem("selectedProblem") || "Default Problem";
-    const selectedProblemDetails = problemDetailsMap[selectedProblem];
+    const selectedProblemDetails = isCustom
+      ? problemDescription
+      : problemDetailsMap[selectedProblem];
 
     setLoadingCheck(true);
     setLoading(true);

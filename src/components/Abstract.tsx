@@ -2955,6 +2955,14 @@ const testDataTutorial2: AbstractionItem[] = [
   },
 ];
 
+interface CustomMeta {
+  id: string;
+  name: string;
+  description: string;
+}
+
+const BACKEND = "https://bachelor-backend.erenhomburg.workers.dev";
+
 const CorrectStepOverlay: React.FC<CorrectStepOverlayProps> = ({
   onClose,
   onConfirm,
@@ -3210,16 +3218,59 @@ const Abstract: React.FC = ({}) => {
     [problemId]
   );
 
+  const [customMetas, setCustomMetas] = useState<CustomMeta[]>([]);
+  const [customMetasLoaded, setCustomMetasLoaded] = useState(false);
+
   useEffect(() => {
-    const savedProblem = localStorage.getItem("selectedProblem");
-    if (savedProblem && problemList.includes(savedProblem)) {
-      setProblemId(savedProblem);
-    } else {
-      const defaultProblem = problemList[0] || "Problem 1";
-      setProblemId(defaultProblem);
-      localStorage.setItem("selectedProblem", defaultProblem);
+    async function fetchCustomProblems() {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${BACKEND}/customProblems/v1/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error(res.statusText);
+
+        const list: Pick<CustomMeta, "id" | "name" | "description">[] =
+          await res.json();
+        setCustomMetas(list);
+      } catch (err) {
+        console.warn("Failed to load custom problems:", err);
+      } finally {
+        setCustomMetasLoaded(true);
+      }
     }
-  }, [problemList]); // problemList is stable, but good practice
+
+    fetchCustomProblems();
+  }, []);
+
+  // 2) Turn your built-in list of strings into the same shape
+  const defaultMetas = problemList.map((id) => ({ id, name: id }));
+
+  // 3) Merge them
+  const allMetas = [...defaultMetas, ...customMetas];
+
+  // 4) Look up the display name for whatever is in state.problemId
+  const selectedMeta = allMetas.find((m) => m.id === problemId);
+  const displayName = selectedMeta ? selectedMeta.name : problemId;
+
+  // ✅ Now run the fallback logic only after customMetas are loaded
+  useEffect(() => {
+    if (!customMetasLoaded) return;
+
+    const saved = localStorage.getItem("selectedProblem");
+    const allIds = allMetas.map((m) => m.id);
+
+    if (saved && allIds.includes(saved)) {
+      setProblemId(saved);
+    } else if (allMetas.length > 0) {
+      const fallback = allMetas[0].id;
+      setProblemId(fallback);
+      localStorage.setItem("selectedProblem", fallback);
+    }
+  }, [customMetasLoaded, allMetas]);
 
   useEffect(() => {
     if (tutorialParam === "3") return;
@@ -3450,6 +3501,7 @@ const Abstract: React.FC = ({}) => {
       window.location.href = "/start";
     }, 500);
   };
+
   /* ---------------------------------------
   render Tree function START
 --------------------------------------- */
@@ -6058,7 +6110,7 @@ const Abstract: React.FC = ({}) => {
               <span
                 className={`dropdown-label ${isDropdownOpen ? "hidden" : ""}`}
               >
-                {problemId}
+                {displayName}
               </span>
               <span className={`arrow ${isDropdownOpen ? "up" : "down"}`}>
                 {"▲"}
@@ -6071,13 +6123,13 @@ const Abstract: React.FC = ({}) => {
               style={{ display: shouldRenderDropdown ? "block" : "none" }}
             >
               <div className="dropdown-items-container-ab">
-                {problemList.map((problem) => (
+                {allMetas.map((meta) => (
                   <div
-                    key={problem}
+                    key={meta.id}
                     className="dropdown-item"
-                    onClick={() => handleSelectProblem(problem)}
+                    onClick={() => handleSelectProblem(meta.id)}
                   >
-                    {problem}
+                    {meta.name}
                   </div>
                 ))}
               </div>
