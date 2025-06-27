@@ -3628,6 +3628,7 @@ const Abstract: React.FC = ({}) => {
       if (step.status.correctness === "incorrect") {
         return "#ff6363";
       }
+      if (step.status.correctness === "missing") return "#ffffff";
       return "#008000";
     }
 
@@ -3647,7 +3648,10 @@ const Abstract: React.FC = ({}) => {
       ) {
         return "black";
       }
-      if (step.status.correctness === "incorrect") {
+      if (
+        step.status.correctness === "incorrect" ||
+        step.status.correctness === "missing"
+      ) {
         return "black";
       }
       return "white";
