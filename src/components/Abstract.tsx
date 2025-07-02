@@ -6133,7 +6133,9 @@ const Abstract: React.FC = ({}) => {
                     className="dropdown-item"
                     onClick={() => handleSelectProblem(meta.id)}
                   >
-                    {meta.name}
+                    <div className="problem-dropdown-title-start">
+                      {meta.name}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -164,6 +164,10 @@ body.dark-mode {
   transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 1;
   transform: translateX(0);
+  width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdown-header-abstract .dropdown-label.hidden {

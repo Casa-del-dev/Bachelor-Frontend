@@ -178,7 +178,9 @@ body.dark-mode {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
   text-transform: none;
   word-break: break-word;
-  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .general-button:hover {

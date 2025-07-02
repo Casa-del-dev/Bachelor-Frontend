@@ -182,7 +182,9 @@ const StartLeft = ({
                 onClick={() => setMenuOpen((prev) => !prev)}
                 ref={ref4}
               >
-                {storedProblem || "Select Problem"}{" "}
+                <div className="title-start-problem">
+                  {storedProblem || "Select Problem"}{" "}
+                </div>
                 <span className={`arrow-icon ${menuOpen ? "rotated" : ""}`}>
                   ▾
                 </span>
@@ -196,7 +198,7 @@ const StartLeft = ({
                       className="dropdown-item-left-problem"
                       onClick={() => handleProblemSelect(k)}
                     >
-                      {k}
+                      <div className="problem-dropdown-title-start">{k}</div>
                     </div>
                   ))}
                   {customMetas.map((p) => (
@@ -205,7 +207,9 @@ const StartLeft = ({
                       className="dropdown-item-left-problem"
                       onClick={() => handleProblemSelect(p.id)}
                     >
-                      {p.name}
+                      <div className="problem-dropdown-title-start">
+                        {p.name}
+                      </div>
                     </div>
                   ))}
                 </div>

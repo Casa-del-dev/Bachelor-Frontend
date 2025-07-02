@@ -167,7 +167,12 @@ export default function Problem_left({
                 `}
                 onClick={() => handleClick(opt.id)}
               >
-                {opt.label}
+                <div
+                  className="problem-dropdown-title-start"
+                  style={{ padding: "0 10px" }}
+                >
+                  {opt.label}
+                </div>
               </div>
             ))}
           </div>
