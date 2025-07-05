@@ -374,6 +374,7 @@ body.dark-mode {
   gap: 20px;
 
   font-size: 1rem;
+  overflow-y: auto;
 }
 
 .tree-node-text {

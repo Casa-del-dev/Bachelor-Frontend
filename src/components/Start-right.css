@@ -70,7 +70,6 @@ body.dark-mode {
   overflow-y: auto;
   overflow-x: hidden;
   word-break: normal;
-  display: flex;
   flex-direction: column;
   justify-content: flex-start;
   gap: 1vw;

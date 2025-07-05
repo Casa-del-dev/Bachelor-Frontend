@@ -248,11 +248,11 @@ export default function Problem() {
         cancelTutorial();
       } else if (e.key === "ArrowRight" && inTutorial) {
         // same as clicking "Next"
-        go(stepIndex + 1, true);
+        go(stepIndex + 1, animate);
       } else if (e.key === "ArrowLeft" && inTutorial) {
         // same as clicking "Back"
         if (stepIndex !== 1) {
-          go(stepIndex - 1, true);
+          go(stepIndex - 1, animate);
         }
       }
     };

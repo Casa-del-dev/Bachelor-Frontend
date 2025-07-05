@@ -632,7 +632,7 @@ const Start: React.FC = () => {
         cancelTutorial();
       } else if (e.key === "ArrowRight" && inTutorial) {
         // same as clicking "Next"
-        go(stepIndex + 1, true);
+        go(stepIndex + 1, animate);
       } else if (e.key === "ArrowLeft" && inTutorial) {
         // same as clicking "Back"
         if (tutorialParam === "2" && stepIndex === 1) {

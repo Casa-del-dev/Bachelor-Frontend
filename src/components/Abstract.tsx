@@ -5584,7 +5584,6 @@ const Abstract: React.FC = ({}) => {
   useLayoutEffect(() => {
     setTimeout(() => {
       if (stepIndex > 0) {
-        setAnimate(true); // if you still want your anim flag reset
         const cur = tutorialStepsAbstract[stepIndex - 1];
         if (!cur) {
           setHoleRect(null);
@@ -5783,7 +5782,7 @@ const Abstract: React.FC = ({}) => {
         cancelTutorial();
       } else if (e.key === "ArrowRight" && inTutorial) {
         // same as clicking "Next"
-        go(stepIndex + 1, true);
+        go(stepIndex + 1, animate);
       } else if (e.key === "ArrowLeft" && inTutorial) {
         if (tutorialParam === "3" && stepIndex === 1) {
           localStorage.setItem(
