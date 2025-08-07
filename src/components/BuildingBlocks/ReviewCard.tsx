@@ -204,7 +204,7 @@ export default function ReviewCard({
             </p>
           </div>
         ) : (
-          <div style={{ minHeight: "calc(200px - 2rem)" }}>
+          <div style={{ padding: "1rem", minHeight: "calc(200px - 2rem)" }}>
             <div className="review-header">
               <h4>{username}</h4>
               <div className="icon-buttons">

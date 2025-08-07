@@ -56,27 +56,27 @@ export default function Welcome_text({ videoDone }: { videoDone: boolean }) {
 
       const timeout3 = setTimeout(() => {
         setShowBackground1(true);
-      }, 1200);
+      }, 600);
 
       const timeout4 = setTimeout(() => {
         setShowDetails(true);
-      }, 2000);
+      }, 600);
 
       const timeout5 = setTimeout(() => {
         setShowSlopeContainers(true);
-      }, 2000);
+      }, 600);
 
       const timeout6 = setTimeout(() => {
         setShowReviewBoxes(true);
-      }, 2600);
+      }, 600);
 
       const timeout7 = setTimeout(() => {
         setShowTeam(true);
-      }, 3200);
+      }, 600);
 
       const timeout8 = setTimeout(() => {
         setFooter(true);
-      }, 3800);
+      }, 600);
 
       return () => {
         clearTimeout(timeout1);
