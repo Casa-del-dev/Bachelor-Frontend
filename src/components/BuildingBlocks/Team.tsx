@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import "./Team.css";
 import Network from "./Network";
 import picEren from "../../assets/Eren.jpeg";
-import picAnastasiia from "../../assets/Anastasiia.jpg";
 import picApril from "../../assets/AprilWang.jpg";
 import { useInView } from "./useInView";
 
@@ -24,13 +23,6 @@ const Team = ({ condition }: { condition: boolean }) => {
       affiliation: "ETH Zürich",
       tag: "Developer",
       image: picEren,
-    },
-    {
-      name: "Anastasiia Birillo",
-      role: "Extern",
-      affiliation: "JetBrains",
-      tag: "Co-Supervisor",
-      image: picAnastasiia,
     },
     {
       name: "April Yi Wang",
@@ -76,7 +68,7 @@ const Team = ({ condition }: { condition: boolean }) => {
                 : ""
             }`}
           >
-            {[picAnastasiia, picApril].map((image, i) => {
+            {[picApril].map((image, i) => {
               const member = teamMembers[i + 1];
               return (
                 <div className="team-card" key={member.name}>

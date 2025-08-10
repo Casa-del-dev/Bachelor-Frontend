@@ -12,11 +12,31 @@
 
 .footer-content {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: center;
-  gap: calc(100% / 7);
+  align-items: center;
+  padding: 1rem calc(100% / 9);
+  box-sizing: border-box;
+}
+
+.allThesis-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 0 calc(100% / 9);
-  box-sizing: border-box;
+}
+
+.allthesis-title {
+  font-family: var(--font-family);
+  font-size: 1.5rem;
+}
+
+.footer-lineEnd {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: calc(100% / 3);
+  align-items: center;
+  width: 100%;
 }
