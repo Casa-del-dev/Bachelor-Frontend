@@ -18,6 +18,7 @@ const PUBLICATIONS: Publication[] = [
     year: 2025,
     venue: "ETH Zürich",
     note: "Supervisor: April Yi Wang",
+    link: "https://1drv.ms/b/c/3db0bd2b235f90fe/EThKy9zpB0FLqyiR55gfljABAzRCQ7AA1lvYC04LgU3hkQ?e=heykU9",
   },
   {
     id: "dbox-learner-llm-2025",
