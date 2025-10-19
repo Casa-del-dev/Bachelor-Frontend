@@ -42,6 +42,8 @@ export default function Welcome() {
     const onScrollGesture = (e: Event) => {
       if (!videoDone && !isUnlocked) {
         e.preventDefault();
+        const v = videoRef.current;
+        if (v) v.pause();
         setVideoDone(true);
         cleanup();
       }
