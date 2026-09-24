@@ -4564,11 +4564,16 @@ const Abstract: React.FC = ({}) => {
       const simplifiedTree = simplifyStepTree(steps);
       setToggleAbstraction("false");
       const gptResponse = await apiCallAbstract(simplifiedTree); // <-- await here!
-      const rawMessage = gptResponse.choices[0].message.content;
+      const content = gptResponse?.choices?.[0]?.message?.content;
+
+      if (content === undefined || content === null) {
+        throw new Error("OpenAI response is missing choices[0].message.content.");
+      }
 
       let abstractionJson;
       try {
-        abstractionJson = JSON.parse(rawMessage);
+        abstractionJson =
+          typeof content === "string" ? JSON.parse(content) : content;
       } catch (e) {
         console.error("Failed to parse abstraction JSON:", e);
         return;

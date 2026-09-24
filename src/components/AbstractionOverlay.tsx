@@ -2183,7 +2183,26 @@ const AbstractionOverlay: React.FC<AbstractionOverlayProps> = ({
           simplifiedSteps,
           simplifiedAbstraction
         );
-        setAnswerAbstractionOVerlay(data.choices[0].message.content);
+        const content = data?.choices?.[0]?.message?.content;
+
+        if (content === undefined || content === null) {
+          throw new Error("OpenAI response is missing choices[0].message.content.");
+        }
+
+        const answer =
+          typeof content === "string"
+            ? content
+            : typeof content.answer === "string"
+              ? content.answer
+              : null;
+
+        if (answer === null) {
+          throw new Error(
+            "OpenAI abstraction-check response must contain a string answer."
+          );
+        }
+
+        setAnswerAbstractionOVerlay(answer);
       } catch (err) {
         console.error("Error during abstraction check:", err);
       } finally {

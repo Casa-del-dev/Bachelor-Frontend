@@ -1052,17 +1052,18 @@ const StartRight: React.FC<StartRightProps> = ({
     try {
       const code = codeMap[currentFile];
       const gptResponse = await apiCallTree(JSON.stringify(steps), code || "");
-      const rawMessage = gptResponse.choices[0].message.content;
+      const content = gptResponse?.choices?.[0]?.message?.content;
 
-      if (!rawMessage) {
+      if (content === undefined || content === null) {
         throw new Error("GPT response missing message content.");
       }
 
       let parsedResponse;
       try {
-        parsedResponse = JSON.parse(rawMessage);
+        parsedResponse =
+          typeof content === "string" ? JSON.parse(content) : content;
       } catch (e) {
-        console.error("Failed to parse GPT response:", rawMessage);
+        console.error("Failed to parse GPT response:", content);
         throw e;
       }
 
