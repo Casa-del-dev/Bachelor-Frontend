@@ -1273,12 +1273,16 @@ Checking Code and Tree END
         selectedProblemDetails,
         steps
       );
-      const rawMessage = gptResponse.choices[0].message.content;
-      const parsedResponse = JSON.parse(rawMessage);
+      const content = gptResponse?.choices?.[0]?.message?.content;
 
-      const stepsData = parsedResponse.steps
-        ? parsedResponse.steps
-        : parsedResponse;
+      if (content === undefined || content === null) {
+        throw new Error("OpenAI response is missing choices[0].message.content.");
+      }
+
+      const parsedResult =
+        typeof content === "string" ? JSON.parse(content) : content;
+
+      const stepsData = parsedResult.steps ? parsedResult.steps : parsedResult;
 
       const stepsArray = transformStepsObject(stepsData);
 
