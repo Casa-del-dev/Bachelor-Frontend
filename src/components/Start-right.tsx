@@ -1180,7 +1180,7 @@ Checking Code and Tree END
     if (Context === "From Prompt" && text.trim() === "") return;
 
     const selectedProblem =
-      localStorage.getItem("selectedProblem") || "Default Problem";
+      localStorage.getItem("selectedProblem") || "Problem 1";
     const selectedProblemDetails = isCustom
       ? problemDescription
       : problemDetailsMap[selectedProblem];
