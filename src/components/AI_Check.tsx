@@ -3,11 +3,28 @@ import axios from "axios";
 const API_ENDPOINT =
   "https://bachelor-backend.erenhomburg.workers.dev/openai/v2/";
 
-export const apiCallCheck = async (problemDetails: any, steps: any) => {
+export const apiCallCheck = async (problemDetails: string, steps: unknown) => {
   try {
+    const Problem = problemDetails?.trim();
+    const Tree = typeof steps === "string" ? steps.trim() : steps;
+    const hasTree =
+      typeof Tree === "string"
+        ? Tree.length > 0
+        : Array.isArray(Tree)
+          ? Tree.length > 0
+          : Tree !== null &&
+            typeof Tree === "object" &&
+            Object.keys(Tree).length > 0;
+
+    if (!Problem || !hasTree) {
+      throw new Error(
+        "The OpenAI check request requires non-empty Problem and Tree fields."
+      );
+    }
+
     const requestBody = {
-      Problem: problemDetails,
-      Tree: steps ?? {},
+      Problem,
+      Tree,
     };
 
     console.log("Sending API Request:", requestBody); // Debugging log

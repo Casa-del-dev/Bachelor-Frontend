@@ -1260,7 +1260,7 @@ Checking Code and Tree END
     if (Context === "From Prompt" && text.trim() === "") return;
 
     const selectedProblem =
-      localStorage.getItem("selectedProblem") || "Default Problem";
+      localStorage.getItem("selectedProblem") || "Problem 1";
     const selectedProblemDetails = isCustom
       ? problemDescription
       : problemDetailsMap[selectedProblem];
@@ -1271,7 +1271,7 @@ Checking Code and Tree END
     try {
       const gptResponse = await apiCallCheck(
         selectedProblemDetails,
-        JSON.stringify(steps)
+        steps
       );
       const rawMessage = gptResponse.choices[0].message.content;
       const parsedResponse = JSON.parse(rawMessage);
