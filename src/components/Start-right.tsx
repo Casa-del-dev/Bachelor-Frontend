@@ -1189,14 +1189,18 @@ Checking Code and Tree END
     setLoadingCheck(true);
 
     try {
-      const gptResponse = await apiCall(text, selectedProblemDetails);
-      const rawMessage = gptResponse.choices[0].message.content;
-      const parsedResponse = JSON.parse(rawMessage);
+      const response = await apiCall(text, selectedProblemDetails);
+      const content = response.data?.choices?.[0]?.message?.content;
+
+      if (content === undefined || content === null) {
+        throw new Error("OpenAI response is missing choices[0].message.content.");
+      }
+
+      const parsedResult =
+        typeof content === "string" ? JSON.parse(content) : content;
 
       // Extract steps
-      const stepsData = parsedResponse.steps
-        ? parsedResponse.steps
-        : parsedResponse;
+      const stepsData = parsedResult.steps ? parsedResult.steps : parsedResult;
 
       const stepsArray = transformStepsObject(stepsData);
 

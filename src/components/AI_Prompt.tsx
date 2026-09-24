@@ -27,7 +27,7 @@ export const apiCall = async (prompt: string, problemDetails: string) => {
       },
     });
 
-    return response.data;
+    return response;
   } catch (error) {
     console.error("Error in API call:", error);
     throw error;
